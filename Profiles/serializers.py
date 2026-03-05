@@ -7,11 +7,11 @@ class MedicalProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MedicalProfile
-        # هنظهر كل البيانات ماعدا صورة التأمين للخصوصية في العرض العام
+        # إخفاء صورة التأمين من العرض العام لزيادة الأمان والخصوصية
         exclude = ["insurance_card_photo"]
 
 
-class InsuranceSerializer(serializers.ModelSerializer):
+class InsuranceCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = MedicalProfile
         fields = ["insurance_card_photo"]
