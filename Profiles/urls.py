@@ -1,4 +1,5 @@
 from django.urls import path
+from . import views
 from .views import ProfileDetailView, InsuranceDetailView, ProfileWebView
 
 urlpatterns = [
@@ -17,4 +18,6 @@ urlpatterns = [
         InsuranceDetailView.as_view(),
         name="insurance-detail",
     ),
+    path("", views.index, name="index"),
+    path("activate/", views.register_medical_info, name="activate"),
 ]
