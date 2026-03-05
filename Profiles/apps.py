@@ -1,10 +1,10 @@
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.conf import settings
-from .models import MedicalProfile
+from django.apps import AppConfig
 
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        MedicalProfile.objects.create(user=instance)
+class ProfilesConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "Profiles"
+
+    def ready(self):
+        # الـ import لازم يكون جوه الدالة دي مش فوق
+        import Profiles.signals
