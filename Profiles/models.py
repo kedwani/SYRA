@@ -6,7 +6,6 @@ class MedicalProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
     )
-
     blood_type = models.CharField(
         max_length=5,
         choices=[
@@ -25,19 +24,28 @@ class MedicalProfile(models.Model):
         max_length=10, choices=[("Male", "Male"), ("Female", "Female")], blank=True
     )
     birth_date = models.DateField(null=True, blank=True)
-
     chronic_diseases = models.TextField(blank=True)
     medical_history = models.TextField(
         blank=True, help_text="Accidents, fractures, old bleeding, etc."
     )
-
     has_insurance = models.BooleanField(default=False)
     insurance_company = models.CharField(max_length=100, blank=True)
     insurance_card_photo = models.ImageField(
         upload_to="insurance_cards/", null=True, blank=True
     )
-
     notes = models.TextField(blank=True)
 
     def __str__(self):
         return f"Profile for {self.user.username}"
+
+
+class EmergencyContact(models.Model):
+    profile = models.ForeignKey(
+        MedicalProfile, on_delete=models.CASCADE, related_name="contacts"
+    )
+    name = models.CharField(max_length=100)
+    relationship = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.name} ({self.relationship})"

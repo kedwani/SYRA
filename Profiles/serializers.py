@@ -1,13 +1,19 @@
 from rest_framework import serializers
-from .models import MedicalProfile
+from .models import MedicalProfile, EmergencyContact
+
+
+class EmergencyContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EmergencyContact
+        fields = ["name", "relationship", "phone_number"]
 
 
 class MedicalProfileSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source="user.username")
+    contacts = EmergencyContactSerializer(many=True, read_only=True)
 
     class Meta:
         model = MedicalProfile
-        # إخفاء صورة التأمين من العرض العام لزيادة الأمان والخصوصية
         exclude = ["insurance_card_photo"]
 
 
