@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>سجل مسح السوار | SYRA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: 'Cairo', sans-serif; }
+        .history-card { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .scan-item { border-right: 4px solid #d9534f; margin-bottom: 10px; background: white; padding: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <h2 class="fw-bold mb-4 text-center">سجل تتبع السوار 🛡️</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card history-card p-4">
+                {% for scan in scans %}
+                <div class="scan-item shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold text-dark">تم المسح في: {{ scan.scan_time|date:"Y-m-d H:i" }}</div>
+                            <div class="text-muted small">العنوان الرقمي (IP): {{ scan.ip_address }}</div>
+                        </div>
+                        <span class="badge bg-light text-danger border border-danger">نشط</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">لا يوجد سجلات مسح حتى الآن.</p>
+                {% endfor %}
+            </div>
+            <div class="text-center mt-4">
+                <a href="{% url 'profile-web-view' user__username=request.user.username %}" class="btn btn-secondary">العودة للملف الشخصي</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
