@@ -12,7 +12,7 @@ class SyraUserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SyraUser
-        fields = ['id', 'username', 'email', 'national_id', 'phone_number', 'date_of_birth', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'phone_number', 'date_of_birth', 'first_name', 'last_name']
         read_only_fields = ['id']
 
 

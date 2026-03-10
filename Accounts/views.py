@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_protect
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,6 +18,7 @@ User = get_user_model()
 
 # ==================== Template Views ====================
 
+@csrf_protect
 def login_template_view(request):
     """HTML login page."""
     if request.user.is_authenticated:
@@ -42,6 +44,7 @@ def login_template_view(request):
     return render(request, 'accounts/login.html')
 
 
+@csrf_protect
 def register_template_view(request):
     """HTML registration page."""
     if request.user.is_authenticated:

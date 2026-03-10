@@ -89,31 +89,50 @@ class MedicalProfile(models.Model):
     def save(self, *args, **kwargs):
         """Encrypt insurance image before saving."""
         if self.insurance_image:
-            from django.core.files.base import ContentFile
-            import base64
-            from cryptography.fernet import Fernet
+            # Only encrypt if not already encrypted (check for Fernet header)
+            self.insurance_image.open()
+            header = self.insurance_image.read(10)
+            self.insurance_image.seek(0)
             
-            # Get Fernet key from settings, ensure it's bytes
-            fernet_key = settings.FERNET_KEY.encode() if settings.FERNET_KEY else None
-            if fernet_key:
-                f = Fernet(fernet_key)
+            # If header starts with Fernet magic bytes, it's already encrypted
+            if not header.startswith(b'gAAAAAB'):
+                from django.core.files.base import ContentFile
+                import base64
+                from cryptography.fernet import Fernet
                 
-                # Read the image file
-                self.insurance_image.open()
-                image_data = self.insurance_image.read()
+                # Get Fernet key from settings, ensure it's bytes
+                fernet_key = settings.FERNET_KEY.encode() if settings.FERNET_KEY else None
+                if fernet_key:
+                    f = Fernet(fernet_key)
+                    
+                    # Read the image file
+                    image_data = self.insurance_image.read()
+                    self.insurance_image.close()
+                    
+                    # Encrypt the data
+                    encrypted_data = f.encrypt(image_data)
+                    
+                    # Store encrypted data back
+                    self.insurance_image.save(
+                        self.insurance_image.name,
+                        ContentFile(encrypted_data),
+                        save=False
+                    )
+                else:
+                    self.insurance_image.close()
+            else:
                 self.insurance_image.close()
-                
-                # Encrypt the data
-                encrypted_data = f.encrypt(image_data)
-                
-                # Store encrypted data back
-                self.insurance_image.save(
-                    self.insurance_image.name,
-                    ContentFile(encrypted_data),
-                    save=False
-                )
         
         super().save(*args, **kwargs)
+
+    def get_insurance_image_url(self):
+        """Return decrypted image URL for authorized access."""
+        if not self.insurance_image:
+            return None
+        
+        # This would need a custom view to serve decrypted images
+        # For now, return the encrypted file path
+        return self.insurance_image.url
 
 
 class Medication(models.Model):

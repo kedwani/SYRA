@@ -33,6 +33,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'ratelimit.middleware.RateLimitMiddleware',
 ]
 
 ROOT_URLCONF = 'syra.urls'
@@ -91,6 +92,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
 }
 
 from datetime import timedelta
@@ -99,7 +102,19 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
+# Rate Limiting Configuration
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_DEFAULT = '5/m'  # Default rate limit
+RATELIMIT_AUTHICATION = '10/m'  # Auth endpoints
+RATELIMIT_REGISTER = '3/h'  # Registration - very restrictive
+
 FERNET_KEY = os.environ.get('FERNET_KEY', '')
 if not FERNET_KEY:
-    import base64
-    FERNET_KEY = base64.urlsafe_b64encode(os.urandom(32)).decode()
+    import warnings
+    warnings.warn(
+        "FERNET_KEY not set! Insurance image encryption will be disabled. "
+        "Set FERNET_KEY in environment variables for production.",
+        UserWarning
+    )
+    # Use empty string to disable encryption rather than generating a random key
+    FERNET_KEY = ''
