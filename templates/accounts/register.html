@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Register — SYRA{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-page {
+    min-height: calc(100vh - 58px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .auth-left {
+    background: var(--card); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 60px; position: relative; overflow: hidden;
+  }
+  .auth-left::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(26,140,255,.05) 0%, transparent 70%);
+  }
+  .auth-visual { position: relative; z-index: 1; max-width: 360px; }
+  .steps-visual { display: flex; flex-direction: column; gap: 20px; }
+  .step-v {
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .step-v-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(0,232,122,.1); border: 1px solid rgba(0,232,122,.25);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--green); flex-shrink: 0;
+  }
+  .step-v-body h4 {
+    font-family: var(--display); font-size: 15px; color: var(--white);
+    margin-bottom: 4px;
+  }
+  .step-v-body p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .auth-visual-title {
+    font-family: var(--display); font-size: 26px; font-weight: 800;
+    color: var(--white); margin-bottom: 28px;
+  }
+
+  .auth-right {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 60px; overflow-y: auto;
+  }
+  .auth-form-wrap { width: 100%; max-width: 400px; }
+  .auth-form-wrap h1 {
+    font-family: var(--display); font-size: 30px; font-weight: 800;
+    color: var(--white); margin-bottom: 6px;
+  }
+  .auth-form-wrap .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+  .auth-form-wrap .subtitle a { color: var(--green); text-decoration: none; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .submit-btn {
+    width: 100%; padding: 12px;
+    background: var(--green); color: #030a10;
+    font-family: var(--display); font-size: 15px; font-weight: 700;
+    border: none; border-radius: 9px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all .2s; margin-top: 4px;
+  }
+  .submit-btn:hover { background: #18ffaa; box-shadow: 0 0 24px rgba(0,232,122,.4); }
+  .submit-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .tos-note {
+    font-size: 11px; color: var(--muted);
+    text-align: center; margin-top: 16px; line-height: 1.5;
+  }
+
+  @media (max-width: 860px) {
+    .auth-page { grid-template-columns: 1fr; }
+    .auth-left  { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+
+  <!-- Left visual -->
+  <div class="auth-left">
+    <div class="auth-visual">
+      <div class="auth-visual-title">You're 2 minutes<br/>away from safety.</div>
+      <div class="steps-visual">
+        <div class="step-v">
+          <div class="step-v-num">1</div>
+          <div class="step-v-body">
+            <h4>Create Your Account</h4>
+            <p>Basic info only — username, email, and password. That's it to start.</p>
+          </div>
+        </div>
+        <div class="step-v">
+          <div class="step-v-num">2</div>
+          <div class="step-v-body">
+            <h4>Fill Your Medical Profile</h4>
+            <p>Blood type, chronic conditions, emergency contacts, and current medications.</p>
+          </div>
+        </div>
+        <div class="step-v">
+          <div class="step-v-num">3</div>
+          <div class="step-v-body">
+            <h4>Activate Your Bracelet</h4>
+            <p>Link your QR/NFC ID. First responders scan it and instantly see what matters.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register form -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h1>Create Account</h1>
+      <p class="subtitle">Already registered? <a href="/login/">Sign in here</a></p>
+
+      <div class="alert alert-error"   id="errAlert"></div>
+      <div class="alert alert-success" id="successAlert"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="username" placeholder="ahmed_sayed"/>
+        </div>
+        <div class="form-group">
+          <label>National ID</label>
+          <input type="text" id="national_id" placeholder="12345678901234" maxlength="14"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="ahmed@example.com"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Min. 8 characters"/>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" id="password_confirm" placeholder="Repeat password"/>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="regBtn" onclick="doRegister()">
+        <span id="regBtnText">Create My Profile</span>
+      </button>
+
+      <p class="tos-note">
+        By registering, your medical data is stored securely with<br/>
+        Fernet encryption. Your insurance data is always owner-only.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+if (getToken()) window.location.href = '/dashboard/';
+
+document.addEventListener('keydown', e => { if(e.key === 'Enter') doRegister(); });
+
+async function doRegister() {
+  const payload = {
+    username:         document.getElementById('username').value.trim(),
+    email:            document.getElementById('email').value.trim(),
+    national_id:      document.getElementById('national_id').value.trim(),
+    password:         document.getElementById('password').value,
+    password_confirm: document.getElementById('password_confirm').value,
+  };
+
+  const errAlert  = document.getElementById('errAlert');
+  const okAlert   = document.getElementById('successAlert');
+  const btn       = document.getElementById('regBtn');
+  const btnText   = document.getElementById('regBtnText');
+
+  errAlert.classList.remove('show');
+  okAlert.classList.remove('show');
+
+  if (!payload.username || !payload.email || !payload.password) {
+    showError('Username, email, and password are required.'); return;
+  }
+  if (payload.password !== payload.password_confirm) {
+    showError('Passwords do not match.'); return;
+  }
+  if (payload.password.length < 8) {
+    showError('Password must be at least 8 characters.'); return;
+  }
+
+  btn.disabled = true;
+  btnText.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const res  = await fetch('/api/auth/register/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      // Auto-login after registration
+      const tokenRes = await fetch('/api/auth/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: payload.username, password: payload.password }),
+      });
+      const tokenData = await tokenRes.json();
+      if (tokenRes.ok) {
+        setAuth(tokenData.access, payload.username);
+        okAlert.textContent = 'Account created! Redirecting to your dashboard…';
+        okAlert.classList.add('show');
+        setTimeout(() => window.location.href = '/dashboard/', 1200);
+      } else {
+        okAlert.textContent = 'Account created! Please sign in.';
+        okAlert.classList.add('show');
+        setTimeout(() => window.location.href = '/login/', 1500);
+      }
+    } else {
+      const msgs = Object.values(data).flat().join(' ');
+      showError(msgs || 'Registration failed. Please check your inputs.');
+    }
+  } catch (err) {
+    showError('Could not connect to server. Is Django running?');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Create My Profile';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errAlert');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+</script>
+{% endblock %}

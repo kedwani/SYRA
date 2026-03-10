@@ -1,28 +1,61 @@
+"""
+Profiles/urls.py
+----------------
+URL routing for all profile-related endpoints.
+"""
+
 from django.urls import path
-from . import views
+
+from .views import (
+    EmergencyContactDetailView,
+    EmergencyContactListCreateView,
+    InsuranceView,
+    MedicalEventDetailView,
+    MedicalEventListCreateView,
+    MedicalProfileView,
+    MedicationDetailView,
+    MedicationListCreateView,
+    PatientSearchView,
+)
 
 urlpatterns = [
-    # الرابط الأساسي للسوار
-    path("b/<str:bracelet_id>/", views.bracelet_handler, name="bracelet-handler"),
-    # سجل المسح
-    path("history/", views.scan_history_view, name="scan-history"),
-    # الروابط العامة
-    path("", views.index, name="index"),
-    path("activate/", views.register_medical_info, name="activate"),
+    # ---- Search (must come before <username> to avoid collision) ----
+    path("search/", PatientSearchView.as_view(), name="patient-search"),
+    # ---- Main profile ----
+    path("<str:username>/", MedicalProfileView.as_view(), name="medical-profile"),
+    # ---- Insurance (sensitive — owner only) ----
+    path("<str:username>/insurance/", InsuranceView.as_view(), name="insurance"),
+    # ---- Emergency contacts ----
     path(
-        "view/<str:user__username>/",
-        views.ProfileWebView.as_view(),
-        name="profile-web-view",
-    ),
-    # روابط API
-    path(
-        "api/profile/<str:user__username>/",
-        views.ProfileDetailView.as_view(),
-        name="profile-detail",
+        "<str:username>/contacts/",
+        EmergencyContactListCreateView.as_view(),
+        name="contacts-list",
     ),
     path(
-        "api/profile/<str:user__username>/insurance/",
-        views.InsuranceDetailView.as_view(),
-        name="insurance-detail",
+        "<str:username>/contacts/<int:pk>/",
+        EmergencyContactDetailView.as_view(),
+        name="contacts-detail",
+    ),
+    # ---- Medications ----
+    path(
+        "<str:username>/medications/",
+        MedicationListCreateView.as_view(),
+        name="medications-list",
+    ),
+    path(
+        "<str:username>/medications/<int:pk>/",
+        MedicationDetailView.as_view(),
+        name="medications-detail",
+    ),
+    # ---- Medical history ----
+    path(
+        "<str:username>/history/",
+        MedicalEventListCreateView.as_view(),
+        name="history-list",
+    ),
+    path(
+        "<str:username>/history/<int:pk>/",
+        MedicalEventDetailView.as_view(),
+        name="history-detail",
     ),
 ]

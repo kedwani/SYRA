@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile — SYRA{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_css %}
+.edit-grid { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: start; }
+.edit-nav { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: sticky; top: 84px; }
+.edit-nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 18px; font-size: 14px; color: var(--ink-mid); text-decoration: none; border-bottom: 1px solid var(--border); transition: all .15s; }
+.edit-nav-item:last-child { border-bottom: none; }
+.edit-nav-item:hover { background: var(--teal-pale); color: var(--teal); }
+.edit-nav-item.active { background: var(--teal-pale); color: var(--teal); font-weight: 500; border-left: 3px solid var(--teal); }
+.section-anchor { scroll-margin-top: 84px; }
+.inline-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.item-list-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+.item-list-info { flex: 1; }
+.item-list-name { font-weight: 500; font-size: 14px; }
+.item-list-sub  { font-size: 12px; color: var(--ink-soft); }
+.btn-icon { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: grid; place-items: center; font-size: 14px; transition: all .15s; }
+.btn-icon:hover { border-color: var(--red); background: var(--red-pale); }
+.add-form-toggle { margin-top: 16px; padding: 14px 16px; background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; }
+.add-form-toggle summary { cursor: pointer; font-size: 14px; color: var(--teal); font-weight: 500; list-style: none; display: flex; align-items: center; gap: 8px; }
+.add-form-inner { margin-top: 16px; }
+@media (max-width: 800px) { .edit-grid { grid-template-columns: 1fr; } .edit-nav { position: static; } .inline-form-row { grid-template-columns: 1fr; } }
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header fade-in">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <a href="{% url 'web:dashboard' user.username %}" class="btn btn-outline btn-sm">← Back</a>
+      <div><div class="page-title">Edit Profile</div><div class="page-subtitle">Update your medical information</div></div>
+    </div>
+  </div>
+
+  <div class="edit-grid">
+    <nav class="edit-nav fade-in">
+      <a href="#general"     class="edit-nav-item active">👤 General</a>
+      <a href="#medical"     class="edit-nav-item">⚕ Medical</a>
+      <a href="#contacts"    class="edit-nav-item">🆘 Contacts</a>
+      <a href="#medications" class="edit-nav-item">💊 Medications</a>
+      <a href="#history"     class="edit-nav-item">📋 History</a>
+    </nav>
+
+    <div style="display:flex;flex-direction:column;gap:24px;">
+
+      <!-- General -->
+      <div class="card section-anchor fade-in" id="general">
+        <div class="card-header"><span class="card-title">General Information</span></div>
+        <div class="card-body">
+          <form method="post" action="{% url 'web:update_general' user.username %}">
+            {% csrf_token %}
+            <div class="inline-form-row">
+              <div class="form-group">
+                <label class="form-label">Blood Type</label>
+                <select class="form-control" name="blood_type">
+                  {% for val, label in blood_type_choices %}
+                    <option value="{{ val }}" {% if profile.blood_type == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select class="form-control" name="gender">
+                  <option value="">— not specified —</option>
+                  <option value="M" {% if profile.gender == "M" %}selected{% endif %}>Male</option>
+                  <option value="F" {% if profile.gender == "F" %}selected{% endif %}>Female</option>
+                  <option value="O" {% if profile.gender == "O" %}selected{% endif %}>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Birth</label>
+              <input class="form-control" type="date" name="date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d'|default:'' }}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Allergies <span style="color:var(--ink-ghost);font-weight:300;">(comma separated)</span></label>
+              <input class="form-control" type="text" name="allergies" value="{{ profile.allergies }}" placeholder="Penicillin, Aspirin…" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">General Notes</label>
+              <textarea class="form-control" name="general_notes" rows="3" placeholder="Any extra info for first responders…">{{ profile.general_notes }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save General Info</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Medical -->
+      <div class="card section-anchor fade-in-delay-1" id="medical">
+        <div class="card-header"><span class="card-title">Medical Conditions</span></div>
+        <div class="card-body">
+          <form method="post" action="{% url 'web:update_medical' user.username %}">
+            {% csrf_token %}
+            <div class="form-group">
+              <label class="form-label">Chronic Diseases <span style="color:var(--ink-ghost);font-weight:300;">(comma separated)</span></label>
+              <input class="form-control" type="text" name="chronic_diseases" value="{{ profile.chronic_diseases }}" placeholder="Diabetes Type 2, Hypertension…" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Immune / Auto-immune Diseases</label>
+              <textarea class="form-control" name="immune_diseases" rows="2" placeholder="Rheumatoid Arthritis, Lupus…">{{ profile.immune_diseases }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Medical Info</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Contacts -->
+      <div class="card section-anchor fade-in-delay-2" id="contacts">
+        <div class="card-header">
+          <span class="card-title">Emergency Contacts</span>
+          <span class="badge badge-ghost">{{ contacts|length }}/2</span>
+        </div>
+        <div class="card-body">
+          {% for contact in contacts %}
+            <div class="item-list-row">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--teal-pale);color:var(--teal);display:grid;place-items:center;font-weight:600;flex-shrink:0;">{{ contact.name|first|upper }}</div>
+              <div class="item-list-info">
+                <div class="item-list-name">{{ contact.name }}</div>
+                <div class="item-list-sub">{{ contact.relationship|default:"—" }} · {{ contact.phone_number }} · Priority {{ contact.priority }}</div>
+              </div>
+              <form method="post" action="{% url 'web:delete_contact' user.username contact.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon" onclick="return confirm('Delete this contact?')">🗑</button>
+              </form>
+            </div>
+          {% empty %}<p class="data-empty" style="margin-bottom:16px;">No emergency contacts yet.</p>{% endfor %}
+
+          {% if contacts|length < 2 %}
+          <details class="add-form-toggle">
+            <summary>+ Add emergency contact</summary>
+            <div class="add-form-inner">
+              <form method="post" action="{% url 'web:add_contact' user.username %}">
+                {% csrf_token %}
+                <div class="inline-form-row">
+                  <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" type="text" name="name" placeholder="Sara Hassan" required /></div>
+                  <div class="form-group"><label class="form-label">Relationship</label><input class="form-control" type="text" name="relationship" placeholder="Sister, Father…" /></div>
+                </div>
+                <div class="inline-form-row">
+                  <div class="form-group"><label class="form-label">Phone Number *</label><input class="form-control" type="text" name="phone_number" placeholder="+201001234567" required /></div>
+                  <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-control" name="priority"><option value="1">1 — Primary</option><option value="2">2 — Secondary</option></select>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Add Contact</button>
+              </form>
+            </div>
+          </details>
+          {% else %}
+            <div class="alert alert-info" style="margin-top:12px;">Maximum of 2 emergency contacts reached.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Medications -->
+      <div class="card section-anchor fade-in-delay-2" id="medications">
+        <div class="card-header"><span class="card-title">Medications</span></div>
+        <div class="card-body">
+          {% for med in medications %}
+            <div class="item-list-row">
+              <div style="width:36px;height:36px;border-radius:8px;background:var(--amber-pale);color:var(--amber);display:grid;place-items:center;font-size:18px;flex-shrink:0;">💊</div>
+              <div class="item-list-info">
+                <div class="item-list-name">{{ med.name }}</div>
+                <div class="item-list-sub">{{ med.dosage|default:"—" }} · Since {{ med.start_date|date:"M d, Y" }}{% if med.duration_days %} · {{ med.duration_days }} days{% endif %}</div>
+              </div>
+              <form method="post" action="{% url 'web:delete_medication' user.username med.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon" onclick="return confirm('Delete?')">🗑</button>
+              </form>
+            </div>
+          {% empty %}<p class="data-empty" style="margin-bottom:16px;">No medications added.</p>{% endfor %}
+
+          <details class="add-form-toggle">
+            <summary>+ Add medication</summary>
+            <div class="add-form-inner">
+              <form method="post" action="{% url 'web:add_medication' user.username %}">
+                {% csrf_token %}
+                <div class="inline-form-row">
+                  <div class="form-group"><label class="form-label">Name *</label><input class="form-control" type="text" name="name" placeholder="Metformin" required /></div>
+                  <div class="form-group"><label class="form-label">Dosage</label><input class="form-control" type="text" name="dosage" placeholder="500mg twice daily" /></div>
+                </div>
+                <div class="inline-form-row">
+                  <div class="form-group"><label class="form-label">Start Date *</label><input class="form-control" type="date" name="start_date" required /></div>
+                  <div class="form-group"><label class="form-label">Duration (days)</label><input class="form-control" type="number" name="duration_days" placeholder="30 — blank = ongoing" min="1" /></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Add Medication</button>
+              </form>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card section-anchor fade-in-delay-3" id="history">
+        <div class="card-header"><span class="card-title">Medical History</span></div>
+        <div class="card-body">
+          {% for event in history %}
+            <div class="item-list-row">
+              <div style="width:36px;height:36px;border-radius:50%;background:var(--bg);border:2px solid var(--border);display:grid;place-items:center;font-size:16px;flex-shrink:0;">
+                {% if event.event_type == "Accident" %}🚗{% elif event.event_type == "Fracture" %}🦴{% elif event.event_type == "Bleeding" %}🩸{% elif event.event_type == "Surgery" %}🔬{% else %}📌{% endif %}
+              </div>
+              <div class="item-list-info">
+                <div class="item-list-name">{{ event.event_type }} — {{ event.event_date|date:"M d, Y" }}</div>
+                <div class="item-list-sub">{{ event.description|truncatechars:70 }}{% if event.hospital %} · {{ event.hospital }}{% endif %}</div>
+              </div>
+              <form method="post" action="{% url 'web:delete_history' user.username event.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon" onclick="return confirm('Delete?')">🗑</button>
+              </form>
+            </div>
+          {% empty %}<p class="data-empty" style="margin-bottom:16px;">No history records.</p>{% endfor %}
+
+          <details class="add-form-toggle">
+            <summary>+ Add medical event</summary>
+            <div class="add-form-inner">
+              <form method="post" action="{% url 'web:add_history' user.username %}">
+                {% csrf_token %}
+                <div class="inline-form-row">
+                  <div class="form-group">
+                    <label class="form-label">Event Type *</label>
+                    <select class="form-control" name="event_type" required>
+                      <option value="Accident">Accident</option>
+                      <option value="Fracture">Fracture</option>
+                      <option value="Bleeding">Bleeding</option>
+                      <option value="Surgery">Surgery</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Date *</label><input class="form-control" type="date" name="event_date" required /></div>
+                </div>
+                <div class="form-group"><label class="form-label">Description *</label><textarea class="form-control" name="description" rows="2" placeholder="Briefly describe what happened…" required></textarea></div>
+                <div class="form-group"><label class="form-label">Hospital</label><input class="form-control" type="text" name="hospital" placeholder="Cairo General Hospital" /></div>
+                <button type="submit" class="btn btn-primary btn-sm">Add Event</button>
+              </form>
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const sections = document.querySelectorAll('.section-anchor');
+const navItems = document.querySelectorAll('.edit-nav-item');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navItems.forEach(n => n.classList.remove('active'));
+      document.querySelector(`.edit-nav-item[href="#${e.target.id}"]`)?.classList.add('active');
+    }
+  });
+}, { threshold: .3 });
+sections.forEach(s => observer.observe(s));
+</script>
+{% endblock %}

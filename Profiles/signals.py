@@ -1,20 +1,26 @@
+"""
+Profiles/signals.py
+-------------------
+Django signal: automatically create a blank MedicalProfile whenever
+a new SyraUser is saved for the first time.
+
+This satisfies the Phase 1 requirement: "Use signals to automatically
+create a MedicalProfile whenever a new user is registered."
+"""
+
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
+
 from .models import MedicalProfile
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def link_or_create_profile(sender, instance, created, **kwargs):
+def create_medical_profile(sender, instance, created: bool, **kwargs) -> None:
+    """
+    Fires after every SyraUser save.
+    Only acts on the very first save (created=True) to avoid
+    overwriting data on subsequent profile updates.
+    """
     if created:
-        # البحث عن سوار تم مسحه ولم يُربط بمستخدم بعد
-        unlinked_profile = MedicalProfile.objects.filter(user__isnull=True).last()
-
-        if unlinked_profile:
-            unlinked_profile.user = instance
-            unlinked_profile.save()
-        else:
-            # لو الحساب اتعمل من غير مسح سوار، ننشئ له بروفايل بمعرف مؤقت
-            MedicalProfile.objects.create(
-                user=instance, bracelet_id=f"TEMP-{instance.id}"
-            )
+        MedicalProfile.objects.create(user=instance)

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Insurance — SYRA{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_css %}
+.insurance-wrap { max-width: 640px; margin: 0 auto; }
+.lock-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; background: linear-gradient(135deg, #fff8f0, #fffaf5); border: 1px solid #f0d0b0; border-radius: 12px; margin-bottom: 24px; }
+.lock-icon-wrap { width: 52px; height: 52px; background: var(--amber-pale); border: 2px solid #f0d0b0; border-radius: 12px; display: grid; place-items: center; font-size: 26px; flex-shrink: 0; }
+.lock-title { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--amber); }
+.lock-desc  { font-size: 13px; color: #9a6020; margin-top: 2px; line-height: 1.5; }
+.enc-badge  { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: var(--green-pale); border: 1px solid #a8dfc0; border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--green); }
+.card-preview { width: 100%; max-height: 260px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); display: block; margin-top: 12px; }
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+  <div class="page-header fade-in" style="display:flex;align-items:center;gap:16px;">
+    <a href="{% url 'web:dashboard' user.username %}" class="btn btn-outline btn-sm">← Back</a>
+    <div><div class="page-title">Insurance Card</div><div class="page-subtitle">Sensitive — owner access only</div></div>
+  </div>
+
+  <div class="insurance-wrap">
+    <div class="lock-header fade-in">
+      <div class="lock-icon-wrap">🔒</div>
+      <div>
+        <div class="lock-title">Private Insurance Data</div>
+        <div class="lock-desc">Your insurance card is <strong>encrypted at rest</strong> using Fernet symmetric encryption. It is never stored as a plain file.</div>
+      </div>
+    </div>
+
+    <div class="card fade-in-delay-1" style="margin-bottom:20px;">
+      <div class="card-header">
+        <span class="card-title">Current Insurance</span>
+        <span class="enc-badge">🛡 Encrypted Storage</span>
+      </div>
+      <div class="card-body">
+        <div class="data-row">
+          <span class="data-label">Insurance Company</span>
+          <span class="data-value">{% if profile.insurance_company %}{{ profile.insurance_company }}{% else %}<span class="data-empty">Not set</span>{% endif %}</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">Card Image</span>
+          <span class="data-value">
+            {% if insurance_image_b64 %}
+              <span class="enc-badge" style="margin-bottom:8px;">✓ Decrypted for display</span>
+              <img src="data:{{ insurance_mime }};base64,{{ insurance_image_b64 }}" class="card-preview" alt="Insurance card" />
+            {% else %}
+              <span class="data-empty">No card uploaded yet</span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-in-delay-2">
+      <div class="card-header"><span class="card-title">Update Insurance</span></div>
+      <div class="card-body">
+        <form method="post" action="{% url 'web:insurance' user.username %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="alert alert-info">Uploading a new card replaces any existing one. The image is encrypted immediately before saving.</div>
+          <div class="form-group">
+            <label class="form-label">Insurance Company Name</label>
+            <input class="form-control" type="text" name="insurance_company" value="{{ profile.insurance_company }}" placeholder="MISR Life Insurance…" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Insurance Card Photo</label>
+            <input class="form-control" type="file" name="insurance_card_upload" accept="image/jpeg,image/png,image/webp" />
+            <span style="font-size:12px;color:var(--ink-soft);margin-top:4px;display:block;">Accepted: JPG, PNG, WEBP. File will be encrypted before saving.</span>
+          </div>
+          <button type="submit" class="btn btn-primary">Save & Encrypt</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
