@@ -1,4 +1,5 @@
 """Models for the Profiles app - Medical profiles, medications, emergency contacts."""
+
 import uuid
 from django.db import models
 from django.conf import settings
@@ -10,126 +11,128 @@ class MedicalProfile(models.Model):
     Core medical profile for a patient.
     Linked to a SyraUser with a unique public_id for emergency scanning.
     """
+
     BLOOD_TYPE_CHOICES = [
-        ('A+', 'A+'), ('A-', 'A-'),
-        ('B+', 'B+'), ('B-', 'B-'),
-        ('AB+', 'AB+'), ('AB-', 'AB-'),
-        ('O+', 'O+'), ('O-', 'O-'),
-        ('Unknown', 'Unknown'),
+        ("A+", "A+"),
+        ("A-", "A-"),
+        ("B+", "B+"),
+        ("B-", "B-"),
+        ("AB+", "AB+"),
+        ("AB-", "AB-"),
+        ("O+", "O+"),
+        ("O-", "O-"),
+        ("Unknown", "Unknown"),
     ]
-    
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='medical_profile'
+        related_name="medical_profile",
     )
     public_id = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
         editable=False,
-        help_text='Unique UUID for NFC/QR scanning'
+        help_text="Unique UUID for NFC/QR scanning",
     )
     blood_type = models.CharField(
-        max_length=10,
-        choices=BLOOD_TYPE_CHOICES,
-        default='Unknown'
+        max_length=10, choices=BLOOD_TYPE_CHOICES, default="Unknown"
     )
     chronic_diseases = models.TextField(
         blank=True,
-        verbose_name='Chronic Diseases',
-        help_text='List of chronic conditions (e.g., Diabetes, Hypertension)'
+        verbose_name="Chronic Diseases",
+        help_text="List of chronic conditions (e.g., Diabetes, Hypertension)",
     )
     allergies = models.TextField(
-        blank=True,
-        verbose_name='Allergies',
-        help_text='Known allergies'
+        blank=True, verbose_name="Allergies", help_text="Known allergies"
     )
     emergency_notes = models.TextField(
         blank=True,
-        verbose_name='Emergency Notes',
-        help_text='Critical medical notes for first responders'
+        verbose_name="Emergency Notes",
+        help_text="Critical medical notes for first responders",
     )
     insurance_provider = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name='Insurance Provider'
+        max_length=200, blank=True, verbose_name="Insurance Provider"
     )
     insurance_number = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name='Insurance Number'
+        max_length=50, blank=True, verbose_name="Insurance Number"
     )
     insurance_image = models.ImageField(
-        upload_to='insurance/',
+        upload_to="insurance/",
         blank=True,
         null=True,
-        validators=[FileExtensionValidator(['jpg', 'jpeg', 'png', 'pdf'])],
-        verbose_name='Insurance Card Image'
+        validators=[FileExtensionValidator(["jpg", "jpeg", "png", "pdf"])],
+        verbose_name="Insurance Card Image",
     )
     height = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        verbose_name='Height (cm)'
+        null=True, blank=True, verbose_name="Height (cm)"
     )
     weight = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        verbose_name='Weight (kg)'
+        null=True, blank=True, verbose_name="Weight (kg)"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Medical Profile'
-        verbose_name_plural = 'Medical Profiles'
+        verbose_name = "Medical Profile"
+        verbose_name_plural = "Medical Profiles"
 
     def __str__(self):
         return f"Medical Profile - {self.user.username}"
-    
+
     def save(self, *args, **kwargs):
         """Encrypt insurance image before saving."""
-        if self.insurance_image:
-            # Only encrypt if not already encrypted (check for Fernet header)
+        # Check if we have a new file to upload that needs encryption
+        if self.insurance_image and not self._is_encrypted():
+            self._encrypt_insurance_image()
+
+        super().save(*args, **kwargs)
+
+    def _is_encrypted(self):
+        """Check if insurance image is already encrypted."""
+        if not self.insurance_image:
+            return False
+        try:
             self.insurance_image.open()
             header = self.insurance_image.read(10)
             self.insurance_image.seek(0)
-            
-            # If header starts with Fernet magic bytes, it's already encrypted
-            if not header.startswith(b'gAAAAAB'):
-                from django.core.files.base import ContentFile
-                import base64
-                from cryptography.fernet import Fernet
-                
-                # Get Fernet key from settings, ensure it's bytes
-                fernet_key = settings.FERNET_KEY.encode() if settings.FERNET_KEY else None
-                if fernet_key:
-                    f = Fernet(fernet_key)
-                    
-                    # Read the image file
-                    image_data = self.insurance_image.read()
-                    self.insurance_image.close()
-                    
-                    # Encrypt the data
-                    encrypted_data = f.encrypt(image_data)
-                    
-                    # Store encrypted data back
-                    self.insurance_image.save(
-                        self.insurance_image.name,
-                        ContentFile(encrypted_data),
-                        save=False
-                    )
-                else:
-                    self.insurance_image.close()
-            else:
-                self.insurance_image.close()
-        
-        super().save(*args, **kwargs)
+            self.insurance_image.close()
+            return header.startswith(b"gAAAAAB")
+        except Exception:
+            return False
+
+    def _encrypt_insurance_image(self):
+        """Encrypt the insurance image."""
+        if not self.insurance_image:
+            return
+
+        from django.core.files.base import ContentFile
+        from cryptography.fernet import Fernet
+
+        fernet_key = settings.FERNET_KEY.encode() if settings.FERNET_KEY else None
+        if not fernet_key:
+            return
+
+        f = Fernet(fernet_key)
+
+        # Read the image data using context manager to ensure file is closed
+        with self.insurance_image.open() as image_file:
+            image_data = image_file.read()
+
+        # Encrypt the data
+        encrypted_data = f.encrypt(image_data)
+
+        # Store encrypted data - get current name before replacing
+        current_name = self.insurance_image.name
+
+        # Replace the file with encrypted content
+        self.insurance_image.save(current_name, ContentFile(encrypted_data), save=False)
 
     def get_insurance_image_url(self):
         """Return decrypted image URL for authorized access."""
         if not self.insurance_image:
             return None
-        
+
         # This would need a custom view to serve decrypted images
         # For now, return the encrypted file path
         return self.insurance_image.url
@@ -137,39 +140,23 @@ class MedicalProfile(models.Model):
 
 class Medication(models.Model):
     """Model for patient's active medications."""
+
     profile = models.ForeignKey(
-        MedicalProfile,
-        on_delete=models.CASCADE,
-        related_name='medications'
+        MedicalProfile, on_delete=models.CASCADE, related_name="medications"
     )
-    name = models.CharField(
-        max_length=200,
-        verbose_name='Medication Name'
-    )
+    name = models.CharField(max_length=200, verbose_name="Medication Name")
     dosage = models.CharField(
-        max_length=100,
-        verbose_name='Dosage',
-        help_text='e.g., 500mg twice daily'
+        max_length=100, verbose_name="Dosage", help_text="e.g., 500mg twice daily"
     )
-    frequency = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='Frequency'
-    )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name='Currently Taking'
-    )
-    notes = models.TextField(
-        blank=True,
-        verbose_name='Additional Notes'
-    )
+    frequency = models.CharField(max_length=100, blank=True, verbose_name="Frequency")
+    is_active = models.BooleanField(default=True, verbose_name="Currently Taking")
+    notes = models.TextField(blank=True, verbose_name="Additional Notes")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Medication'
-        verbose_name_plural = 'Medications'
+        verbose_name = "Medication"
+        verbose_name_plural = "Medications"
 
     def __str__(self):
         return f"{self.name} - {self.dosage}"
@@ -177,49 +164,35 @@ class Medication(models.Model):
 
 class EmergencyContact(models.Model):
     """Model for patient's emergency contacts (max 2)."""
+
     RELATIONSHIP_CHOICES = [
-        ('spouse', 'Spouse'),
-        ('parent', 'Parent'),
-        ('sibling', 'Sibling'),
-        ('child', 'Child'),
-        ('friend', 'Friend'),
-        ('other', 'Other'),
+        ("spouse", "Spouse"),
+        ("parent", "Parent"),
+        ("sibling", "Sibling"),
+        ("child", "Child"),
+        ("friend", "Friend"),
+        ("other", "Other"),
     ]
-    
+
     profile = models.ForeignKey(
-        MedicalProfile,
-        on_delete=models.CASCADE,
-        related_name='emergency_contacts'
+        MedicalProfile, on_delete=models.CASCADE, related_name="emergency_contacts"
     )
-    name = models.CharField(
-        max_length=200,
-        verbose_name='Contact Name'
-    )
+    name = models.CharField(max_length=200, verbose_name="Contact Name")
     relationship = models.CharField(
-        max_length=20,
-        choices=RELATIONSHIP_CHOICES,
-        verbose_name='Relationship'
+        max_length=20, choices=RELATIONSHIP_CHOICES, verbose_name="Relationship"
     )
-    phone_number = models.CharField(
-        max_length=15,
-        verbose_name='Phone Number'
-    )
+    phone_number = models.CharField(max_length=15, verbose_name="Phone Number")
     alternate_phone = models.CharField(
-        max_length=15,
-        blank=True,
-        verbose_name='Alternate Phone'
+        max_length=15, blank=True, verbose_name="Alternate Phone"
     )
-    is_primary = models.BooleanField(
-        default=False,
-        verbose_name='Primary Contact'
-    )
+    is_primary = models.BooleanField(default=False, verbose_name="Primary Contact")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Emergency Contact'
-        verbose_name_plural = 'Emergency Contacts'
-        ordering = ['-is_primary', 'name']
+        verbose_name = "Emergency Contact"
+        verbose_name_plural = "Emergency Contacts"
+        ordering = ["-is_primary", "name"]
 
     def __str__(self):
         return f"{self.name} ({self.get_relationship_display()})"
@@ -227,52 +200,37 @@ class EmergencyContact(models.Model):
 
 class MedicalEvent(models.Model):
     """Model for tracking medical events/history."""
+
     EVENT_TYPE_CHOICES = [
-        ('surgery', 'Surgery'),
-        ('hospitalization', 'Hospitalization'),
-        ('diagnosis', 'Diagnosis'),
-        ('emergency', 'Emergency'),
-        ('checkup', 'Check-up'),
-        ('other', 'Other'),
+        ("surgery", "Surgery"),
+        ("hospitalization", "Hospitalization"),
+        ("diagnosis", "Diagnosis"),
+        ("emergency", "Emergency"),
+        ("checkup", "Check-up"),
+        ("other", "Other"),
     ]
-    
+
     profile = models.ForeignKey(
-        MedicalProfile,
-        on_delete=models.CASCADE,
-        related_name='medical_events'
+        MedicalProfile, on_delete=models.CASCADE, related_name="medical_events"
     )
     event_type = models.CharField(
-        max_length=20,
-        choices=EVENT_TYPE_CHOICES,
-        verbose_name='Event Type'
+        max_length=20, choices=EVENT_TYPE_CHOICES, verbose_name="Event Type"
     )
-    title = models.CharField(
-        max_length=200,
-        verbose_name='Title'
-    )
-    description = models.TextField(
-        blank=True,
-        verbose_name='Description'
-    )
-    date = models.DateField(
-        verbose_name='Event Date'
-    )
+    title = models.CharField(max_length=200, verbose_name="Title")
+    description = models.TextField(blank=True, verbose_name="Description")
+    date = models.DateField(verbose_name="Event Date")
     hospital_name = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name='Hospital/Clinic Name'
+        max_length=200, blank=True, verbose_name="Hospital/Clinic Name"
     )
     doctor_name = models.CharField(
-        max_length=200,
-        blank=True,
-        verbose_name='Doctor Name'
+        max_length=200, blank=True, verbose_name="Doctor Name"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Medical Event'
-        verbose_name_plural = 'Medical Events'
-        ordering = ['-date']
+        verbose_name = "Medical Event"
+        verbose_name_plural = "Medical Events"
+        ordering = ["-date"]
 
     def __str__(self):
         return f"{self.title} - {self.date}"
