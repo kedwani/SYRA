@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Medication - SYRA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ action }} Medication</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name">Medication Name</label>
+            <input type="text" name="name" id="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="dosage">Dosage</label>
+            <input type="text" name="dosage" id="dosage" placeholder="e.g., 500mg" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="frequency">Frequency</label>
+            <input type="text" name="frequency" id="frequency" placeholder="e.g., Twice daily">
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_active" checked> Currently Taking
+            </label>
+        </div>
+        
+        <div class="form-group">
+            <label for="notes">Notes</label>
+            <textarea name="notes" id="notes" rows="3"></textarea>
+        </div>
+        
+        <button type="submit" class="btn">Save</button>
+        <a href="{% url 'medications' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

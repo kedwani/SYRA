@@ -1,20 +1,11 @@
-"""
-Accounts/urls.py
-----------------
-URL routing for the Accounts app.
-"""
-
+"""URL configuration for the Accounts API."""
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-
-from .views import RegisterView, UserDetailView
+from rest_framework_simplejwt.views import TokenRefreshView
+from . import views
 
 urlpatterns = [
-    # Registration
-    path("register/", RegisterView.as_view(), name="register"),
-    # JWT Login
-    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # Current user info
-    path("me/", UserDetailView.as_view(), name="user_detail"),
+    # Template views (HTML pages)
+    path('', views.login_template_view, name='login'),
+    path('register/', views.register_template_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
 ]

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - SYRA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{% if profile %}Edit{% else %}Create{% endif %} Medical Profile</h2>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="blood_type">Blood Type</label>
+            <select name="blood_type" id="blood_type">
+                <option value="Unknown">Unknown</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="chronic_diseases">Chronic Diseases</label>
+            <textarea name="chronic_diseases" id="chronic_diseases" rows="3" placeholder="e.g., Diabetes, Hypertension">{{ profile.chronic_diseases|default:'' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="allergies">Allergies</label>
+            <textarea name="allergies" id="allergies" rows="3" placeholder="e.g., Penicillin, Peanuts">{{ profile.allergies|default:'' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="emergency_notes">Emergency Notes</label>
+            <textarea name="emergency_notes" id="emergency_notes" rows="3" placeholder="Critical information for first responders">{{ profile.emergency_notes|default:'' }}</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="height">Height (cm)</label>
+            <input type="number" name="height" id="height" value="{{ profile.height|default:'' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="weight">Weight (kg)</label>
+            <input type="number" name="weight" id="weight" value="{{ profile.weight|default:'' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="insurance_provider">Insurance Provider</label>
+            <input type="text" name="insurance_provider" id="insurance_provider" value="{{ profile.insurance_provider|default:'' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="insurance_number">Insurance Number</label>
+            <input type="text" name="insurance_number" id="insurance_number" value="{{ profile.insurance_number|default:'' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="insurance_image">Insurance Card Image</label>
+            <input type="file" name="insurance_image" id="insurance_image" accept="image/*,.pdf">
+        </div>
+        
+        <button type="submit" class="btn">Save Profile</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

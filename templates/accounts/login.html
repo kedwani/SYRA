@@ -1,200 +1,35 @@
-{% extends "base.html" %}
-{% block title %}Sign In — SYRA{% endblock %}
+{% extends 'base.html' %}
 
-{% block extra_head %}
-<style>
-  .auth-page {
-    min-height: calc(100vh - 58px);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* ── Left panel ── */
-  .auth-left {
-    background: var(--card);
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    padding: 60px;
-    position: relative; overflow: hidden;
-  }
-  .auth-left::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,232,122,.05) 0%, transparent 70%);
-  }
-  .auth-visual { position: relative; z-index: 1; text-align: center; max-width: 360px; }
-  .auth-visual .big-icon {
-    font-size: 64px; margin-bottom: 24px;
-    filter: drop-shadow(0 0 20px rgba(0,232,122,.3));
-  }
-  .auth-visual h2 {
-    font-family: var(--display); font-size: 28px; font-weight: 800;
-    color: var(--white); margin-bottom: 14px;
-  }
-  .auth-visual p { font-size: 14px; color: var(--muted); line-height: 1.7; }
-  .auth-bullets { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; text-align: left; }
-  .auth-bullet {
-    display: flex; align-items: center; gap: 12px;
-    font-size: 13px; color: var(--text);
-  }
-  .auth-bullet .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green); flex-shrink: 0;
-    box-shadow: 0 0 8px var(--green);
-  }
-
-  /* ── Right panel ── */
-  .auth-right {
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    padding: 60px;
-  }
-  .auth-form-wrap { width: 100%; max-width: 380px; }
-  .auth-form-wrap h1 {
-    font-family: var(--display); font-size: 30px; font-weight: 800;
-    color: var(--white); margin-bottom: 6px;
-  }
-  .auth-form-wrap .subtitle {
-    font-size: 14px; color: var(--muted); margin-bottom: 32px;
-  }
-  .auth-form-wrap .subtitle a { color: var(--green); text-decoration: none; }
-  .auth-form-wrap .subtitle a:hover { text-decoration: underline; }
-
-  .submit-btn {
-    width: 100%; padding: 12px;
-    background: var(--green); color: #030a10;
-    font-family: var(--display); font-size: 15px; font-weight: 700;
-    border: none; border-radius: 9px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: all .2s; margin-top: 4px;
-  }
-  .submit-btn:hover { background: #18ffaa; box-shadow: 0 0 24px rgba(0,232,122,.4); }
-  .submit-btn:disabled { opacity: .45; cursor: not-allowed; }
-
-  .divider-text {
-    text-align: center; font-size: 12px; color: var(--muted);
-    margin: 20px 0; position: relative;
-  }
-  .divider-text::before, .divider-text::after {
-    content: ''; position: absolute; top: 50%; width: 42%;
-    height: 1px; background: var(--border);
-  }
-  .divider-text::before { left: 0; }
-  .divider-text::after  { right: 0; }
-
-  @media (max-width: 860px) {
-    .auth-page { grid-template-columns: 1fr; }
-    .auth-left { display: none; }
-  }
-</style>
-{% endblock %}
+{% block title %}Login - SYRA{% endblock %}
 
 {% block content %}
-<div class="auth-page">
-
-  <!-- Left visual -->
-  <div class="auth-left">
-    <div class="auth-visual">
-      <div class="big-icon">🏥</div>
-      <h2>Welcome back to SYRA</h2>
-      <p>Access your complete medical profile, update your health data, and manage your emergency contacts.</p>
-      <div class="auth-bullets">
-        <div class="auth-bullet"><div class="dot"></div>Your data is encrypted end-to-end</div>
-        <div class="auth-bullet"><div class="dot"></div>Instant access via NFC wristband</div>
-        <div class="auth-bullet"><div class="dot"></div>First responders see only what's needed</div>
-      </div>
+<div style="max-width: 400px; margin: 4rem auto;">
+    <div class="card">
+        <h2 style="text-align: center; margin-bottom: 1.5rem;">Login to SYRA</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="national_id">Egyptian National ID</label>
+                <input type="text" id="national_id" name="national_id" 
+                       placeholder="Enter 14-digit National ID" 
+                       required maxlength="14" pattern="\d{14}">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" 
+                       placeholder="Enter password" required>
+            </div>
+            
+            <button type="submit" class="btn" style="width: 100%;">Login</button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 1rem;">
+            Don't have an account? 
+            <a href="{% url 'register-template' %}" style="color: #2563eb;">Register here</a>
+        </p>
     </div>
-  </div>
-
-  <!-- Login form -->
-  <div class="auth-right">
-    <div class="auth-form-wrap">
-      <h1>Sign In</h1>
-      <p class="subtitle">Don't have an account? <a href="/register/">Register here</a></p>
-
-      <div class="alert alert-error" id="errAlert"></div>
-
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="username" placeholder="your_username" autocomplete="username"/>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/>
-      </div>
-
-      <button class="submit-btn" id="loginBtn" onclick="doLogin()">
-        <span id="loginBtnText">Sign In</span>
-      </button>
-
-      <div class="divider-text">or</div>
-
-      <a href="/register/" class="btn btn-ghost" style="width:100%;justify-content:center;font-size:14px;">
-        Create a New Account
-      </a>
-
-      <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:24px;">
-        Emergency access? Scan the patient's bracelet directly.<br/>No login required for first responders.
-      </p>
-    </div>
-  </div>
 </div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-// Redirect if already logged in
-if (getToken()) window.location.href = '/dashboard/';
-
-// Allow Enter key to submit
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
-
-async function doLogin() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value;
-  const btn      = document.getElementById('loginBtn');
-  const errAlert = document.getElementById('errAlert');
-  const btnText  = document.getElementById('loginBtnText');
-
-  if (!username || !password) {
-    showError('Please fill in all fields.');
-    return;
-  }
-
-  btn.disabled = true;
-  btnText.innerHTML = '<div class="spinner"></div>';
-  errAlert.classList.remove('show');
-
-  try {
-    const res = await fetch('/api/auth/token/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      setAuth(data.access, username);
-      toast('Signed in successfully ✓');
-      window.location.href = '/dashboard/';
-    } else {
-      showError(data.detail || 'Invalid username or password.');
-    }
-  } catch (err) {
-    showError('Could not connect to server. Is Django running?');
-  } finally {
-    btn.disabled = false;
-    btnText.textContent = 'Sign In';
-  }
-}
-
-function showError(msg) {
-  const el = document.getElementById('errAlert');
-  el.textContent = msg;
-  el.classList.add('show');
-}
-</script>
 {% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Contacts - SYRA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Emergency Contacts</h2>
+    <p>Maximum {{ max_contacts }} contacts allowed.</p>
+    {% if can_add %}
+    <a href="{% url 'contact-add' %}" class="btn">Add Contact</a>
+    {% else %}
+    <p style="color: #991b1b;">Maximum contacts reached.</p>
+    {% endif %}
+</div>
+
+{% if contacts %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Relationship</th>
+                <th>Phone</th>
+                <th>Primary</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contact in contacts %}
+            <tr>
+                <td>{{ contact.name }}</td>
+                <td>{{ contact.get_relationship_display }}</td>
+                <td>{{ contact.phone_number }}</td>
+                <td>{% if contact.is_primary %}Yes{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>No emergency contacts added yet.</p>
+</div>
+{% endif %}
+
+<a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}

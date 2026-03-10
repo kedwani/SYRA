@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Medications - SYRA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Your Medications</h2>
+    <a href="{% url 'medication-add' %}" class="btn">Add Medication</a>
+</div>
+
+{% if medications %}
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for med in medications %}
+            <tr>
+                <td>{{ med.name }}</td>
+                <td>{{ med.dosage }}</td>
+                <td>{{ med.frequency|default:"-" }}</td>
+                <td>{% if med.is_active %}Active{% else %}Inactive{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <p>No medications added yet.</p>
+</div>
+{% endif %}
+
+<a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}

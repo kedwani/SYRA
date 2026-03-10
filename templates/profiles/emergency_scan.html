@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Emergency Medical ID - SYRA{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <!-- Emergency Header -->
+    <div class="bg-red-600 text-white p-6 rounded-lg mb-6 text-center">
+        <h1 class="text-2xl font-bold mb-2">🚨 Emergency Medical ID</h1>
+        <p class="text-red-100">Important medical information for first responders</p>
+    </div>
+
+    <!-- Blood Type - Prominent Display -->
+    <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6 text-center">
+        <p class="text-sm text-red-600 uppercase tracking-wide mb-1">Blood Type</p>
+        <p class="text-5xl font-bold text-red-700">{{ profile.get_blood_type_display }}</p>
+    </div>
+
+    <!-- Allergies - Critical -->
+    {% if profile.allergies %}
+    <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-orange-800 text-lg mb-2">⚠️ Allergies</h3>
+        <p class="text-orange-900">{{ profile.allergies }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Chronic Diseases -->
+    {% if profile.chronic_diseases %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-blue-800 text-lg mb-2">🏥 Chronic Conditions</h3>
+        <p class="text-blue-900">{{ profile.chronic_diseases }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Emergency Notes -->
+    {% if profile.emergency_notes %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-yellow-800 text-lg mb-2">📝 Emergency Notes</h3>
+        <p class="text-yellow-900">{{ profile.emergency_notes }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Current Medications -->
+    {% if medications %}
+    <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-purple-800 text-lg mb-3">💊 Current Medications</h3>
+        <ul class="space-y-2">
+            {% for med in medications %}
+            <li class="bg-white p-3 rounded shadow-sm">
+                <p class="font-semibold text-purple-900">{{ med.name }}</p>
+                <p class="text-purple-700 text-sm">{{ med.dosage }}{% if med.frequency %} - {{ med.frequency }}{% endif %}</p>
+                {% if med.notes %}
+                <p class="text-purple-600 text-xs mt-1">{{ med.notes }}</p>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Emergency Contacts -->
+    {% if contacts %}
+    <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-green-800 text-lg mb-3">📞 Emergency Contacts</h3>
+        <ul class="space-y-3">
+            {% for contact in contacts %}
+            <li class="bg-white p-3 rounded shadow-sm{% if contact.is_primary %} border-2 border-green-500{% endif %}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-semibold text-green-900">
+                            {{ contact.name }}
+                            {% if contact.is_primary %}<span class="text-xs bg-green-500 text-white px-2 py-0.5 rounded ml-2">Primary</span>{% endif %}
+                        </p>
+                        <p class="text-green-700 text-sm">{{ contact.get_relationship_display }}</p>
+                    </div>
+                    <a href="tel:{{ contact.phone_number }}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700">
+                        Call
+                    </a>
+                </div>
+                <p class="text-green-800 mt-2">{{ contact.phone_number }}</p>
+                {% if contact.alternate_phone %}
+                <p class="text-green-700 text-sm">Alt: {{ contact.alternate_phone }}</p>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Physical Info -->
+    {% if profile.height or profile.weight %}
+    <div class="bg-gray-50 border-l-4 border-gray-400 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-gray-700 text-lg mb-2">📊 Physical Information</h3>
+        <div class="flex gap-6">
+            {% if profile.height %}
+            <div>
+                <p class="text-sm text-gray-500">Height</p>
+                <p class="font-semibold text-gray-800">{{ profile.height }} cm</p>
+            </div>
+            {% endif %}
+            {% if profile.weight %}
+            <div>
+                <p class="text-sm text-gray-500">Weight</p>
+                <p class="font-semibold text-gray-800">{{ profile.weight }} kg</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="text-center mt-8 text-gray-500 text-sm">
+        <p>Provided by SYRA Medical ID</p>
+        <p class="mt-1">Last updated: {{ profile.updated_at|date:"M d, Y" }}</p>
+    </div>
+</div>
+{% endblock %}

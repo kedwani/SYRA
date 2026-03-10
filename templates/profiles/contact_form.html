@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Contact - SYRA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ action }} Emergency Contact</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name">Contact Name</label>
+            <input type="text" name="name" id="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="relationship">Relationship</label>
+            <select name="relationship" id="relationship" required>
+                <option value="">Select...</option>
+                <option value="spouse">Spouse</option>
+                <option value="parent">Parent</option>
+                <option value="sibling">Sibling</option>
+                <option value="child">Child</option>
+                <option value="friend">Friend</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="phone_number">Phone Number</label>
+            <input type="text" name="phone_number" id="phone_number" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="alternate_phone">Alternate Phone</label>
+            <input type="text" name="alternate_phone" id="alternate_phone">
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="is_primary"> Primary Contact
+            </label>
+        </div>
+        
+        <button type="submit" class="btn">Save</button>
+        <a href="{% url 'contacts' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

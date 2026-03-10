@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Event - SYRA{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>{{ action }} Medical Event</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="event_type">Event Type</label>
+            <select name="event_type" id="event_type" required>
+                <option value="">Select...</option>
+                <option value="surgery">Surgery</option>
+                <option value="hospitalization">Hospitalization</option>
+                <option value="diagnosis">Diagnosis</option>
+                <option value="emergency">Emergency</option>
+                <option value="checkup">Check-up</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" name="title" id="title" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="date">Event Date</label>
+            <input type="date" name="date" id="date" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea name="description" id="description" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="hospital_name">Hospital/Clinic</label>
+            <input type="text" name="hospital_name" id="hospital_name">
+        </div>
+        
+        <div class="form-group">
+            <label for="doctor_name">Doctor Name</label>
+            <input type="text" name="doctor_name" id="doctor_name">
+        </div>
+        
+        <button type="submit" class="btn">Save</button>
+        <a href="{% url 'events' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

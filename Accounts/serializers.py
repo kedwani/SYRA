@@ -1,52 +1,47 @@
-"""
-Accounts/serializers.py
------------------------
-Serializers for user registration and authentication.
-"""
-
-from django.contrib.auth import get_user_model
+"""Serializers for the Accounts API."""
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from .models import SyraUser
 
 User = get_user_model()
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    """
-    Handles new user creation. Password is write-only and confirmed
-    before saving. Signal will auto-create MedicalProfile on save.
-    """
+class SyraUserSerializer(serializers.ModelSerializer):
+    """Serializer for SyraUser model."""
+    
+    class Meta:
+        model = SyraUser
+        fields = ['id', 'username', 'email', 'national_id', 'phone_number', 'date_of_birth', 'first_name', 'last_name']
+        read_only_fields = ['id']
 
-    password = serializers.CharField(write_only=True, min_length=8)
+
+class RegisterSerializer(serializers.ModelSerializer):
+    """Serializer for user registration."""
+    password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
-        fields = (
-            "id",
-            "username",
-            "email",
-            "national_id",
-            "password",
-            "password_confirm",
-        )
+        model = SyraUser
+        fields = ['username', 'email', 'password', 'password_confirm', 'national_id', 'phone_number', 'first_name', 'last_name']
 
-    def validate(self, data: dict) -> dict:
-        if data["password"] != data.pop("password_confirm"):
-            raise serializers.ValidationError({"password": "Passwords do not match."})
-        return data
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({'password_confirm': 'Passwords do not match.'})
+        
+        # Check if National ID already exists
+        if SyraUser.objects.filter(national_id=attrs['national_id']).exists():
+            raise serializers.ValidationError({'national_id': 'This National ID is already registered.'})
+        
+        return attrs
 
-    def create(self, validated_data: dict) -> User:
-        password = validated_data.pop("password")
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = SyraUser.objects.create_user(**validated_data)
         return user
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
-    """Read-only public user info. Never exposes password."""
-
-    class Meta:
-        model = User
-        fields = ("id", "username", "email", "national_id", "date_joined")
-        read_only_fields = fields
+class LoginSerializer(serializers.Serializer):
+    """Serializer for user login."""
+    national_id = serializers.CharField()
+    password = serializers.CharField(write_only=True)
