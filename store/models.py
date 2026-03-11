@@ -171,8 +171,11 @@ class SyraBand(models.Model):
     @property
     def discount_percentage(self):
         """Calculate discount percentage."""
+        from decimal import Decimal
+
         if self.has_discount:
-            return int((1 - self.discount_price / self.price) * 100)
+            discount = Decimal(1) - (self.discount_price / self.price)
+            return int(discount * Decimal(100))
         return 0
 
 
