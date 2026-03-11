@@ -37,6 +37,7 @@ class SyraUser(AbstractUser):
     national_id = models.CharField(
         max_length=14,
         unique=True,
+        db_index=True,
         validators=[validate_egyptian_national_id],
         verbose_name="Egyptian National ID",
         help_text="14-digit Egyptian National ID",

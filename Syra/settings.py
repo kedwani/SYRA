@@ -4,6 +4,7 @@ Django settings for SYRA medical identification platform.
 
 import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -11,7 +12,7 @@ SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-dev-key-change-in-production"
 )
 
-DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
@@ -25,12 +26,15 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
+    "corsheaders",
+    "drf_spectacular",
     "accounts",
     "profiles",
     "store",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -98,9 +102,11 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 from datetime import timedelta
+from cryptography.fernet import Fernet
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
@@ -110,17 +116,41 @@ SIMPLE_JWT = {
 # Rate Limiting Configuration
 RATELIMIT_USE_CACHE = "default"
 RATELIMIT_DEFAULT = "5/m"  # Default rate limit
-RATELIMIT_AUTHICATION = "10/m"  # Auth endpoints
+RATELIMIT_AUTH = "10/m"  # Auth endpoints
 RATELIMIT_REGISTER = "3/h"  # Registration - very restrictive
 
-FERNET_KEY = os.environ.get("FERNET_KEY", "")
+# FERNET Encryption Key - CRITICAL for production security
+FERNET_KEY = os.environ.get("FERNET_KEY")
 if not FERNET_KEY:
-    import warnings
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "FERNET_KEY is required in production! "
+            "Generate with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+        )
+    # Generate temporary key for development
+    FERNET_KEY = Fernet.generate_key().decode()
 
-    warnings.warn(
-        "FERNET_KEY not set! Insurance image encryption will be disabled. "
-        "Set FERNET_KEY in environment variables for production.",
-        UserWarning,
-    )
-    # Use empty string to disable encryption rather than generating a random key
-    FERNET_KEY = ""
+# CORS Configuration
+CORS_ALLOW_CREDENTIALS = True
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:19006",
+        "http://127.0.0.1:3000",
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = os.environ.get(
+        "CORS_ALLOWED_ORIGINS", "https://syra-app.com,https://www.syra-app.com"
+    ).split(",")
+
+# Security Headers for Production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

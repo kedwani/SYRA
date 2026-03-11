@@ -32,6 +32,7 @@ class MedicalProfile(models.Model):
     public_id = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
+        db_index=True,
         editable=False,
         help_text="Unique UUID for NFC/QR scanning",
     )
@@ -76,6 +77,10 @@ class MedicalProfile(models.Model):
     class Meta:
         verbose_name = "Medical Profile"
         verbose_name_plural = "Medical Profiles"
+        indexes = [
+            models.Index(fields=["user", "updated_at"]),
+            models.Index(fields=["public_id"]),
+        ]
 
     def __str__(self):
         return f"Medical Profile - {self.user.username}"
