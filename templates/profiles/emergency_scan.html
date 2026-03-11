@@ -8,15 +8,24 @@
     <div class="bg-red-600 text-white p-6 rounded-lg mb-6 text-center">
         <h1 class="text-2xl font-bold mb-2">🚨 Emergency Medical ID</h1>
         <p class="text-red-100">Important medical information for first responders</p>
+        
+        <!-- Role Badge -->
+        {% if user_role != 'user' %}
+        <div class="mt-2">
+            <span class="bg-white text-red-600 px-3 py-1 rounded-full text-sm font-semibold">
+                Viewed as: {{ user_role|title }}
+            </span>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Blood Type - Prominent Display -->
+    <!-- Blood Type - Prominent Display (Visible to All) -->
     <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6 text-center">
         <p class="text-sm text-red-600 uppercase tracking-wide mb-1">Blood Type</p>
         <p class="text-5xl font-bold text-red-700">{{ profile.get_blood_type_display }}</p>
     </div>
 
-    <!-- Allergies - Critical -->
+    <!-- Allergies - Critical (Visible to All) -->
     {% if profile.allergies %}
     <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-4">
         <h3 class="font-bold text-orange-800 text-lg mb-2">⚠️ Allergies</h3>
@@ -24,15 +33,7 @@
     </div>
     {% endif %}
 
-    <!-- Chronic Diseases -->
-    {% if profile.chronic_diseases %}
-    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-blue-800 text-lg mb-2">🏥 Chronic Conditions</h3>
-        <p class="text-blue-900">{{ profile.chronic_diseases }}</p>
-    </div>
-    {% endif %}
-
-    <!-- Emergency Notes -->
+    <!-- Emergency Notes (Visible to All) -->
     {% if profile.emergency_notes %}
     <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 mb-4">
         <h3 class="font-bold text-yellow-800 text-lg mb-2">📝 Emergency Notes</h3>
@@ -40,7 +41,15 @@
     </div>
     {% endif %}
 
-    <!-- Current Medications -->
+    <!-- Chronic Diseases (Visible to Doctors/Admins) -->
+    {% if show_full_medical and profile.chronic_diseases %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-blue-800 text-lg mb-2">🏥 Chronic Conditions</h3>
+        <p class="text-blue-900">{{ profile.chronic_diseases }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Current Medications (Visible to All) -->
     {% if medications %}
     <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4 mb-4">
         <h3 class="font-bold text-purple-800 text-lg mb-3">💊 Current Medications</h3>
@@ -58,7 +67,7 @@
     </div>
     {% endif %}
 
-    <!-- Emergency Contacts -->
+    <!-- Emergency Contacts (Visible to All) -->
     {% if contacts %}
     <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-4">
         <h3 class="font-bold text-green-800 text-lg mb-3">📞 Emergency Contacts</h3>
@@ -87,7 +96,7 @@
     </div>
     {% endif %}
 
-    <!-- Physical Info -->
+    <!-- Physical Info (Visible to All) -->
     {% if profile.height or profile.weight %}
     <div class="bg-gray-50 border-l-4 border-gray-400 rounded-lg p-4 mb-4">
         <h3 class="font-bold text-gray-700 text-lg mb-2">📊 Physical Information</h3>
@@ -108,10 +117,57 @@
     </div>
     {% endif %}
 
+    <!-- Medical History (Visible to Doctors/Admins Only) -->
+    {% if show_full_medical and medical_events %}
+    <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-indigo-800 text-lg mb-3">📋 Medical History</h3>
+        <ul class="space-y-2">
+            {% for event in medical_events %}
+            <li class="bg-white p-3 rounded shadow-sm">
+                <p class="font-semibold text-indigo-900">{{ event.title }}</p>
+                <p class="text-indigo-700 text-sm">{{ event.get_event_type_display }} - {{ event.date }}</p>
+                {% if event.description %}
+                <p class="text-indigo-600 text-xs mt-1">{{ event.description }}</p>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Insurance Information (Visible to Doctors/Engineers/Admins) -->
+    {% if show_insurance and profile.insurance_provider %}
+    <div class="bg-teal-50 border-l-4 border-teal-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-teal-800 text-lg mb-2">🏢 Insurance Information</h3>
+        <p class="text-teal-900"><strong>Provider:</strong> {{ profile.insurance_provider }}</p>
+        {% if profile.insurance_number %}
+        <p class="text-teal-900"><strong>Policy Number:</strong> {{ profile.insurance_number }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- User/Owner Info (Visible to Engineers/Admins - for band/device info) -->
+    {% if show_engineer_info %}
+    <div class="bg-slate-50 border-l-4 border-slate-500 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-slate-800 text-lg mb-2">👤 Owner Information</h3>
+        <p class="text-slate-900"><strong>Name:</strong> {{ profile.user.get_full_name|default:profile.user.username }}</p>
+        {% if national_id_masked %}
+        <p class="text-slate-900"><strong>National ID:</strong> {{ national_id_masked }}</p>
+        {% endif %}
+        {% if profile.user.date_of_birth %}
+        <p class="text-slate-900"><strong>Date of Birth:</strong> {{ profile.user.date_of_birth }}</p>
+        {% endif %}
+        {% if profile.user.phone_number %}
+        <p class="text-slate-900"><strong>Phone:</strong> {{ profile.user.phone_number }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <!-- Footer -->
     <div class="text-center mt-8 text-gray-500 text-sm">
         <p>Provided by SYRA Medical ID</p>
         <p class="mt-1">Last updated: {{ profile.updated_at|date:"M d, Y" }}</p>
+        <p class="mt-1">Public ID: {{ profile.public_id }}</p>
     </div>
 </div>
 {% endblock %}

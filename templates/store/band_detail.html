@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ band.name }} - Syra Store{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'store:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'store:band_list' %}">Store</a></li>
+            <li class="breadcrumb-item active">{{ band.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                {% if band.image %}
+                <img src="{{ band.image.url }}" class="card-img-top" alt="{{ band.name }}" style="height: 400px; object-fit: contain;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="bi bi-watch display-1 text-muted"></i>
+                </div>
+                {% endif %}
+                
+                {% if band.has_discount %}
+                <span class="position-absolute top-0 start-0 badge bg-danger m-3 fs-6">
+                    -{{ band.discount_percentage }}% OFF
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">{{ band.band_type.get_name_display }}</span>
+                    <span class="badge bg-secondary mb-2">{{ band.band_use.get_name_display }}</span>
+                    
+                    <h2 class="mb-3">{{ band.name }}</h2>
+                    
+                    <p class="text-muted">{{ band.short_description }}</p>
+                    
+                    <div class="mb-4">
+                        <span class="h3 text-primary">EGP {{ band.current_price }}</span>
+                        {% if band.has_discount %}
+                        <span class="h5 text-decoration-line-through text-muted ms-2">EGP {{ band.price }}</span>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Features -->
+                    <h5 class="mb-3">Features</h5>
+                    <div class="row g-2 mb-4">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" {% if band.has_nfc %}checked{% endif %} disabled>
+                                <label class="form-check-label">NFC Chip</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" {% if band.has_qr_code %}checked{% endif %} disabled>
+                                <label class="form-check-label">QR Code</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" {% if band.has_gps %}checked{% endif %} disabled>
+                                <label class="form-check-label">GPS Tracking</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" {% if band.has_heart_rate %}checked{% endif %} disabled>
+                                <label class="form-check-label">Heart Rate Monitor</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" {% if band.has_water_resistant %}checked{% endif %} disabled>
+                                <label class="form-check-label">Water Resistant</label>
+                            </div>
+                        </div>
+                        {% if band.battery_life %}
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" checked disabled>
+                                <label class="form-check-label">Battery: {{ band.battery_life }}</label>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Select Options -->
+                    <form method="post" action="{% url 'store:add_to_cart' band.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Size</label>
+                                <select class="form-select" name="size" required>
+                                    {% for size_code, size_name in band.BAND_SIZES %}
+                                    <option value="{{ size_code }}" {% if size_code == 'medium' %}selected{% endif %}>
+                                        {{ size_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Color</label>
+                                <select class="form-select" name="color" required>
+                                    {% for color_code, color_name in band.BAND_COLORS %}
+                                    <option value="{{ color_code }}" {% if color_code == band.color %}selected{% endif %}>
+                                        {{ color_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Quantity</label>
+                            <div class="input-group" style="max-width: 150px;">
+                                <input type="number" class="form-control" name="quantity" value="1" min="1" max="10">
+                            </div>
+                        </div>
+
+                        {% if band.stock_quantity > 0 %}
+                        <div class="mb-3">
+                            <span class="text-success"><i class="bi bi-check-circle"></i> In Stock ({{ band.stock_quantity }} available)</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                        {% else %}
+                        {% if band.allow_preorder %}
+                        <button type="submit" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-clock"></i> Pre-Order
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-secondary btn-lg w-100" disabled>
+                            Out of Stock
+                        </button>
+                        {% endif %}
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Description -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Product Description</h4>
+                </div>
+                <div class="card-body">
+                    {{ band.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_bands %}
+    <div class="mt-5">
+        <h3 class="mb-4">Related Products</h3>
+        <div class="row g-4">
+            {% for related in related_bands %}
+            <div class="col-md-3 col-sm-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    {% if related.thumbnail %}
+                    <img src="{{ related.thumbnail.url }}" class="card-img-top" alt="{{ related.name }}" style="height: 150px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                        <i class="bi bi-watch display-5 text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">{{ related.name }}</h6>
+                        <p class="text-primary fw-bold">EGP {{ related.current_price }}</p>
+                    </div>
+                    <div class="card-footer bg-white border-0">
+                        <a href="{% url 'store:band_detail' related.id %}" class="btn btn-outline-primary btn-sm w-100">View</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

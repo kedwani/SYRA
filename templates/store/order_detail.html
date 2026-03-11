@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.order_number }} - Syra Store{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'store:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'store:order_list' %}">My Orders</a></li>
+            <li class="breadcrumb-item active">{{ order.order_number }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Order #{{ order.order_number }}</h5>
+                    <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted">Order Date</small>
+                            <p class="mb-0">{{ order.created_at|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Payment Method</small>
+                            <p class="mb-0">{{ order.get_payment_method_display }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Payment Status</small>
+                            <p class="mb-0">
+                                {% if order.payment_status %}
+                                <span class="text-success">Paid</span>
+                                {% else %}
+                                <span class="text-warning">Pending</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order.items.all %}
+                    <div class="row align-items-center border-bottom py-3">
+                        <div class="col-md-2">
+                            {% if item.product.thumbnail %}
+                            <img src="{{ item.product.thumbnail.url }}" alt="{{ item.product_name }}" class="img-fluid rounded">
+                            {% else %}
+                            <div class="bg-light rounded p-2 text-center">
+                                <i class="bi bi-watch text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-1">{{ item.product_name }}</h6>
+                            <small class="text-muted">{{ item.product_size }} / {{ item.product_color }}</small>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="text-muted">x{{ item.quantity }}</span>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <strong>EGP {{ item.total }}</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Shipping Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">Name</small>
+                            <p class="mb-2">{{ order.shipping_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Phone</small>
+                            <p class="mb-2">{{ order.shipping_phone }}</p>
+                        </div>
+                    </div>
+                    <small class="text-muted">Address</small>
+                    <p class="mb-0">{{ order.shipping_address }}, {{ order.shipping_area }}, {{ order.shipping_city }}</p>
+                    {% if order.shipping_notes %}
+                    <small class="text-muted">Notes</small>
+                    <p class="mb-0">{{ order.shipping_notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>EGP {{ order.subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span>EGP {{ order.shipping_cost }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax</span>
+                        <span>EGP {{ order.tax_amount }}</span>
+                    </div>
+                    {% if order.discount_amount > 0 %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Discount</span>
+                        <span>-EGP {{ order.discount_amount }}</span>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total</strong>
+                        <strong class="text-primary">EGP {{ order.total }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            {% if order.user_notes %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Your Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ order.user_notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if order.status == 'pending' %}
+            <form method="post" action="{% url 'store:order_cancel' order.id %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Are you sure you want to cancel this order?')">
+                    Cancel Order
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}My Syra Bands - Syra Store{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Syra Bands</h2>
+        <a href="{% url 'store:band_list' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Buy New Band
+        </a>
+    </div>
+
+    {% if registrations %}
+    <div class="row g-4">
+        {% for reg in registrations %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ reg.nickname|default:"My Band" }}</h6>
+                    <span class="badge bg-{% if reg.status == 'active' %}success{% elif reg.status == 'lost' %}danger{% else %}secondary{% endif %}">
+                        {{ reg.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Public ID</small>
+                        <p class="mb-0 font-monospace">{{ reg.public_id }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Product</small>
+                        <p class="mb-0">{{ reg.order_item.product_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Activated</small>
+                        <p class="mb-0">
+                            {% if reg.activated_at %}
+                            {{ reg.activated_at|date:"M d, Y" }}
+                            {% else %}
+                            Not activated
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if reg.expires_at %}
+                    <div class="mb-3">
+                        <small class="text-muted">Expires</small>
+                        <p class="mb-0">{{ reg.expires_at|date:"M d, Y" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <div class="d-flex gap-2">
+                        {% if reg.status == 'active' %}
+                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#reportLostModal{{ reg.id }}">
+                            Report Lost
+                        </button>
+                        {% elif reg.status == 'lost' %}
+                        <button class="btn btn-outline-success btn-sm">
+                            Mark Found
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editNicknameModal{{ reg.id }}">
+                            Edit Name
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit Nickname Modal -->
+        <div class="modal fade" id="editNicknameModal{{ reg.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Band Nickname</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="post" action="{% url 'store:registration_update_nickname' reg.id %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <label class="form-label">Nickname</label>
+                            <input type="text" name="nickname" class="form-control" value="{{ reg.nickname }}">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Lost Modal -->
+        <div class="modal fade" id="reportLostModal{{ reg.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Report Band as Lost</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to mark this band as lost? You can mark it as found later.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="{% url 'store:registration_report_lost' reg.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Report Lost</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-watch display-1 text-muted"></i>
+        <h3 class="mt-3">No Bands Yet</h3>
+        <p class="text-muted">You haven't purchased any Syra Bands yet.</p>
+        <a href="{% url 'store:band_list' %}" class="btn btn-primary mt-3">Buy Your First Band</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

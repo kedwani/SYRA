@@ -176,12 +176,34 @@ def emergency_scan_template_view(request, public_id):
     """
     Public emergency view - HTML version for NFC/QR scanning.
     Returns life-saving data WITHOUT requiring authentication.
-    Excludes sensitive insurance/financial data.
+    Shows data based on user role:
+    - Anonymous/User: Emergency data only (blood type, allergies, medications, contacts)
+    - Doctor: Full medical data including history, chronic diseases
+    - Engineer: Equipment/maintenance info + emergency data
+    - Admin: All data
     """
     try:
         profile = MedicalProfile.objects.get(public_id=public_id)
     except MedicalProfile.DoesNotExist:
         return render(request, "profiles/emergency_not_found.html", status=404)
+
+    # Get user role (default to 'user' for anonymous)
+    user_role = "user"
+    if request.user.is_authenticated:
+        try:
+            user_role = getattr(request.user, "profile_role", "user")
+        except AttributeError:
+            user_role = "user"
+
+    # Determine data visibility based on role
+    show_basic_emergency = True  # Everyone sees this
+    show_full_medical = user_role in ["doctor", "admin"]  # Doctors and admins
+    show_engineer_info = user_role in ["engineer", "admin"]  # Engineers and admins
+    show_insurance = user_role in [
+        "doctor",
+        "admin",
+        "engineer",
+    ]  # More access for medical/worker
 
     # Get active medications
     medications = profile.medications.filter(is_active=True)
@@ -189,9 +211,25 @@ def emergency_scan_template_view(request, public_id):
     # Get emergency contacts (max 2)
     contacts = profile.emergency_contacts.all()[:2]
 
+    # Get medical events (for doctors/admins)
+    medical_events = profile.medical_events.all() if show_full_medical else None
+
+    # Masked National ID for engineers/admins (show first 4 and last 4 digits)
+    national_id_masked = None
+    if show_engineer_info and profile.user.national_id:
+        nat_id = profile.user.national_id
+        national_id_masked = f"{nat_id[:4]}****{nat_id[-4:]}"
+
     context = {
         "profile": profile,
         "medications": medications,
         "contacts": contacts,
+        "medical_events": medical_events,
+        "user_role": user_role,
+        "show_basic_emergency": show_basic_emergency,
+        "show_full_medical": show_full_medical,
+        "show_engineer_info": show_engineer_info,
+        "show_insurance": show_insurance,
+        "national_id_masked": national_id_masked,
     }
     return render(request, "profiles/emergency_scan.html", context)
