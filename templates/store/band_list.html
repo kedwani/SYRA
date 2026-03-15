@@ -1,203 +1,556 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Shop Syra Bands - Syra Store{% endblock %}
+{% block title %}{% trans "Shop SYRA Medical Bracelets" %} - Syra Store{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Product card animations */
+    .product-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+    /* Category card with shine effect */
+    .category-card {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .category-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s;
+    }
+    .category-card:hover::after {
+        left: 100%;
+    }
+    /* Filter pills */
+    .filter-pill {
+        transition: all 0.2s ease;
+    }
+    .filter-pill:hover {
+        transform: translateY(-2px);
+    }
+    .filter-pill.active {
+        box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
+    }
+    /* Image zoom on hover */
+    .img-zoom-container {
+        overflow: hidden;
+    }
+    .img-zoom-container img {
+        transition: transform 0.5s ease;
+    }
+    .product-card:hover .img-zoom-container img {
+        transform: scale(1.08);
+    }
+    /* Smooth accordion */
+    .filter-section {
+        transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        max-height: 500px;
+        opacity: 1;
+    }
+    .filter-section.collapsed {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
+    /* Type badges */
+    .type-badge {
+        transition: all 0.2s ease;
+    }
+    .type-badge:hover {
+        transform: scale(1.05);
+    }
+    /* Stagger animation for products */
+    .stagger-item {
+        opacity: 0;
+        animation: fadeInUp 0.5s ease forwards;
+    }
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    /* Mobile filter drawer */
+    @media (max-width: 1023px) {
+        .filter-drawer {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        .filter-drawer.open {
+            transform: translateX(0);
+        }
+    }
+    /* Color swatches */
+    .color-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        display: inline-block;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .color-swatch:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .color-swatch.selected {
+        border-color: #1d4ed8;
+        box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.3);
+    }
+    /* Size chips */
+    .size-chip {
+        transition: all 0.2s ease;
+    }
+    .size-chip:hover {
+        border-color: #1d4ed8;
+        color: #1d4ed8;
+    }
+    .size-chip.active {
+        background-color: #1d4ed8;
+        border-color: #1d4ed8;
+        color: white;
+    }
+    
+    /* Dark mode support - Enhanced for accessibility */
+    .dark .bg-white { background-color: #1e293b; }
+    .dark .bg-slate-50 { background-color: #0f172a; }
+    .dark .bg-slate-100 { background-color: #1e293b; }
+    .dark .text-slate-900 { color: #f1f5f9; }
+    .dark .text-slate-800 { color: #e2e8f0; }
+    .dark .text-slate-700 { color: #cbd5e1; }
+    .dark .text-slate-600 { color: #94a3b8; }
+    .dark .text-slate-500 { color: #64748b; }
+    .dark .text-slate-400 { color: #475569; }
+    .dark .text-slate-300 { color: #334155; }
+    .dark .border-slate-100 { border-color: #334155; }
+    .dark .border-slate-200 { border-color: #475569; }
+    .dark .border-slate-300 { border-color: #64748b; }
+    .dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+    .dark .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+    .dark .product-card:hover { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    
+    /* Dark mode filter pills - Better contrast */
+    .dark .filter-pill.bg-slate-100,
+    .dark .filter-pill.bg-slate-200 {
+        background-color: #334155;
+        color: #e2e8f0;
+    }
+    .dark .filter-pill.bg-slate-100:hover,
+    .dark .filter-pill.bg-slate-200:hover {
+        background-color: #475569;
+    }
+    
+    /* Dark mode size chips - Improved visibility */
+    .dark .size-chip {
+        border-color: #475569;
+        color: #cbd5e1;
+    }
+    .dark .size-chip:hover {
+        border-color: #60a5fa;
+        color: #60a5fa;
+    }
+    
+    /* Dark mode active states - High contrast */
+    .dark .filter-pill.active,
+    .dark .filter-pill.bg-slate-900 {
+        background-color: #1d4ed8;
+        color: #ffffff;
+    }
+    
+    /* Dark mode badge backgrounds - Better contrast */
+    .dark .bg-blue-50 { background-color: rgba(29, 78, 216, 0.3); }
+    .dark .text-blue-700 { color: #93c5fd; }
+    .dark .bg-emerald-50 { background-color: rgba(5, 150, 105, 0.3); }
+    .dark .text-emerald-700 { color: #6ee7b7; }
+    .dark .bg-amber-50 { background-color: rgba(180, 83, 9, 0.3); }
+    .dark .text-amber-700 { color: #fcd34d; }
+    
+    /* Dark mode feature pills - Better visibility */
+    .dark .bg-cyan-50 { background-color: rgba(8, 145, 178, 0.3); }
+    .dark .text-cyan-700 { color: #22d3ee; }
+    .dark .bg-indigo-50 { background-color: rgba(67, 56, 202, 0.3); }
+    .dark .text-indigo-700 { color: #a5b4fc; }
+    .dark .bg-pink-50 { background-color: rgba(219, 39, 119, 0.3); }
+    .dark .text-pink-700 { color: #f9a8d4; }
+    
+    /* Dark mode stock badges */
+    .dark .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95); }
+    
+    /* Dark mode pagination - Better contrast */
+    .dark .border-slate-200 { border-color: #475569; }
+    .dark a.border-slate-200:hover {
+        background-color: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #ffffff;
+    }
+    
+    /* Dark mode select dropdown */
+    .dark select {
+        background-color: #334155;
+        border-color: #475569;
+        color: #f1f5f9;
+    }
+    
+    /* Dark mode color swatches */
+    .dark .color-swatch {
+        border-color: #475569;
+    }
+    .dark .color-swatch.selected {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <!-- Filters Sidebar -->
-        <div class="col-lg-3 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Filters</h5>
+<!-- Store Header -->
+<div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-sm font-medium rounded-full">
+                        {% if current_filters.type %}{{ current_filters.type|title }}{% else %}All Products{% endif %}
+                    </span>
                 </div>
-                <div class="card-body">
-                    <form method="get" id="filterForm">
-                        <!-- Band Type -->
-                        <div class="mb-4">
-                            <h6>Band Type</h6>
+                <h1 class="text-3xl lg:text-4xl font-bold mb-2">🩺 SYRA Medical Bracelets</h1>
+                <p class="text-slate-300 mb-0 text-lg">Premium smart medical ID bracelets with QR Code for emergencies</p>
+            </div>
+            
+            <!-- Quick stats -->
+            <div class="flex flex-wrap gap-4">
+                <div class="flex items-center bg-white/10 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/10">
+                    <svg class="w-6 h-6 mr-3 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wide">Free Shipping</p>
+                        <p class="font-semibold">On orders over 300 EGP</p>
+                    </div>
+                </div>
+                <div class="flex items-center bg-white/10 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/10">
+                    <svg class="w-6 h-6 mr-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase tracking-wide">Secure Payment</p>
+                        <p class="font-semibold">100% Protected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Quick Links -->
+<div class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2 py-4 overflow-x-auto scrollbar-hide">
+            <a href="{% url 'store:band_list' %}" 
+               class="filter-pill px-5 py-2 rounded-full font-medium whitespace-nowrap transition-all
+                      {% if not current_filters.type and not current_filters.use %}bg-slate-900 text-white active{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                All Bands
+            </a>
+            {% for bt in band_types %}
+            <a href="?type={{ bt.name }}{% if current_filters.size %}&size={{ current_filters.size }}{% endif %}{% if current_filters.price %}&price={{ current_filters.price }}{% endif %}" 
+               class="filter-pill px-5 py-2 rounded-full font-medium whitespace-nowrap transition-all
+                      {% if current_filters.type == bt.name %}bg-slate-900 text-white active{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">
+                {% if bt.name == 'classic' %}🏥 Classic
+                {% elif bt.name == 'sport' %}🏃 Sport
+                {% elif bt.name == 'kids' %}👶 Kids
+                {% elif bt.name == 'premium' %}💎 Premium{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Mobile Filter Toggle -->
+        <div class="lg:hidden">
+            <button onclick="document.getElementById('mobileFilters').classList.toggle('open')" 
+                    class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 px-6 py-3 rounded-xl font-semibold text-slate-700 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filters
+                {% if current_filters.type or current_filters.size or current_filters.price %}
+                <span class="bg-cyan-500 text-white text-xs px-2 py-0.5 rounded-full">Active</span>
+                {% endif %}
+            </button>
+        </div>
+
+        <!-- Filters Sidebar -->
+        <div id="mobileFilters" class="filter-drawer lg:block lg:w-72 flex-shrink-0">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden lg:sticky lg:top-24">
+                <!-- Filter Header -->
+                <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                        </svg>
+                        <h3 class="font-bold text-slate-900">Filters</h3>
+                    </div>
+                    <a href="{% url 'store:band_list' %}" class="text-sm text-cyan-600 hover:text-cyan-700 font-medium">
+                        Clear All
+                    </a>
+                </div>
+                
+                <div class="p-6 space-y-6">
+                    <!-- Band Type Filter -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            Band Type
+                        </h4>
+                        <div class="space-y-2">
                             {% for bt in band_types %}
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="type" 
-                                       id="type{{ bt.id }}" value="{{ bt.name }}"
-                                       {% if current_filters.type == bt.name %}checked{% endif %}>
-                                <label class="form-check-label" for="type{{ bt.id }}">
-                                    {{ bt.get_name_display }}
-                                </label>
-                            </div>
+                            <a href="?type={{ bt.name }}{% if current_filters.size %}&size={{ current_filters.size }}{% endif %}{% if current_filters.price %}&price={{ current_filters.price }}{% endif %}"
+                               class="filter-pill flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all
+                                      {% if current_filters.type == bt.name %}border-blue-500 bg-blue-50 text-blue-700{% else %}border-slate-200 hover:border-slate-300{% endif %}">
+                                <span class="font-medium">{{ bt.get_name_display }}</span>
+                                {% if current_filters.type == bt.name %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                {% endif %}
+                            </a>
                             {% endfor %}
                         </div>
+                    </div>
 
-                        <!-- Band Use -->
-                        <div class="mb-4">
-                            <h6>Use Case</h6>
-                            {% for bu in band_uses %}
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="use" 
-                                       id="use{{ bu.id }}" value="{{ bu.name }}"
-                                       {% if current_filters.use == bu.name %}checked{% endif %}>
-                                <label class="form-check-label" for="use{{ bu.id }}">
-                                    {{ bu.get_name_display }}
-                                </label>
-                            </div>
+                    <!-- Size Filter -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                            Size
+                        </h4>
+                        <div class="grid grid-cols-3 gap-2">
+                            {% for size_code, size_name in band_sizes %}
+                            <a href="?type={{ current_filters.type|default:'' }}&size={{ size_code }}{% if current_filters.price %}&price={{ current_filters.price }}{% endif %}"
+                               class="filter-pill size-chip text-center py-2.5 rounded-xl border font-medium transition-all
+                                      {% if current_filters.size == size_code %}active{% else %}border-slate-200 text-slate-600{% endif %}">
+                                {{ size_name }}
+                            </a>
                             {% endfor %}
                         </div>
+                    </div>
 
-                        <!-- Size -->
-                        <div class="mb-4">
-                            <h6>Size</h6>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="size" 
-                                       id="sizeSmall" value="small"
-                                       {% if current_filters.size == 'small' %}checked{% endif %}>
-                                <label class="form-check-label" for="sizeSmall">Small</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="size" 
-                                       id="sizeMedium" value="medium"
-                                       {% if current_filters.size == 'medium' %}checked{% endif %}>
-                                <label class="form-check-label" for="sizeMedium">Medium</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="size" 
-                                       id="sizeLarge" value="large"
-                                       {% if current_filters.size == 'large' %}checked{% endif %}>
-                                <label class="form-check-label" for="sizeLarge">Large</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="size" 
-                                       id="sizeXL" value="xl"
-                                       {% if current_filters.size == 'xl' %}checked{% endif %}>
-                                <label class="form-check-label" for="sizeXL">Extra Large</label>
-                            </div>
+                    <!-- Price Range -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
+                            Price Range
+                        </h4>
+                        <div class="space-y-2">
+                            <a href="?type={{ current_filters.type|default:'' }}&size={{ current_filters.size|default:'' }}&price=0-300"
+                               class="filter-pill flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all
+                                      {% if current_filters.price == '0-300' %}border-amber-500 bg-amber-50 text-amber-700{% else %}border-slate-200 hover:border-slate-300{% endif %}">
+                                <span>Under 300 EGP</span>
+                                {% if current_filters.price == '0-300' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                {% endif %}
+                            </a>
+                            <a href="?type={{ current_filters.type|default:'' }}&size={{ current_filters.size|default:'' }}&price=300-500"
+                               class="filter-pill flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all
+                                      {% if current_filters.price == '300-500' %}border-amber-500 bg-amber-50 text-amber-700{% else %}border-slate-200 hover:border-slate-300{% endif %}">
+                                <span>300 - 500 EGP</span>
+                                {% if current_filters.price == '300-500' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                {% endif %}
+                            </a>
+                            <a href="?type={{ current_filters.type|default:'' }}&size={{ current_filters.size|default:'' }}&price=500"
+                               class="filter-pill flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all
+                                      {% if current_filters.price == '500' %}border-amber-500 bg-amber-50 text-amber-700{% else %}border-slate-200 hover:border-slate-300{% endif %}">
+                                <span>500+ EGP</span>
+                                {% if current_filters.price == '500' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                {% endif %}
+                            </a>
                         </div>
+                    </div>
 
-                        <!-- Color -->
-                        <div class="mb-4">
-                            <h6>Color</h6>
-                            <div class="d-flex flex-wrap gap-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="color" 
-                                           id="colorBlack" value="black">
-                                    <label class="form-check-label" for="colorBlack">Black</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="color" 
-                                           id="colorWhite" value="white">
-                                    <label class="form-check-label" for="colorWhite">White</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="color" 
-                                           id="colorBlue" value="blue">
-                                    <label class="form-check-label" for="colorBlue">Blue</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="color" 
-                                           id="colorRed" value="red">
-                                    <label class="form-check-label" for="colorRed">Red</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="color" 
-                                           id="colorGreen" value="green">
-                                    <label class="form-check-label" for="colorGreen">Green</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="color" 
-                                           id="colorPink" value="pink">
-                                    <label class="form-check-label" for="colorPink">Pink</label>
-                                </div>
-                            </div>
+                    <!-- Active Filters -->
+                    {% if current_filters.type or current_filters.size or current_filters.price %}
+                    <div class="pt-4 border-t border-slate-100">
+                        <h4 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-cyan-500 rounded-full"></span>
+                            Active Filters
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            {% if current_filters.type %}
+                            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-blue-50 text-blue-700">
+                                {{ current_filters.type|title }}
+                                <a href="?size={{ current_filters.size|default:'' }}&price={{ current_filters.price|default:'' }}" class="hover:text-blue-900">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </a>
+                            </span>
+                            {% endif %}
+                            {% if current_filters.size %}
+                            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-700">
+                                {{ current_filters.size|title }}
+                                <a href="?type={{ current_filters.type|default:'' }}&price={{ current_filters.price|default:'' }}" class="hover:text-emerald-900">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </a>
+                            </span>
+                            {% endif %}
+                            {% if current_filters.price %}
+                            <span class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium bg-amber-50 text-amber-700">
+                                {% if current_filters.price == '500' %}500+ EGP{% else %}{{ current_filters.price }} EGP{% endif %}
+                                <a href="?type={{ current_filters.type|default:'' }}&size={{ current_filters.size|default:'' }}" class="hover:text-amber-900">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </a>
+                            </span>
+                            {% endif %}
                         </div>
-
-                        <!-- Price Range -->
-                        <div class="mb-4">
-                            <h6>Price Range</h6>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <input type="number" class="form-control" name="min_price" 
-                                           placeholder="Min" value="{{ current_filters.min_price }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" class="form-control" name="max_price" 
-                                           placeholder="Max" value="{{ current_filters.max_price }}">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Features -->
-                        <div class="mb-4">
-                            <h6>Features</h6>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="has_nfc" id="hasNfc" 
-                                       {% if request.GET.has_nfc %}checked{% endif %}>
-                                <label class="form-check-label" for="hasNfc">NFC Enabled</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="has_gps" id="hasGps"
-                                       {% if request.GET.has_gps %}checked{% endif %}>
-                                <label class="form-check-label" for="hasGps">GPS Tracking</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="has_heart_rate" id="hasHeartRate"
-                                       {% if request.GET.has_heart_rate %}checked{% endif %}>
-                                <label class="form-check-label" for="hasHeartRate">Heart Rate Monitor</label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                        <a href="{% url 'store:band_list' %}" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
-                    </form>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
         <!-- Products Grid -->
-        <div class="col-lg-9">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>All Syra Bands</h2>
-                <span class="text-muted">{{ bands.paginator.count }} products</span>
+        <div class="flex-1">
+            <!-- Results Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                <div class="flex items-center gap-3">
+                    <span class="text-slate-600">
+                        Showing <span class="font-bold text-slate-900">{{ bands.paginator.count|default:bands|length }}</span> products
+                    </span>
+                    {% if current_filters.type or current_filters.size or current_filters.price %}
+                    <a href="{% url 'store:band_list' %}" class="text-sm text-cyan-600 hover:text-cyan-700 font-medium">
+                        Clear filters
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-500">Sort by:</span>
+                    <select class="form-select text-sm border-slate-200 rounded-xl focus:ring-cyan-500 focus:border-cyan-500 py-2.5 px-4 font-medium">
+                        <option>Featured</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Newest First</option>
+                    </select>
+                </div>
             </div>
 
             {% if bands %}
-            <div class="row g-4">
+            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {% for band in bands %}
-                <div class="col-md-4 col-sm-6">
-                    <div class="card h-100 border-0 shadow-sm product-card">
-                        {% if band.thumbnail %}
-                        <img src="{{ band.thumbnail.url }}" class="card-img-top" alt="{{ band.name }}" style="height: 200px; object-fit: cover;">
-                        {% else %}
-                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                            <i class="bi bi-watch display-4 text-muted"></i>
+                <div class="product-card bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden stagger-item" style="animation-delay: {{ forloop.counter0 }}0ms;">
+                    <!-- Product Image -->
+                    <div class="relative img-zoom-container bg-gradient-to-br from-slate-50 to-slate-100">
+                        <a href="{% url 'store:band_detail' band.id %}">
+                            {% if band.thumbnail %}
+                            <img src="{{ band.thumbnail.url }}" alt="{{ band.name }}" class="w-full h-56 object-contain p-4">
+                            {% else %}
+                            <div class="w-full h-56 flex items-center justify-center">
+                                <svg class="w-20 h-20 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            {% endif %}
+                        </a>
+                        
+                        <!-- Type Badge -->
+                        <div class="absolute top-3 left-3 type-badge">
+                            {% if band.band_type.name == 'classic' %}
+                            <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-blue-500 text-white shadow-lg">CLASSIC</span>
+                            {% elif band.band_type.name == 'sport' %}
+                            <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-emerald-500 text-white shadow-lg">SPORT</span>
+                            {% elif band.band_type.name == 'kids' %}
+                            <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-orange-500 text-white shadow-lg">KIDS</span>
+                            {% elif band.band_type.name == 'premium' %}
+                            <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-violet-500 text-white shadow-lg">PREMIUM</span>
+                            {% endif %}
                         </div>
-                        {% endif %}
                         
-                        {% if band.has_discount %}
-                        <span class="position-absolute top-0 end-0 badge bg-danger m-2">
-                            -{{ band.discount_percentage }}%
-                        </span>
-                        {% endif %}
-                        
-                        <div class="card-body">
-                            <h6 class="card-title">{{ band.name }}</h6>
-                            <p class="text-muted small mb-2">
-                                {{ band.band_use.get_name_display }} • {{ band.get_size_display }}
-                            </p>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="h5 mb-0">EGP {{ band.current_price }}</span>
+                        <!-- Stock Badge -->
+                        <div class="absolute top-3 right-3">
+                            {% if band.stock_quantity > 0 %}
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-full bg-white/95 backdrop-blur-sm text-emerald-600 flex items-center gap-1.5 shadow">
+                                <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                                In Stock
+                            </span>
+                            {% else %}
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-full bg-red-100 text-red-600 shadow">
+                                Out of Stock
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="p-5">
+                        <!-- Product Name -->
+                        <a href="{% url 'store:band_detail' band.id %}" class="block">
+                            <h3 class="font-bold text-slate-900 mb-2 hover:text-cyan-600 transition-colors line-clamp-2 text-lg">{{ band.name }}</h3>
+                        </a>
+
+                        <!-- Quick specs -->
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-sm text-slate-500">{{ band.band_use.get_name_display }}</span>
+                            <span class="text-slate-300">•</span>
+                            <span class="text-sm text-slate-500">{{ band.get_size_display }}</span>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="flex flex-wrap gap-1.5 mb-4">
+                            {% if band.has_nfc %}
+                            <span class="px-2.5 py-1 bg-cyan-50 text-cyan-700 text-xs font-medium rounded-lg">NFC</span>
+                            {% endif %}
+                            {% if band.has_qr_code %}
+                            <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-medium rounded-lg">QR</span>
+                            {% endif %}
+                            {% if band.has_gps %}
+                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-lg">GPS</span>
+                            {% endif %}
+                            {% if band.has_heart_rate %}
+                            <span class="px-2.5 py-1 bg-pink-50 text-pink-700 text-xs font-medium rounded-lg">❤️</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Price & Action -->
+                        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div>
+                                <span class="text-2xl font-bold text-slate-900">EGP {{ band.current_price }}</span>
                                 {% if band.has_discount %}
-                                <small class="text-decoration-line-through text-muted">EGP {{ band.price }}</small>
+                                <span class="text-slate-400 line-through ml-2 text-sm">EGP {{ band.price }}</span>
                                 {% endif %}
                             </div>
-                            <div class="d-flex flex-wrap gap-1">
-                                {% if band.has_nfc %}<span class="badge bg-primary">NFC</span>{% endif %}
-                                {% if band.has_qr_code %}<span class="badge bg-info">QR</span>{% endif %}
-                                {% if band.has_gps %}<span class="badge bg-success">GPS</span>{% endif %}
-                                {% if band.has_heart_rate %}<span class="badge bg-danger">❤️</span>{% endif %}
-                                {% if band.has_water_resistant %}<span class="badge bg-secondary">💧</span>{% endif %}
-                            </div>
-                        </div>
-                        <div class="card-footer bg-white border-0">
-                            <a href="{% url 'store:band_detail' band.id %}" class="btn btn-outline-primary w-100">View Details</a>
+                            <a href="{% url 'store:band_detail' band.id %}" 
+                               class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors">
+                                View
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -206,33 +559,44 @@
 
             <!-- Pagination -->
             {% if bands.has_other_pages %}
-            <nav class="mt-5" aria-label="Products pagination">
-                <ul class="pagination justify-content-center">
+            <nav class="mt-12" aria-label="Products pagination">
+                <ul class="flex items-center justify-center gap-2">
                     {% if bands.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ bands.previous_page_number }}">Previous</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Previous</span>
+                    <li>
+                        <a href="?page={{ bands.previous_page_number }}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}{% if current_filters.size %}&size={{ current_filters.size }}{% endif %}{% if current_filters.price %}&price={{ current_filters.price }}{% endif %}"
+                           class="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </a>
                     </li>
                     {% endif %}
-
+                    
                     {% for num in bands.paginator.page_range %}
-                    {% if bands.number == num %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                    {% elif num > bands.number|add:'-3' and num < bands.number|add:'3' %}
-                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                    {% endif %}
+                        {% if bands.number == num %}
+                        <li>
+                            <span class="w-11 h-11 flex items-center justify-center rounded-xl bg-slate-900 text-white font-bold">
+                                {{ num }}
+                            </span>
+                        </li>
+                        {% elif num > bands.number|add:'-3' and num < bands.number|add:'3' %}
+                        <li>
+                            <a href="?page={{ num }}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}{% if current_filters.size %}&size={{ current_filters.size }}{% endif %}{% if current_filters.price %}&price={{ current_filters.price }}{% endif %}"
+                               class="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
                     {% endfor %}
 
                     {% if bands.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ bands.next_page_number }}">Next</a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">Next</span>
+                    <li>
+                        <a href="?page={{ bands.next_page_number }}{% if current_filters.type %}&type={{ current_filters.type }}{% endif %}{% if current_filters.size %}&size={{ current_filters.size }}{% endif %}{% if current_filters.price %}&price={{ current_filters.price }}{% endif %}"
+                           class="w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
                     </li>
                     {% endif %}
                 </ul>
@@ -240,11 +604,21 @@
             {% endif %}
 
             {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-inbox display-1 text-muted"></i>
-                <h4 class="mt-3">No Products Found</h4>
-                <p class="text-muted">Try adjusting your filters to find what you're looking for.</p>
-                <a href="{% url 'store:band_list' %}" class="btn btn-primary">Clear Filters</a>
+            <!-- No Results -->
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-12 text-center">
+                <div class="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+                    <svg class="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-3">No Products Found</h3>
+                <p class="text-slate-500 mb-8 max-w-md mx-auto">We couldn't find any products matching your criteria. Try adjusting your filters.</p>
+                <a href="{% url 'store:band_list' %}" class="inline-flex items-center px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Clear All Filters
+                </a>
             </div>
             {% endif %}
         </div>

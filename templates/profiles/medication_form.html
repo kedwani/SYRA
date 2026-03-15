@@ -1,42 +1,126 @@
 {% extends 'base.html' %}
 
+{% load i18n %}
 {% block title %}{{ action }} Medication - SYRA{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>{{ action }} Medication</h2>
-    
-    <form method="post">
-        {% csrf_token %}
-        
-        <div class="form-group">
-            <label for="name">Medication Name</label>
-            <input type="text" name="name" id="name" required>
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            <a href="{% url 'medications' %}" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">{% blocktrans with action=action %}{{ action }} Medication{% endblocktrans %}</h1>
         </div>
-        
-        <div class="form-group">
-            <label for="dosage">Dosage</label>
-            <input type="text" name="dosage" id="dosage" placeholder="e.g., 500mg" required>
+        <p class="text-gray-500 ml-11">{% trans "Add or update your current medications" %}</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Medication Name -->
+                <div>
+                    <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {% trans "Medication Name" %} <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="name" 
+                               id="name" 
+                               required
+                               placeholder="{% trans "e.g., Metformin, Aspirin" %}"
+                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                    </div>
+                </div>
+                
+                <!-- Dosage -->
+                <div>
+                    <label for="dosage" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {% trans "Dosage" %} <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="dosage" 
+                               id="dosage" 
+                               placeholder="{% trans "e.g., 500mg, 2 tablets" %}"
+                               required
+                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                    </div>
+                </div>
+                
+                <!-- Frequency -->
+                <div>
+                    <label for="frequency" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {% trans "Frequency" %}
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="frequency" 
+                               id="frequency" 
+                               placeholder="{% trans "e.g., Twice daily, Every 8 hours" %}"
+                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                    </div>
+                </div>
+                
+                <!-- Currently Taking Checkbox -->
+                <div class="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
+                    <input type="checkbox" 
+                           name="is_active" 
+                           id="is_active"
+                           checked
+                           class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300">
+                    <label for="is_active" class="flex-1">
+                        <span class="block text-sm font-semibold text-gray-900">{% trans "Currently Taking" %}</span>
+                        <span class="text-xs text-gray-500">{% trans "Show this medication in your emergency profile" %}</span>
+                    </label>
+                </div>
+                
+                <!-- Notes -->
+                <div>
+                    <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {% trans "Additional Notes" %}
+                    </label>
+                    <textarea name="notes" 
+                              id="notes" 
+                              rows="3"
+                              placeholder="{% trans "Any additional instructions or notes..." %}"
+                              class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200 resize-none"></textarea>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" 
+                            class="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 shadow-lg shadow-purple-500/30">
+                        {% blocktrans with action=action %}{{ action }} Medication{% endblocktrans %}
+                    </button>
+                    <a href="{% url 'medications' %}" 
+                       class="flex-1 bg-gray-100 text-gray-700 py-3.5 px-6 rounded-xl font-semibold hover:bg-gray-200 text-center transition-all duration-200 border border-gray-200">
+                        {% trans "Cancel" %}
+                    </a>
+                </div>
+            </form>
         </div>
-        
-        <div class="form-group">
-            <label for="frequency">Frequency</label>
-            <input type="text" name="frequency" id="frequency" placeholder="e.g., Twice daily">
-        </div>
-        
-        <div class="form-group">
-            <label>
-                <input type="checkbox" name="is_active" checked> Currently Taking
-            </label>
-        </div>
-        
-        <div class="form-group">
-            <label for="notes">Notes</label>
-            <textarea name="notes" id="notes" rows="3"></textarea>
-        </div>
-        
-        <button type="submit" class="btn">Save</button>
-        <a href="{% url 'medications' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+    </div>
 </div>
 {% endblock %}

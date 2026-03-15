@@ -1,188 +1,622 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
+{% block hide_navigation %}true{% endblock %}
 
 {% block title %}Syra Store - Medical ID Bands{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Modern hero animations */
+    .hero-gradient {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0ea5e9 100%);
+    }
+    .hero-pattern {
+        background-image: radial-gradient(circle at 20% 50%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+                          radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+    }
+    .float-animation {
+        animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    .glow-pulse {
+        animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+        50% { box-shadow: 0 0 40px rgba(14, 165, 233, 0.6); }
+    }
+    /* Card hover effects */
+    .product-card {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .category-card {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    .category-card:hover::before {
+        left: 100%;
+    }
+    /* Type-specific gradients */
+    .type-classic { background: linear-gradient(135deg, #3b82f6, #0ea5e9); }
+    .type-sport { background: linear-gradient(135deg, #10b981, #14b8a6); }
+    .type-kids { background: linear-gradient(135deg, #f59e0b, #f97316); }
+    .type-premium { background: linear-gradient(135deg, #8b5cf6, #6366f1); }
+    /* Glass morphism */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; }
+    
+    /* Dark mode support - Enhanced for accessibility */
+    .dark .hero-gradient {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0c4a6e 100%);
+    }
+    .dark .bg-slate-50 {
+        background-color: #0f172a;
+    }
+    .dark .bg-white {
+        background-color: #1e293b;
+    }
+    .dark .text-slate-900 {
+        color: #f1f5f9;
+    }
+    .dark .text-slate-800 {
+        color: #e2e8f0;
+    }
+    .dark .text-slate-700 {
+        color: #cbd5e1;
+    }
+    .dark .text-slate-600 {
+        color: #94a3b8;
+    }
+    .dark .text-slate-500 {
+        color: #64748b;
+    }
+    .dark .text-slate-400 {
+        color: #475569;
+    }
+    .dark .bg-white\/10 {
+        background-color: rgba(30, 41, 59, 0.5);
+    }
+    .dark .glass-card {
+        background: rgba(30, 41, 59, 0.5);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .dark .category-card:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+    
+    /* Dark mode feature cards - Better contrast */
+    .dark .from-slate-50 {
+        --tw-gradient-from: #1e293b;
+    }
+    .dark .to-white {
+        --tw-gradient-to: #1e293b;
+    }
+    .dark .bg-gradient-to-br.from-slate-50.to-white {
+        background: linear-gradient(to bottom right, #1e293b, #1e293b);
+    }
+    
+    /* Dark mode text on white backgrounds */
+    .dark h2,
+    .dark h3,
+    .dark .text-slate-900,
+    .dark .text-slate-800 {
+        color: #f1f5f9;
+    }
+    
+    /* Dark mode paragraphs */
+    .dark .text-slate-600,
+    .dark .text-slate-500 {
+        color: #94a3b8;
+    }
+    
+    /* Dark mode badge backgrounds - Better contrast */
+    .dark .bg-cyan-100 { background-color: rgba(8, 145, 178, 0.3); }
+    .dark .text-cyan-700 { color: #22d3ee; }
+    .dark .bg-indigo-100 { background-color: rgba(67, 56, 202, 0.3); }
+    .dark .text-indigo-700 { color: #a5b4fc; }
+    .dark .bg-emerald-100 { background-color: rgba(5, 150, 105, 0.3); }
+    .dark .text-emerald-700 { color: #6ee7b7; }
+    .dark .bg-violet-100 { background-color: rgba(139, 92, 246, 0.3); }
+    .dark .text-violet-700 { color: #c4b5fd; }
+    
+    /* Dark mode feature pills */
+    .dark .bg-cyan-100.text-cyan-700 { background-color: rgba(8, 145, 178, 0.3); color: #22d3ee; }
+    .dark .bg-indigo-100.text-indigo-700 { background-color: rgba(67, 56, 202, 0.3); color: #a5b4fc; }
+    .dark .bg-emerald-100.text-emerald-700 { background-color: rgba(5, 150, 105, 0.3); color: #6ee7b7; }
+    
+    /* Dark mode border colors */
+    .dark .border-slate-100 { border-color: #334155; }
+    .dark .border-slate-200 { border-color: #475569; }
+    
+    /* Dark mode stock badges */
+    .dark .bg-white\/90 { background-color: rgba(30, 41, 59, 0.9); }
+    .dark .bg-red-100 { background-color: rgba(220, 38, 38, 0.3); }
+    
+    /* Dark mode featured section backgrounds */
+    .dark .from-slate-100 { --tw-gradient-from: #1e293b; }
+    .dark .to-slate-200 { --tw-gradient-to: #334155; }
+    
+    /* Dark mode icon containers */
+    .dark .bg-blue-100 { background-color: rgba(29, 78, 216, 0.3); }
+    .dark .text-blue-600 { color: #60a5fa; }
+    .dark .bg-indigo-100 { background-color: rgba(67, 56, 202, 0.3); }
+    .dark .text-indigo-600 { color: #818cf8; }
+    .dark .bg-emerald-100 { background-color: rgba(5, 150, 105, 0.3); }
+    .dark .text-emerald-600 { color: #34d399; }
+    
+    /* Dark mode shadow adjustments */
+    .dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+    .dark .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    
+    /* Dark mode product card */
+    .dark .product-card:hover {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Dark mode links */
+    .dark a.text-slate-600:hover,
+    .dark a:hover.text-cyan-600 {
+        color: #22d3ee;
+    }
+    /* Image hover zoom */
+    .img-zoom {
+        transition: transform 0.5s ease;
+    }
+    .product-card:hover .img-zoom {
+        transform: scale(1.08);
+    }
+    /* Button shine effect */
+    .btn-shine {
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-shine::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -100%;
+        width: 50%;
+        height: 200%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transform: skewX(-20deg);
+        transition: left 0.5s;
+    }
+    .btn-shine:hover::after {
+        left: 150%;
+    }
+    /* Stagger animations */
+    .stagger-item {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: staggerIn 0.5s ease forwards;
+    }
+    @keyframes staggerIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <!-- Hero Section -->
-    <div class="row align-items-center mb-5">
-        <div class="col-lg-6">
-            <h1 class="display-4 fw-bold mb-4">Protect What Matters Most</h1>
-            <p class="lead mb-4">
-                Discover Syra Band - the smart medical identification wristband that keeps you and your loved ones safe. 
-                With NFC and QR code technology, first responders can access your critical medical information instantly.
-            </p>
-            <div class="d-flex gap-3">
-                <a href="{% url 'store:band_list' %}" class="btn btn-primary btn-lg">Shop Now</a>
-                <a href="#features" class="btn btn-outline-secondary btn-lg">Learn More</a>
+<!-- Hero Section -->
+<section class="hero-gradient hero-pattern min-h-[600px] flex items-center relative overflow-hidden">
+    <!-- Animated background elements -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Hero Content -->
+            <div class="text-white">
+                <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 stagger-item" style="animation-delay: 0.1s;">
+                    <span class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+                    <span class="text-sm font-medium text-cyan-100">Advanced Medical Protection</span>
+                </div>
+                
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight stagger-item" style="animation-delay: 0.2s;">
+                    Your Health, 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400"> secured.</span>
+                </h1>
+                
+                <p class="text-lg text-blue-100 mb-8 max-w-xl stagger-item" style="animation-delay: 0.3s;">
+                    Smart medical identification wristbands with NFC & QR technology. 
+                    First responders can instantly access your critical medical information with a simple tap or scan.
+                </p>
+                
+                <div class="flex flex-wrap gap-4 stagger-item" style="animation-delay: 0.4s;">
+                    <a href="{% url 'store:band_list' %}" class="group bg-white text-slate-900 px-8 py-4 rounded-2xl font-bold inline-flex items-center gap-3 hover:bg-cyan-50 transition-all btn-shine">
+                        <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                        Shop Now
+                        <span class="bg-cyan-100 text-cyan-600 text-xs px-2 py-1 rounded-lg">New</span>
+                    </a>
+                    <a href="#features" class="glass-card text-white px-8 py-4 rounded-2xl font-semibold inline-flex items-center gap-2 hover:bg-white/20 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Learn More
+                    </a>
+                </div>
+                
+                <!-- Trust indicators -->
+                <div class="mt-10 flex items-center gap-6 stagger-item" style="animation-delay: 0.5s;">
+                    <div class="flex -space-x-3">
+                        <img src="https://ui-avatars.com/api/?name=Ahmed+M&background=3b82f6&color=fff&size=40" class="w-10 h-10 rounded-full border-2 border-white">
+                        <img src="https://ui-avatars.com/api/?name=Sarah+K&background=10b981&color=fff&size=40" class="w-10 h-10 rounded-full border-2 border-white">
+                        <img src="https://ui-avatars.com/api/?name=Mohamed+R&background=f59e0b&color=fff&size=40" class="w-10 h-10 rounded-full border-2 border-white">
+                        <img src="https://ui-avatars.com/api/?name=Fatima+A&background=8b5cf6&color=fff&size=40" class="w-10 h-10 rounded-full border-2 border-white">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1">
+                            <div class="flex text-yellow-400">
+                                {% for i in "12345" %}<svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>{% endfor %}
+                            </div>
+                            <span class="text-white font-semibold ml-1">5.0</span>
+                        </div>
+                        <p class="text-blue-200 text-sm">Trusted by 10,000+ customers</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="col-lg-6 text-center">
-            <div class="bg-light rounded-4 p-5">
-                <i class="bi bi-watch display-1 text-primary"></i>
-                <p class="mt-3 text-muted">Premium Medical ID Band</p>
+            
+            <!-- Hero Visual -->
+            <div class="relative hidden lg:block">
+                <div class="relative float-animation glow-pulse">
+                    <div class="glass-card rounded-3xl p-8 border border-white/20">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500&h=500&fit=crop" 
+                                 alt="Syra Medical Band" 
+                                 class="w-full h-auto rounded-2xl shadow-2xl">
+                            
+                            <!-- Floating badges -->
+                            <div class="absolute -top-4 -right-4 bg-white text-slate-900 px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2">
+                                <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="font-bold">NFC</span>
+                            </div>
+                            <div class="absolute -bottom-4 -left-4 bg-gradient-to-r from-cyan-500 to-indigo-500 text-white px-4 py-2 rounded-2xl shadow-lg flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                </svg>
+                                <span class="font-bold">QR Code</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <!-- Wave divider -->
+    <div class="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full">
+            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
+        </svg>
+    </div>
+</section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-5 mb-5">
-        <h2 class="text-center mb-4">Why Choose Syra Band?</h2>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-upc-scan display-5 text-primary"></i>
-                        </div>
-                        <h5 class="card-title">NFC & QR Code</h5>
-                        <p class="card-text text-muted">
-                            Instant access to your medical profile with a simple tap or scan.
-                        </p>
-                    </div>
+<!-- Features Section -->
+<section id="features" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <span class="inline-block px-4 py-2 bg-cyan-100 text-cyan-700 rounded-full text-sm font-semibold mb-4">Why Syra?</span>
+            <h2 class="text-4xl font-bold text-slate-900 mb-4">Protection Meets Technology</h2>
+            <p class="text-slate-600 max-w-2xl mx-auto text-lg">Advanced features designed to keep you and your loved ones safe</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="group bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all border border-slate-100">
+                <div class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">Instant QR & NFC Access</h3>
+                <p class="text-slate-600">First responders scan your QR code or tap the NFC chip to instantly access your complete medical profile.</p>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-heart-pulse display-5 text-danger"></i>
-                        </div>
-                        <h5 class="card-title">Health Monitoring</h5>
-                        <p class="card-text text-muted">
-                            Track heart rate and vital signs with advanced sensors.
-                        </p>
-                    </div>
+            
+            <!-- Feature 2 -->
+            <div class="group bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all border border-slate-100">
+                <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">24/7 Health Monitoring</h3>
+                <p class="text-slate-600">Advanced sensors track vital signs and alert contacts in case of emergencies.</p>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="feature-icon mb-3">
-                            <i class="bi bi-geo-alt display-5 text-success"></i>
-                        </div>
-                        <h5 class="card-title">GPS Tracking</h5>
-                        <p class="card-text text-muted">
-                            Locate loved ones instantly with built-in GPS technology.
-                        </p>
-                    </div>
+            
+            <!-- Feature 3 -->
+            <div class="group bg-gradient-to-br from-slate-50 to-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all border border-slate-100">
+                <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
                 </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-3">GPS Location Tracking</h3>
+                <p class="text-slate-600">Locate loved ones instantly with real-time GPS technology built into every band.</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Band Types Section -->
-    <section class="py-5 mb-5">
-        <h2 class="text-center mb-4">Choose Your Syra Band</h2>
-        <div class="row g-4">
-            {% for band_type in band_types %}
-            <div class="col-md-4 col-sm-6">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ band_type.get_name_display }}</h5>
-                        <p class="card-text text-muted">{{ band_type.description|truncatewords:20 }}</p>
-                        <a href="{% url 'store:band_list' %}?type={{ band_type.name }}" class="btn btn-outline-primary btn-sm">
-                            View Products
-                        </a>
+<!-- Browse by Type Section -->
+<section class="py-20 bg-gradient-to-b from-slate-50 to-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <span class="inline-block px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold mb-4">Collection</span>
+            <h2 class="text-4xl font-bold text-slate-900 mb-4">Browse by Bracelet Type</h2>
+            <p class="text-slate-600 max-w-2xl mx-auto text-lg">Find the perfect medical ID bracelet tailored to your lifestyle</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for bt in band_types %}
+            <a href="{% url 'store:band_list' %}?type={{ bt.name }}" 
+               class="category-card group relative overflow-hidden rounded-3xl h-80 block">
+                <!-- Type-specific gradient background -->
+                <div class="absolute inset-0 {% if bt.name == 'classic' %}type-classic{% elif bt.name == 'sport' %}type-sport{% elif bt.name == 'kids' %}type-kids{% elif bt.name == 'premium' %}type-premium{% endif %}"></div>
+                
+                <!-- Overlay -->
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
+                
+                <!-- Content -->
+                <div class="relative h-full flex flex-col items-center justify-center text-white p-6">
+                    <!-- Icon -->
+                    <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all">
+                        {% if bt.name == 'classic' %}
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        {% elif bt.name == 'sport' %}
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        {% elif bt.name == 'kids' %}
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        {% elif bt.name == 'premium' %}
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                        {% endif %}
                     </div>
+                    
+                    <h3 class="text-2xl font-bold mb-2">{{ bt.get_name_display }}</h3>
+                    <p class="text-white/80 text-center text-sm mb-4">
+                        {% if bt.name == 'classic' %}Everyday medical protection
+                        {% elif bt.name == 'sport' %}For active lifestyles
+                        {% elif bt.name == 'kids' %}Safe & fun for children
+                        {% elif bt.name == 'premium' %}Luxury & durability{% endif %}
+                    </p>
+                    
+                    <span class="inline-flex items-center gap-2 text-sm font-semibold group-hover:translate-x-2 transition-transform">
+                        Explore
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                        </svg>
+                    </span>
                 </div>
-            </div>
+            </a>
             {% endfor %}
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Featured Products -->
-    <section class="py-5 mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Featured Products</h2>
-            <a href="{% url 'store:band_list' %}" class="btn btn-outline-secondary">View All</a>
+<!-- Featured Products -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <span class="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold mb-4">Top Picks</span>
+                <h2 class="text-4xl font-bold text-slate-900">Featured Products</h2>
+                <p class="text-slate-600 mt-2 text-lg">Handpicked bands for maximum protection</p>
+            </div>
+            <a href="{% url 'store:band_list' %}" class="hidden md:inline-flex items-center gap-2 text-slate-600 hover:text-cyan-600 font-semibold transition-colors">
+                View All Products
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+            </a>
         </div>
         
         {% if featured_bands %}
-        <div class="row g-4">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {% for band in featured_bands %}
-            <div class="col-md-4 col-sm-6">
-                <div class="card h-100 border-0 shadow-sm product-card">
+            <div class="product-card bg-white rounded-3xl shadow-lg overflow-hidden border border-slate-100">
+                <!-- Image -->
+                <div class="relative h-64 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
                     {% if band.thumbnail %}
-                    <img src="{{ band.thumbnail.url }}" class="card-img-top" alt="{{ band.name }}" style="height: 200px; object-fit: cover;">
+                    <img src="{{ band.thumbnail.url }}" class="w-full h-full object-cover img-zoom" alt="{{ band.name }}">
                     {% else %}
-                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-                        <i class="bi bi-watch display-4 text-muted"></i>
+                    <div class="w-full h-full flex items-center justify-center">
+                        <svg class="w-24 h-24 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
                     </div>
                     {% endif %}
                     
-                    {% if band.has_discount %}
-                    <span class="position-absolute top-0 end-0 badge bg-danger m-2">
-                        -{{ band.discount_percentage }}%
+                    <!-- Badges -->
+                    <div class="absolute top-4 left-4 flex flex-col gap-2">
+                        {% if band.band_type.name %}
+                        <span class="px-3 py-1.5 text-xs font-bold rounded-full text-white 
+                            {% if band.band_type.name == 'classic' %}bg-blue-500
+                            {% elif band.band_type.name == 'sport' %}bg-emerald-500
+                            {% elif band.band_type.name == 'kids' %}bg-orange-500
+                            {% elif band.band_type.name == 'premium' %}bg-violet-500{% endif %}">
+                            {{ band.band_type.get_name_display|upper }}
+                        </span>
+                        {% endif %}
+                        {% if band.is_featured %}
+                        <span class="px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+                            ⭐ Featured
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if band.stock_quantity > 0 %}
+                    <span class="absolute top-4 right-4 px-3 py-1.5 text-xs font-semibold rounded-full bg-white/90 backdrop-blur-sm text-emerald-600 flex items-center gap-1">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        In Stock
+                    </span>
+                    {% else %}
+                    <span class="absolute top-4 right-4 px-3 py-1.5 text-xs font-semibold rounded-full bg-red-100 text-red-600">
+                        Out of Stock
                     </span>
                     {% endif %}
+                </div>
+                
+                <!-- Content -->
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-slate-900 mb-2 line-clamp-1">{{ band.name }}</h3>
+                    <p class="text-slate-500 text-sm mb-4">
+                        {{ band.band_use.get_name_display }} • {{ band.get_size_display }}
+                    </p>
                     
-                    <div class="card-body">
-                        <h6 class="card-title">{{ band.name }}</h6>
-                        <p class="text-muted small mb-2">
-                            {{ band.band_use.get_name_display }} • {{ band.get_size_display }}
-                        </p>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="h5 mb-0">EGP {{ band.current_price }}</span>
+                    <!-- Features -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% if band.has_nfc %}
+                        <span class="px-3 py-1.5 bg-cyan-100 text-cyan-700 text-xs font-semibold rounded-lg flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                            </svg>
+                            NFC
+                        </span>
+                        {% endif %}
+                        {% if band.has_qr_code %}
+                        <span class="px-3 py-1.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                            </svg>
+                            QR
+                        </span>
+                        {% endif %}
+                        {% if band.has_gps %}
+                        <span class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                            GPS
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Price & Action -->
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <div>
+                            <span class="text-2xl font-bold text-slate-900">EGP {{ band.current_price }}</span>
                             {% if band.has_discount %}
-                            <small class="text-decoration-line-through text-muted">EGP {{ band.price }}</small>
+                            <span class="text-slate-400 line-through ml-2 text-sm">EGP {{ band.price }}</span>
                             {% endif %}
                         </div>
-                        <div class="mt-2">
-                            {% if band.has_nfc %}<span class="badge bg-primary me-1">NFC</span>{% endif %}
-                            {% if band.has_qr_code %}<span class="badge bg-info me-1">QR</span>{% endif %}
-                            {% if band.has_gps %}<span class="badge bg-success me-1">GPS</span>{% endif %}
-                            {% if band.has_heart_rate %}<span class="badge bg-danger me-1">❤️</span>{% endif %}
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0">
-                        <a href="{% url 'store:band_detail' band.id %}" class="btn btn-primary w-100">View Details</a>
+                        <a href="{% url 'store:band_detail' band.id %}" 
+                           class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors">
+                            View
+                        </a>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-inbox display-1 text-muted"></i>
-            <p class="mt-3 text-muted">No featured products available at the moment.</p>
+        <div class="text-center py-16 bg-slate-50 rounded-3xl">
+            <svg class="w-20 h-20 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">No Featured Products</h3>
+            <p class="text-slate-500">Check back soon for new arrivals!</p>
         </div>
         {% endif %}
-    </section>
+        
+        <div class="text-center mt-10 md:hidden">
+            <a href="{% url 'store:band_list' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-cyan-600 font-semibold transition-colors">
+                View All Products
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+            </a>
+        </div>
+    </div>
+</section>
 
-    <!-- Use Cases Section -->
-    <section class="py-5 mb-5">
-        <h2 class="text-center mb-4">Find the Perfect Band for Your Needs</h2>
-        <div class="row g-4">
+<!-- Use Cases -->
+<section class="py-20 bg-gradient-to-b from-slate-50 to-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <span class="inline-block px-4 py-2 bg-violet-100 text-violet-700 rounded-full text-sm font-semibold mb-4">Purpose</span>
+            <h2 class="text-4xl font-bold text-slate-900 mb-4">Find Your Perfect Match</h2>
+            <p class="text-slate-600 max-w-2xl mx-auto text-lg">Browse by your specific needs and lifestyle</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-6">
             {% for band_use in band_uses %}
-            <div class="col-md-3 col-sm-6">
-                <div class="card h-100 border-0 shadow-sm text-center">
-                    <div class="card-body py-4">
-                        <div class="use-icon mb-3">
-                            <i class="bi {% if band_use.icon %}{{ band_use.icon }}{% else %}bi-heart-pulse{% endif %} display-5 text-primary"></i>
-                        </div>
-                        <h5>{{ band_use.get_name_display }}</h5>
-                        <a href="{% url 'store:band_list' %}?use={{ band_use.name }}" class="btn btn-sm btn-link">
-                            Browse Products
-                        </a>
-                    </div>
+            <a href="{% url 'store:band_list' %}?use={{ band_use.name }}" 
+               class="group bg-white rounded-2xl p-6 shadow-md border border-slate-100 hover:shadow-xl hover:border-cyan-200 transition-all block">
+                <div class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
                 </div>
-            </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-2 group-hover:text-cyan-600 transition-colors">{{ band_use.get_name_display }}</h3>
+                <p class="text-slate-500 text-sm">{{ band_use.description|truncatewords:10 }}</p>
+            </a>
             {% endfor %}
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- CTA Section -->
-    <section class="py-5 bg-primary rounded-4 text-white">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <h2>Ready to Get Your Syra Band?</h2>
-                <p class="mb-0">Join thousands of people who trust Syra for their medical identification needs.</p>
+<!-- CTA Section -->
+<section class="py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-12 lg:p-16">
+            <!-- Background pattern -->
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-0 left-0 w-64 h-64 bg-cyan-500 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-3xl"></div>
             </div>
-            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                <a href="{% url 'store:band_list' %}" class="btn btn-light btn-lg">Shop Now</a>
+            
+            <div class="relative z-10 text-center text-white">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Get Your Syra Band?</h2>
+                <p class="text-slate-300 mb-8 max-w-2xl mx-auto text-lg">
+                    Join thousands who trust Syra for their medical identification. 
+                    Free shipping on all orders!
+                </p>
+                <a href="{% url 'store:band_list' %}" class="inline-flex items-center gap-3 bg-white text-slate-900 px-10 py-4 rounded-2xl font-bold text-lg hover:bg-cyan-50 transition-colors btn-shine">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    Shop Now
+                </a>
             </div>
         </div>
-    </section>
-</div>
+    </div>
+</section>
 {% endblock %}

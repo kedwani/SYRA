@@ -2,11 +2,14 @@
 Template views for the Syra Store frontend.
 """
 
+from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
+from django.db import transaction
+from django.db.models import F
 
 from .models import (
     SyraBand,
@@ -194,7 +197,7 @@ def add_to_cart(request, band_id):
 def update_cart_item(request, item_id):
     """Update cart item quantity."""
     if request.method == "POST":
-        cart = Cart.objects.get(user=request.user)
+        cart, _ = Cart.objects.get_or_create(user=request.user)
         quantity = int(request.POST.get("quantity", 1))
 
         try:
@@ -216,7 +219,7 @@ def update_cart_item(request, item_id):
 def remove_from_cart(request, item_id):
     """Remove item from cart."""
     if request.method == "POST":
-        cart = Cart.objects.get(user=request.user)
+        cart, _ = Cart.objects.get_or_create(user=request.user)
 
         try:
             cart_item = CartItem.objects.get(id=item_id, cart=cart)
@@ -229,21 +232,43 @@ def remove_from_cart(request, item_id):
 
 
 @login_required
+@transaction.atomic
 def checkout(request):
     """Checkout process."""
-    cart = Cart.objects.get(user=request.user)
+    cart, _ = Cart.objects.select_for_update().get_or_create(user=request.user)
 
     if not cart.items.exists():
         messages.error(request, "Your cart is empty.")
         return redirect("store:band_list")
 
     if request.method == "POST":
-        # Calculate totals
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Calculate totals (use Decimal for precision)
         subtotal = cart.total_price
-        shipping_cost = 50  # Fixed shipping cost
-        tax_rate = 0.14
-        tax_amount = subtotal * tax_rate
+        shipping_cost = Decimal("50")  # Fixed shipping cost
+        tax_rate = Decimal("0.14")
+        tax_amount = (subtotal + shipping_cost) * tax_rate
         total = subtotal + shipping_cost + tax_amount
+
+        # Check stock availability first
+        for item in cart.items.select_for_update():
+            product = item.product
+            # DEBUG: Log stock check
+            logger.debug(
+                f"[CHECKOUT_STOCK] product={product.name}, stock={product.stock_quantity}, cart_qty={item.quantity}"
+            )
+            if product.stock_quantity < item.quantity:
+                logger.warning(
+                    f"[CHECKOUT_STOCK] INSUFFICIENT STOCK: {product.name} has {product.stock_quantity} but cart has {item.quantity}"
+                )
+                messages.error(
+                    request,
+                    f"{product.name} is out of stock. Only {product.stock_quantity} available.",
+                )
+                return redirect("store:cart")
 
         # Create order
         order = Order.objects.create(
@@ -262,8 +287,8 @@ def checkout(request):
             user_notes=request.POST.get("user_notes", ""),
         )
 
-        # Create order items and update stock
-        for item in cart.items.all():
+        # Create order items and update stock atomically
+        for item in cart.items.select_for_update():
             from .models import OrderItem
 
             OrderItem.objects.create(
@@ -274,10 +299,10 @@ def checkout(request):
                 total=item.total_price,
             )
 
-            # Update stock
-            product = item.product
-            product.stock_quantity -= item.quantity
-            product.save()
+            # Atomic stock update
+            SyraBand.objects.filter(id=item.product.id).update(
+                stock_quantity=F("stock_quantity") - item.quantity
+            )
 
         # Clear cart
         cart.items.all().delete()
@@ -287,8 +312,8 @@ def checkout(request):
 
     # Calculate totals for display
     subtotal = cart.total_price
-    shipping_cost = 50
-    tax_rate = 0.14
+    shipping_cost = Decimal("50")
+    tax_rate = Decimal("0.14")
     tax_amount = subtotal * tax_rate
     total = subtotal + shipping_cost + tax_amount
 
@@ -305,7 +330,12 @@ def checkout(request):
 @login_required
 def order_list(request):
     """List user's orders."""
-    orders = Order.objects.filter(user=request.user).order_by("-created_at")
+    orders = (
+        Order.objects.select_related("user")
+        .prefetch_related("items", "items__product")
+        .filter(user=request.user)
+        .order_by("-created_at")
+    )
 
     context = {
         "orders": orders,
@@ -316,7 +346,13 @@ def order_list(request):
 @login_required
 def order_detail(request, order_id):
     """View order details."""
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order = get_object_or_404(
+        Order.objects.select_related("user").prefetch_related(
+            "items", "items__product"
+        ),
+        id=order_id,
+        user=request.user,
+    )
 
     context = {
         "order": order,
@@ -327,8 +363,10 @@ def order_detail(request, order_id):
 @login_required
 def my_bands(request):
     """View user's registered Syra Bands."""
-    registrations = BandRegistration.objects.filter(user=request.user).order_by(
-        "-created_at"
+    registrations = (
+        BandRegistration.objects.select_related("user", "band", "medical_profile")
+        .filter(user=request.user)
+        .order_by("-created_at")
     )
 
     context = {
@@ -407,11 +445,11 @@ def order_cancel(request, order_id):
             messages.error(request, "Order cannot be cancelled in current status.")
             return redirect("store:order_detail", order_id=order_id)
 
-        # Restore stock
-        for item in order.items.all():
-            product = item.product
-            product.stock_quantity += item.quantity
-            product.save()
+        # Restore stock atomically
+        for item in order.items.select_related("product").all():
+            SyraBand.objects.filter(id=item.product.id).update(
+                stock_quantity=F("stock_quantity") + item.quantity
+            )
 
         order.status = "cancelled"
         order.save()

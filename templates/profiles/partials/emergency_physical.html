@@ -1,0 +1,39 @@
+<!-- HTMX Partial: Physical Information Section -->
+<div class="bg-gray-50 border-l-4 border-gray-400 rounded-lg p-4 mb-4"
+     x-show="physicalLoaded"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100">
+    
+    <h3 class="font-bold text-gray-700 text-lg mb-2">📊 Physical Information</h3>
+    
+    <div class="flex gap-6">
+        {% if profile.height %}
+        <div class="bg-white p-3 rounded-lg shadow-sm">
+            <p class="text-sm text-gray-500">Height</p>
+            <p class="font-semibold text-gray-800">{{ profile.height }} cm</p>
+        </div>
+        {% endif %}
+        
+        {% if profile.weight %}
+        <div class="bg-white p-3 rounded-lg shadow-sm">
+            <p class="text-sm text-gray-500">Weight</p>
+            <p class="font-semibold text-gray-800">{{ profile.weight }} kg</p>
+        </div>
+        {% endif %}
+        
+        {% if not profile.height and not profile.weight %}
+        <p class="text-gray-500">No physical information recorded.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Loading State -->
+<div id="physical-loading" class="hidden">
+    <div class="bg-gray-50 border-l-4 border-gray-400 rounded-lg p-4 mb-4">
+        <div class="flex items-center gap-3">
+            <div class="loading-spinner"></div>
+            <span class="text-gray-700">Loading physical info...</span>
+        </div>
+    </div>
+</div>

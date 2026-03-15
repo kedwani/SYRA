@@ -71,6 +71,43 @@ class MedicalProfile(models.Model):
     weight = models.PositiveIntegerField(
         null=True, blank=True, verbose_name="Weight (kg)"
     )
+    premium_access_logging = models.BooleanField(
+        default=False,
+        verbose_name="Access Log Tracking (Premium)",
+        help_text="Track who views your profile. Requires premium subscription.",
+    )
+
+    # Visibility Controls - User controls which sections are public vs doctor-only
+    show_blood_type_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Blood Type to Public",
+        help_text="Everyone can see blood type in emergencies",
+    )
+    show_allergies_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Allergies to Public",
+        help_text="Everyone can see allergies in emergencies",
+    )
+    show_medications_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Medications to Public",
+        help_text="Anyone can view medications in emergencies",
+    )
+    show_contacts_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Emergency Contacts to Public",
+        help_text="Anyone can view emergency contacts",
+    )
+    show_physical_public = models.BooleanField(
+        default=False,
+        verbose_name="Show Physical Info to Public",
+        help_text="Anyone can view height/weight (doctors only by default)",
+    )
+    show_history_public = models.BooleanField(
+        default=False,
+        verbose_name="Show Medical History to Public",
+        help_text="Anyone can view medical history (doctors only by default)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -87,9 +124,31 @@ class MedicalProfile(models.Model):
 
     def save(self, *args, **kwargs):
         """Encrypt insurance image before saving."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         # Check if we have a new file to upload that needs encryption
-        if self.insurance_image and not self._is_encrypted():
-            self._encrypt_insurance_image()
+        if self.insurance_image:
+            # Check if this is a new upload (not previously saved)
+            if not self.pk:
+                # New profile - encrypt the image
+                logger.debug("New profile - encrypting insurance image...")
+                self._encrypt_insurance_image()
+            else:
+                # Check if the image has changed
+                try:
+                    old_instance = MedicalProfile.objects.get(pk=self.pk)
+                    if old_instance.insurance_image != self.insurance_image:
+                        # New image uploaded - encrypt it
+                        logger.debug("New image uploaded - encrypting...")
+                        self._encrypt_insurance_image()
+                    else:
+                        logger.debug("Image unchanged - skipping encryption")
+                except MedicalProfile.DoesNotExist:
+                    # Shouldn't happen, but encrypt if it does
+                    logger.debug("Could not find old instance - encrypting...")
+                    self._encrypt_insurance_image()
 
         super().save(*args, **kwargs)
 
@@ -108,21 +167,44 @@ class MedicalProfile(models.Model):
 
     def _encrypt_insurance_image(self):
         """Encrypt the insurance image."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         if not self.insurance_image:
+            logger.debug("No insurance_image to encrypt")
             return
+
+        logger.debug(
+            f"_encrypt_insurance_image: file object type: {type(self.insurance_image)}"
+        )
+        logger.debug(
+            f"_encrypt_insurance_image: file closed status: {self.insurance_image.closed if hasattr(self.insurance_image, 'closed') else 'N/A'}"
+        )
 
         from django.core.files.base import ContentFile
         from cryptography.fernet import Fernet
 
         fernet_key = settings.FERNET_KEY.encode() if settings.FERNET_KEY else None
         if not fernet_key:
+            logger.debug("No FERNET_KEY configured, skipping encryption")
             return
 
         f = Fernet(fernet_key)
 
-        # Read the image data using context manager to ensure file is closed
-        with self.insurance_image.open() as image_file:
-            image_data = image_file.read()
+        # Read the image data - handle case where file might be closed
+        try:
+            # First try normal open with context manager
+            with self.insurance_image.open() as image_file:
+                image_data = image_file.read()
+            logger.debug(f"Successfully read {len(image_data)} bytes for encryption")
+        except ValueError as e:
+            # Handle case where file is closed - try to reopen from storage
+            logger.debug(f"File was closed, attempting to reopen: {e}")
+            self.insurance_image.open(mode="rb")
+            image_data = self.insurance_image.read()
+            self.insurance_image.close()
+            logger.debug(f"Successfully read {len(image_data)} bytes after reopen")
 
         # Encrypt the data
         encrypted_data = f.encrypt(image_data)
@@ -156,6 +238,26 @@ class Medication(models.Model):
     frequency = models.CharField(max_length=100, blank=True, verbose_name="Frequency")
     is_active = models.BooleanField(default=True, verbose_name="Currently Taking")
     notes = models.TextField(blank=True, verbose_name="Additional Notes")
+
+    # Doctor-added tracking fields
+    added_by_doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="added_medications",
+        verbose_name="Added by Doctor",
+    )
+    pending_approval = models.BooleanField(
+        default=False,
+        verbose_name="Pending User Approval",
+        help_text="Medication added by doctor, awaiting user approval",
+    )
+    is_approved = models.BooleanField(
+        default=True,
+        verbose_name="Approved",
+        help_text="Medication is approved and visible",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -190,7 +292,32 @@ class EmergencyContact(models.Model):
     alternate_phone = models.CharField(
         max_length=15, blank=True, verbose_name="Alternate Phone"
     )
+    email = models.EmailField(
+        blank=True,
+        verbose_name="Email Address",
+        help_text="Email for emergency notifications",
+    )
     is_primary = models.BooleanField(default=False, verbose_name="Primary Contact")
+
+    # Doctor-added tracking fields
+    added_by_doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="added_emergency_contacts",
+        verbose_name="Added by Doctor",
+    )
+    pending_approval = models.BooleanField(
+        default=False,
+        verbose_name="Pending User Approval",
+        help_text="Contact added by doctor, awaiting user approval",
+    )
+    is_approved = models.BooleanField(
+        default=True,
+        verbose_name="Approved",
+        help_text="Contact is approved and visible",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -230,6 +357,31 @@ class MedicalEvent(models.Model):
     doctor_name = models.CharField(
         max_length=200, blank=True, verbose_name="Doctor Name"
     )
+
+    # Doctor-added tracking fields
+    added_by_doctor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="added_medical_events",
+        verbose_name="Added by Doctor",
+    )
+    pending_approval = models.BooleanField(
+        default=False,
+        verbose_name="Pending User Approval",
+        help_text="Event added by doctor, awaiting user approval",
+    )
+    is_approved = models.BooleanField(
+        default=True,
+        verbose_name="Approved",
+        help_text="Event is approved and visible",
+    )
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Approved At",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -239,3 +391,42 @@ class MedicalEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.date}"
+
+
+class ProfileAccessLog(models.Model):
+    """
+    Track who accessed medical profiles and when.
+    Used for audit logging and paid feature tracking.
+    """
+
+    profile = models.ForeignKey(
+        MedicalProfile, on_delete=models.CASCADE, related_name="access_logs"
+    )
+    accessed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="profile_access_logs",
+    )
+    access_role = models.CharField(max_length=20)
+    access_type = models.CharField(
+        max_length=20,
+        choices=[
+            ("emergency", "Emergency Scan"),
+            ("emergency_alert", "Emergency Alert"),
+            ("api", "API Access"),
+            ("dashboard", "Dashboard View"),
+        ],
+    )
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True)
+    accessed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Profile Access Log"
+        verbose_name_plural = "Profile Access Logs"
+        ordering = ["-accessed_at"]
+
+    def __str__(self):
+        return f"{self.profile.user.username} - {self.accessed_at}"

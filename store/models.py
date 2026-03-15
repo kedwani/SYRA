@@ -15,12 +15,10 @@ class SyraBandType(models.Model):
     """
 
     BAND_TYPES = [
-        ("standard", "Standard"),
-        ("premium", "Premium"),
-        ("kids", "Kids"),
-        ("senior", "Senior"),
+        ("classic", "Classic"),
         ("sport", "Sport"),
-        ("medical", "Medical"),
+        ("kids", "Kids"),
+        ("premium", "Premium"),
     ]
 
     name = models.CharField(max_length=20, choices=BAND_TYPES, unique=True)
@@ -69,29 +67,25 @@ class SyraBand(models.Model):
     """
 
     BAND_SIZES = [
-        ("small", "Small (For Kids)"),
-        ("medium", "Medium (Standard)"),
+        ("small", "Small"),
+        ("medium", "Medium"),
         ("large", "Large"),
-        ("xl", "Extra Large"),
+        ("xl", "XL"),
+        ("adult", "Adult"),
+        ("kids", "Kids"),
     ]
 
     BAND_COLORS = [
         ("black", "Black"),
-        ("white", "White"),
+        ("red", "Medical Red"),
+        ("orange", "Emergency Orange"),
         ("blue", "Blue"),
-        ("red", "Red"),
         ("green", "Green"),
-        ("pink", "Pink"),
-        ("orange", "Orange"),
-        ("purple", "Purple"),
     ]
 
     BAND_MATERIALS = [
-        ("silicone", "Silicone"),
-        ("leather", "Leather"),
-        ("fabric", "Fabric"),
-        ("metal", "Metal"),
-        ("hybrid", "Hybrid"),
+        ("silicone", "Medical Silicone"),
+        ("stainless_steel", "Stainless Steel"),
     ]
 
     # Product identification
@@ -154,6 +148,12 @@ class SyraBand(models.Model):
         verbose_name = "Syra Band"
         verbose_name_plural = "Syra Bands"
         ordering = ["-is_featured", "-created_at"]
+        indexes = [
+            models.Index(fields=["is_active", "-created_at"]),
+            models.Index(fields=["is_featured", "is_active"]),
+            models.Index(fields=["band_type", "is_active"]),
+            models.Index(fields=["is_available", "stock_quantity"]),
+        ]
 
     def __str__(self):
         return f"{self.name} - {self.size} - {self.color}"
@@ -177,6 +177,19 @@ class SyraBand(models.Model):
             discount = Decimal(1) - (self.discount_price / self.price)
             return int(discount * Decimal(100))
         return 0
+
+    @property
+    def average_rating(self):
+        """Get average rating from reviews."""
+        from django.db.models import Avg
+
+        result = self.reviews.filter(is_approved=True).aggregate(Avg("rating"))
+        return round(result["rating__avg"], 1) if result["rating__avg"] else 0
+
+    @property
+    def review_count(self):
+        """Get total number of approved reviews."""
+        return self.reviews.filter(is_approved=True).count()
 
 
 class Order(models.Model):
@@ -229,6 +242,10 @@ class Order(models.Model):
     shipping_area = models.CharField(max_length=100, blank=True)
     shipping_notes = models.TextField(blank=True)
 
+    # Tracking information
+    tracking_number = models.CharField(max_length=100, blank=True)
+    carrier = models.CharField(max_length=50, blank=True)
+
     # Notes
     user_notes = models.TextField(blank=True)
     admin_notes = models.TextField(blank=True)
@@ -244,13 +261,24 @@ class Order(models.Model):
         verbose_name = "Order"
         verbose_name_plural = "Orders"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["status", "-created_at"]),
+            models.Index(fields=["payment_status", "status"]),
+            models.Index(fields=["order_number"]),
+        ]
 
     def __str__(self):
         return f"Order #{self.order_number}"
 
     def save(self, *args, **kwargs):
         if not self.order_number:
-            self.order_number = f"SYRA-{uuid.uuid4().hex[:8].upper()}"
+            # Generate unique order number with retry loop
+            while True:
+                order_num = f"SYRA-{uuid.uuid4().hex[:8].upper()}"
+                if not Order.objects.filter(order_number=order_num).exists():
+                    self.order_number = order_num
+                    break
         if not self.total:
             self.total = (
                 self.subtotal
@@ -259,6 +287,20 @@ class Order(models.Model):
                 - self.discount_amount
             )
         super().save(*args, **kwargs)
+
+    def get_tracking_url(self):
+        """Return tracking URL based on carrier."""
+        if not self.tracking_number or not self.carrier:
+            return None
+
+        carriers = {
+            "aramex": f"https://www.aramex.com/track/results?shipmentnumber={self.tracking_number}",
+            "dhl": f"https://www.dhl.com/en/express/tracking.html?AWB={self.tracking_number}",
+            "fedex": f"https://www.fedex.com/fedextrack/?trknbr={self.tracking_number}",
+            "ups": f"https://www.ups.com/track?tracknum={self.tracking_number}",
+            "ema": f"https://egypt-post.com/track/{self.tracking_number}",
+        }
+        return carriers.get(self.carrier.lower())
 
 
 class OrderItem(models.Model):
@@ -326,10 +368,22 @@ class Cart(models.Model):
 
     @property
     def total_items(self):
+        # Use prefetched items if available to avoid N+1 queries
+        if (
+            hasattr(self, "_prefetched_objects_cache")
+            and "items" in self._prefetched_objects_cache
+        ):
+            return sum(item.quantity for item in self.items.all())
         return sum(item.quantity for item in self.items.all())
 
     @property
     def total_price(self):
+        # Use prefetched items if available to avoid N+1 queries
+        if (
+            hasattr(self, "_prefetched_objects_cache")
+            and "items" in self._prefetched_objects_cache
+        ):
+            return sum(item.total_price for item in self.items.all())
         return sum(item.total_price for item in self.items.all())
 
 
@@ -383,6 +437,14 @@ class BandRegistration(models.Model):
     order_item = models.ForeignKey(
         OrderItem, on_delete=models.CASCADE, related_name="registrations"
     )
+    medical_profile = models.ForeignKey(
+        "profiles.MedicalProfile",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="band_registrations",
+        verbose_name="Linked Medical Profile",
+    )
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nickname = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=20, choices=BAND_STATUS, default="active")
@@ -397,3 +459,38 @@ class BandRegistration(models.Model):
 
     def __str__(self):
         return f"{self.nickname or self.public_id} - {self.user.username}"
+
+
+class BandReview(models.Model):
+    """
+    Customer reviews for Syra Bands.
+    """
+
+    product = models.ForeignKey(
+        SyraBand, on_delete=models.CASCADE, related_name="reviews"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="band_reviews"
+    )
+    rating = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    title = models.CharField(max_length=200)
+    comment = models.TextField()
+    verified_purchase = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Band Review"
+        verbose_name_plural = "Band Reviews"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product", "user"], name="unique_user_review"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.product.name} - {self.rating}★ by {self.user.username}"

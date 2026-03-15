@@ -1,6 +1,71 @@
 {% extends 'base.html' %}
 
+{% block hide_navigation %}true{% endblock %}
+
 {% block title %}Order {{ order.order_number }} - Syra Store{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Order detail styling */
+    .breadcrumb-item a {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+    .breadcrumb-item a:hover {
+        text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+        color: #6b7280;
+    }
+    
+    /* Dark mode support - Enhanced for accessibility */
+    .dark .bg-white { background-color: #1e293b; }
+    .dark .bg-light { background-color: #1e293b; }
+    .dark .text-muted { color: #94a3b8; }
+    .dark .text-dark { color: #f1f5f9; }
+    .dark .text-success { color: #4ade80 !important; }
+    .dark .text-warning { color: #fbbf24 !important; }
+    .dark .text-primary { color: #60a5fa !important; }
+    .dark .card {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    .dark .card-header {
+        background-color: #1e293b !important;
+        border-color: #334155;
+    }
+    .dark .card-body {
+        background-color: #1e293b;
+    }
+    .dark .breadcrumb {
+        background-color: transparent;
+    }
+    .dark .breadcrumb-item a {
+        color: #60a5fa;
+    }
+    .dark .breadcrumb-item.active {
+        color: #64748b;
+    }
+    .dark .breadcrumb-item + .breadcrumb-item::before {
+        color: #475569;
+    }
+    .dark .border-bottom { border-color: #334155; }
+    .dark .badge.bg-primary {
+        background-color: #3b82f6 !important;
+    }
+    .dark hr {
+        border-color: #334155;
+    }
+    .dark .btn-outline-danger {
+        border-color: #dc2626;
+        color: #f87171;
+    }
+    .dark .btn-outline-danger:hover {
+        background-color: #dc2626;
+        color: #ffffff;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">

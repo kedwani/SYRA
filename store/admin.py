@@ -12,6 +12,7 @@ from .models import (
     Cart,
     CartItem,
     BandRegistration,
+    BandReview,
 )
 
 
@@ -88,6 +89,14 @@ class OrderItemInline(admin.TabularInline):
     readonly_fields = ["product", "quantity", "unit_price", "discount", "total"]
     can_delete = False
     extra = 0
+
+
+class CartItemInline(admin.TabularInline):
+    model = CartItem
+    readonly_fields = ["product", "quantity", "size", "color", "created_at"]
+    can_delete = True
+    extra = 0
+    can_add = True
 
 
 @admin.register(Order)
@@ -170,6 +179,7 @@ class OrderAdmin(admin.ModelAdmin):
 class CartAdmin(admin.ModelAdmin):
     list_display = ["user", "created_at", "updated_at"]
     search_fields = ["user__username", "user__email"]
+    inlines = [CartItemInline]
 
 
 @admin.register(BandRegistration)
@@ -186,3 +196,27 @@ class BandRegistrationAdmin(admin.ModelAdmin):
     list_filter = ["status", "activated_at"]
     search_fields = ["user__username", "public_id", "nickname"]
     readonly_fields = ["public_id", "created_at", "updated_at"]
+
+
+@admin.register(BandReview)
+class BandReviewAdmin(admin.ModelAdmin):
+    list_display = [
+        "product",
+        "user",
+        "rating",
+        "verified_purchase",
+        "is_approved",
+        "created_at",
+    ]
+    list_filter = ["rating", "is_approved", "verified_purchase", "created_at"]
+    search_fields = ["product__name", "user__username", "title", "comment"]
+    readonly_fields = ["created_at", "updated_at"]
+    actions = ["approve_reviews", "disapprove_reviews"]
+
+    def approve_reviews(self, request, queryset):
+        queryset.update(is_approved=True)
+        self.message_user(request, "Selected reviews have been approved.")
+
+    def disapprove_reviews(self, request, queryset):
+        queryset.update(is_approved=False)
+        self.message_user(request, "Selected reviews have been disapproved.")

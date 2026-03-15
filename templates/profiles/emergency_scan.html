@@ -1,173 +1,456 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Emergency Medical ID - SYRA{% endblock %}
+{% block page_name %}<span class="text-xs text-red-200 font-normal ml-2">{% trans "Emergency Medical ID" %}</span>{% endblock %}
+
+{% block title %}{% trans "Emergency Medical ID" %} - SYRA{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Emergency Alert Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const alertBtn = document.getElementById('btn-emergency-alert');
+        if (alertBtn) {
+            alertBtn.addEventListener('click', function() {
+                const profileId = this.dataset.profileId;
+                console.log('Emergency Alert - Profile ID:', profileId);
+                
+                if (!profileId) {
+                    alert('Error: Profile ID not found. Cannot send alert.');
+                    return;
+                }
+                
+                // Check if we have location
+                if (navigator.geolocation) {
+                    document.getElementById('location-status').classList.remove('hidden');
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            console.log('Location obtained:', lat, lon);
+                            
+                            fetch('/api/profiles/alert/' + profileId + '/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                body: JSON.stringify({
+                                    latitude: lat,
+                                    longitude: lon,
+                                    device_info: 'Emergency Scan Web'
+                                })
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.text().then(text => {
+                                        throw new Error('HTTP ' + response.status + ': ' + text);
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Emergency alert sent! Emergency contacts have been notified.');
+                                } else {
+                                    alert('Alert failed: ' + (data.message || data.error || 'Unknown error'));
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Alert error:', error);
+                                alert('Error sending alert: ' + error.message + '. Please call emergency services directly.');
+                            });
+                        },
+                        function(error) {
+                            console.log('Geolocation error:', error.message);
+                            alert('Could not get location. Alert will be sent without location data.');
+                            fetch('/api/profiles/alert/' + profileId + '/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                body: JSON.stringify({
+                                    latitude: null,
+                                    longitude: null,
+                                    device_info: 'Emergency Scan Web'
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Emergency alert sent! Emergency contacts have been notified.');
+                                } else {
+                                    alert('Alert failed: ' + (data.message || data.error || 'Unknown error'));
+                                }
+                            })
+                            .catch(error => {
+                                alert('Error sending alert: ' + error.message + '. Please call emergency services directly.');
+                            });
+                        }
+                    );
+                } else {
+                    alert('Geolocation not supported. Please call emergency services directly.');
+                }
+            });
+        }
+
+        // Find Nearby Hospitals Functionality
+        const hospitalBtn = document.getElementById('btn-nearby-hospitals');
+        if (hospitalBtn) {
+            hospitalBtn.addEventListener('click', function() {
+                const profileId = this.dataset.profileId;
+                const hospitalList = document.getElementById('nearby-hospitals-list');
+                
+                if (navigator.geolocation) {
+                    hospitalList.classList.remove('hidden');
+                    hospitalList.innerHTML = '<div class="text-center py-4"><div class="loading-spinner mx-auto"></div><p class="mt-2 text-gray-600">Finding nearby hospitals...</p></div>';
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            
+                            fetch(`/api/profiles/hospitals/?lat=${lat}&lng=${lon}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const hospitals = data.hospitals || [];
+                                if (hospitals.length === 0) {
+                                    hospitalList.innerHTML = '<div class="bg-warning/10 border-l-4 border-warning p-4 rounded"><p class="text-gray-800">{% trans "No hospitals found nearby." %}</p></div>';
+                                    return;
+                                }
+                                
+                                let html = '';
+                                hospitals.forEach(hospital => {
+                                    html += `
+                                    <div class="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center">
+                                        <div>
+                                            <p class="font-semibold text-gray-800 text-sm">${hospital.name}</p>
+                                            <p class="text-xs text-gray-500">${hospital.address}</p>
+                                            <p class="text-xs text-success font-medium">${hospital.distance_km} km</p>
+                                        </div>
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination=${hospital.lat},${hospital.lon}" 
+                                           target="_blank"
+                                           class="bg-success text-white px-3 py-2 rounded-lg font-semibold hover:bg-success/90 text-sm">
+                                            Navigate
+                                        </a>
+                                    </div>`;
+                                });
+                                hospitalList.innerHTML = html;
+                            })
+                            .catch(error => {
+                                console.error('Hospital search error:', error);
+                                hospitalList.innerHTML = '<div class="bg-danger/10 border-l-4 border-danger p-4 rounded"><p class="text-gray-800">Error finding hospitals.</p></div>';
+                            });
+                        },
+                        function(error) {
+                            hospitalList.innerHTML = '<div class="bg-warning/10 border-l-4 border-warning p-4 rounded"><p class="text-gray-800">Could not get your location.</p></div>';
+                        }
+                    );
+                } else {
+                    alert('Geolocation not supported by your browser.');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto px-4 py-8">
-    <!-- Emergency Header -->
-    <div class="bg-red-600 text-white p-6 rounded-lg mb-6 text-center">
-        <h1 class="text-2xl font-bold mb-2">🚨 Emergency Medical ID</h1>
-        <p class="text-red-100">Important medical information for first responders</p>
-        
-        <!-- Role Badge -->
-        {% if user_role != 'user' %}
-        <div class="mt-2">
-            <span class="bg-white text-red-600 px-3 py-1 rounded-full text-sm font-semibold">
-                Viewed as: {{ user_role|title }}
-            </span>
+<div class="max-w-4xl mx-auto px-3 py-4">
+    <!-- Header - Emergency Medical ID -->
+    <div class="text-center mb-4">
+        <div class="inline-flex items-center gap-2 bg-red-100 dark:bg-red-900/30 px-4 py-2 rounded-full">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            <span class="text-red-700 dark:text-red-400 font-semibold text-sm">{% trans "Emergency Medical ID" %}</span>
         </div>
+    </div>
+
+    <!-- Critical Info Row - Blood Type & Allergies -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+        <!-- Blood Type - Prominent -->
+        {% if profile.show_blood_type_public or user_role == 'doctor' or user_role == 'admin' %}
+        <div class="bg-white dark:bg-red-950 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 text-center shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-red-400 uppercase tracking-wider font-semibold mb-1">Blood Type</p>
+            {% if is_embedded %}
+            <p class="text-4xl font-bold text-red-600 dark:text-red-400 medical-data">{{ embedded_data.blood_type }}</p>
+            {% else %}
+            <p class="text-4xl font-bold text-red-600 dark:text-red-400 medical-data">{{ profile.get_blood_type_display }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Allergies - Critical -->
+        {% if is_embedded %}
+            {% if embedded_data.allergies and embedded_data.allergies != "None" %}
+            <div class="bg-white dark:bg-orange-950 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h3 class="font-bold text-orange-700 dark:text-orange-300 text-sm">Allergies</h3>
+                </div>
+                <p class="text-orange-800 dark:text-orange-200 text-sm font-medium">{{ embedded_data.allergies }}</p>
+            </div>
+            {% endif %}
+        {% else %}
+            {% if profile.allergies %}
+            <div class="bg-white dark:bg-orange-950 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h3 class="font-bold text-orange-700 dark:text-orange-300 text-sm">Allergies</h3>
+                </div>
+                <p class="text-orange-800 dark:text-orange-200 text-sm font-medium">{{ profile.allergies }}</p>
+            </div>
+            {% endif %}
         {% endif %}
     </div>
 
-    <!-- Blood Type - Prominent Display (Visible to All) -->
-    <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6 text-center">
-        <p class="text-sm text-red-600 uppercase tracking-wide mb-1">Blood Type</p>
-        <p class="text-5xl font-bold text-red-700">{{ profile.get_blood_type_display }}</p>
-    </div>
-
-    <!-- Allergies - Critical (Visible to All) -->
-    {% if profile.allergies %}
-    <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-orange-800 text-lg mb-2">⚠️ Allergies</h3>
-        <p class="text-orange-900">{{ profile.allergies }}</p>
-    </div>
+    <!-- Emergency Notes -->
+    {% if is_embedded %}
+        {% if embedded_data.emergency_notes and embedded_data.emergency_notes != "None" %}
+        <div class="bg-white dark:bg-yellow-950 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl p-3 mb-4 shadow-sm">
+            <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                <h3 class="font-bold text-yellow-700 dark:text-yellow-300 text-sm">Notes</h3>
+            </div>
+            <p class="text-yellow-800 dark:text-yellow-200 text-sm">{{ embedded_data.emergency_notes }}</p>
+        </div>
+        {% endif %}
+    {% else %}
+        {% if profile.emergency_notes %}
+        <div class="bg-white dark:bg-yellow-950 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl p-3 mb-4 shadow-sm">
+            <div class="flex items-center gap-2 mb-1">
+                <svg class="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                <h3 class="font-bold text-yellow-700 dark:text-yellow-300 text-sm">Notes</h3>
+            </div>
+            <p class="text-yellow-800 dark:text-yellow-200 text-sm">{{ profile.emergency_notes }}</p>
+        </div>
+        {% endif %}
     {% endif %}
 
-    <!-- Emergency Notes (Visible to All) -->
-    {% if profile.emergency_notes %}
-    <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-yellow-800 text-lg mb-2">📝 Emergency Notes</h3>
-        <p class="text-yellow-900">{{ profile.emergency_notes }}</p>
-    </div>
+    <!-- Medications Card -->
+    {% if is_embedded %}
+        {% if embedded_data.medications %}
+        <div class="bg-white dark:bg-purple-950 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-3 mb-3 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                <h3 class="font-bold text-purple-700 dark:text-purple-300 text-sm">Current Medications</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {% for med in embedded_data.medications %}
+                <span class="bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-lg text-xs font-medium border border-purple-200 dark:border-purple-700">
+                    {{ med }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        {% if medications %}
+        <div class="bg-white dark:bg-purple-950 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-3 mb-3 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                <h3 class="font-bold text-purple-700 dark:text-purple-300 text-sm">Current Medications</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {% for med in medications %}
+                <span class="bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-lg text-xs font-medium border border-purple-200 dark:border-purple-700">
+                    {{ med.name }} {% if med.dosage %}({{ med.dosage }}){% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     {% endif %}
 
-    <!-- Chronic Diseases (Visible to Doctors/Admins) -->
-    {% if show_full_medical and profile.chronic_diseases %}
-    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-blue-800 text-lg mb-2">🏥 Chronic Conditions</h3>
-        <p class="text-blue-900">{{ profile.chronic_diseases }}</p>
-    </div>
-    {% endif %}
-
-    <!-- Current Medications (Visible to All) -->
-    {% if medications %}
-    <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-purple-800 text-lg mb-3">💊 Current Medications</h3>
-        <ul class="space-y-2">
-            {% for med in medications %}
-            <li class="bg-white p-3 rounded shadow-sm">
-                <p class="font-semibold text-purple-900">{{ med.name }}</p>
-                <p class="text-purple-700 text-sm">{{ med.dosage }}{% if med.frequency %} - {{ med.frequency }}{% endif %}</p>
-                {% if med.notes %}
-                <p class="text-purple-600 text-xs mt-1">{{ med.notes }}</p>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-
-    <!-- Emergency Contacts (Visible to All) -->
-    {% if contacts %}
-    <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-green-800 text-lg mb-3">📞 Emergency Contacts</h3>
-        <ul class="space-y-3">
-            {% for contact in contacts %}
-            <li class="bg-white p-3 rounded shadow-sm{% if contact.is_primary %} border-2 border-green-500{% endif %}">
-                <div class="flex justify-between items-start">
+    <!-- Emergency Contacts Card -->
+    {% if is_embedded %}
+        {% if contacts %}
+        <div class="bg-white dark:bg-green-950 border-2 border-green-200 dark:border-green-800 rounded-xl p-3 mb-3 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                <h3 class="font-bold text-green-700 dark:text-green-300 text-sm">Emergency Contacts</h3>
+            </div>
+            <div class="space-y-2">
+                {% for contact in contacts %}
+                <div class="flex justify-between items-center bg-green-50 dark:bg-green-900/30 p-2 rounded-lg border border-green-100 dark:border-green-800">
                     <div>
-                        <p class="font-semibold text-green-900">
+                        <p class="font-semibold text-green-800 dark:text-green-200 text-sm">
                             {{ contact.name }}
-                            {% if contact.is_primary %}<span class="text-xs bg-green-500 text-white px-2 py-0.5 rounded ml-2">Primary</span>{% endif %}
+                            {% if contact.is_primary %}<span class="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded ml-1">Primary</span>{% endif %}
                         </p>
-                        <p class="text-green-700 text-sm">{{ contact.get_relationship_display }}</p>
+                        <p class="text-green-600 dark:text-green-400 text-xs">{{ contact.get_relationship_display }}</p>
                     </div>
-                    <a href="tel:{{ contact.phone_number }}" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700">
+                    <a href="tel:{{ contact.phone_number }}" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-green-700 text-xs">
                         Call
                     </a>
                 </div>
-                <p class="text-green-800 mt-2">{{ contact.phone_number }}</p>
-                {% if contact.alternate_phone %}
-                <p class="text-green-700 text-sm">Alt: {{ contact.alternate_phone }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        {% if contacts %}
+        <div class="bg-white dark:bg-green-950 border-2 border-green-200 dark:border-green-800 rounded-xl p-3 mb-3 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                </svg>
+                <h3 class="font-bold text-green-700 dark:text-green-300 text-sm">Emergency Contacts</h3>
+            </div>
+            <div class="space-y-2">
+                {% for contact in contacts %}
+                <div class="flex justify-between items-center bg-green-50 dark:bg-green-900/30 p-2 rounded-lg border border-green-100 dark:border-green-800">
+                    <div>
+                        <p class="font-semibold text-green-800 dark:text-green-200 text-sm">
+                            {{ contact.name }}
+                            {% if contact.is_primary %}<span class="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded ml-1">Primary</span>{% endif %}
+                        </p>
+                        <p class="text-green-600 dark:text-green-400 text-xs">{{ contact.get_relationship_display }}</p>
+                    </div>
+                    <a href="tel:{{ contact.phone_number }}" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-green-700 text-xs">
+                        Call
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- Physical Info Card -->
+    {% if is_embedded %}
+    {% else %}
+        {% if profile.height or profile.weight %}
+        <div class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 mb-3 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <h3 class="font-bold text-gray-700 dark:text-gray-300 text-sm">Physical Info</h3>
+            </div>
+            <div class="flex gap-4">
+                {% if profile.height %}
+                <div class="bg-white dark:bg-gray-800/50 px-3 py-1.5 rounded-lg text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Height</p>
+                    <p class="font-semibold text-gray-800 dark:text-gray-200">{{ profile.height }} cm</p>
+                </div>
                 {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
+                {% if profile.weight %}
+                <div class="bg-white dark:bg-gray-800/50 px-3 py-1.5 rounded-lg text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Weight</p>
+                    <p class="font-semibold text-gray-800 dark:text-gray-200">{{ profile.weight }} kg</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- Medical History - Doctor Only -->
+    {% if user_role == 'doctor' or user_role == 'admin' %}
+        {% if medical_events %}
+        <div class="bg-white dark:bg-indigo-950 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl p-3 mb-3 shadow-sm">
+            <div class="flex items-center gap-2 mb-2">
+                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <h3 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm">Medical History (Doctor Only)</h3>
+            </div>
+            <div class="space-y-2">
+                {% for event in medical_events|slice:":5" %}
+                <div class="bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-semibold text-indigo-900 dark:text-indigo-200 text-xs">{{ event.get_event_type_display }}</p>
+                            <p class="text-indigo-700 dark:text-indigo-300 text-xs">{{ event.description|truncatechars:80 }}</p>
+                        </div>
+                        {% if event.event_date %}
+                        <span class="text-xs text-indigo-500 whitespace-nowrap">{{ event.event_date|date:"M d, Y" }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <!-- Doctor Access Prompt -->
+    {% if user_role != 'doctor' and user_role != 'admin' and not is_embedded %}
+    <div class="bg-white dark:bg-blue-950 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-3 mb-3 shadow-sm">
+        <div class="flex items-center gap-2 mb-2">
+            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <h3 class="font-bold text-blue-700 dark:text-blue-300 text-sm">Doctor Access</h3>
+        </div>
+        <p class="text-blue-800 dark:text-blue-300 text-xs mb-2">Sign in as a doctor to view medical history and full details.</p>
+        <a href="{% url 'login' %}?next={{ request.path }}" class="inline-block bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-700 text-xs">
+            Doctor Login
+        </a>
     </div>
     {% endif %}
 
-    <!-- Physical Info (Visible to All) -->
-    {% if profile.height or profile.weight %}
-    <div class="bg-gray-50 border-l-4 border-gray-400 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-gray-700 text-lg mb-2">📊 Physical Information</h3>
-        <div class="flex gap-6">
-            {% if profile.height %}
-            <div>
-                <p class="text-sm text-gray-500">Height</p>
-                <p class="font-semibold text-gray-800">{{ profile.height }} cm</p>
+    <!-- Emergency Action Buttons -->
+    <div class="mt-4 space-y-2">
+        <!-- Emergency Alert Button -->
+        <button id="btn-emergency-alert" type="button"
+                class="w-full bg-gradient-to-r from-red-600 to-red-500 dark:from-red-700 dark:to-red-600 text-white px-4 py-3 rounded-xl font-bold text-sm hover:from-red-700 hover:to-red-600 flex items-center justify-center gap-2 shadow-lg transition-all"
+                data-profile-id="{{ profile.public_id }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            Send Emergency Alert
+        </button>
+        
+        <!-- Location Status -->
+        <div id="location-status" class="hidden">
+            <div class="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-xl p-3">
+                <p class="text-blue-800 dark:text-blue-300 text-xs flex items-center gap-2">
+                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Getting your location...
+                </p>
             </div>
-            {% endif %}
-            {% if profile.weight %}
-            <div>
-                <p class="text-sm text-gray-500">Weight</p>
-                <p class="font-semibold text-gray-800">{{ profile.weight }} kg</p>
-            </div>
-            {% endif %}
+        </div>
+
+        <!-- Find Nearby Hospitals -->
+        <button id="btn-nearby-hospitals" type="button"
+                class="w-full bg-gradient-to-r from-green-600 to-green-500 dark:from-green-700 dark:to-green-600 text-white px-4 py-2.5 rounded-xl font-semibold hover:from-green-700 hover:to-green-600 flex items-center justify-center gap-2 shadow-md transition-all text-sm"
+                data-profile-id="{{ profile.public_id }}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            Find Nearby Hospitals
+        </button>
+        
+        <div id="nearby-hospitals-list" class="hidden mt-2 space-y-2">
+            <!-- Hospitals will be loaded here -->
         </div>
     </div>
-    {% endif %}
-
-    <!-- Medical History (Visible to Doctors/Admins Only) -->
-    {% if show_full_medical and medical_events %}
-    <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-indigo-800 text-lg mb-3">📋 Medical History</h3>
-        <ul class="space-y-2">
-            {% for event in medical_events %}
-            <li class="bg-white p-3 rounded shadow-sm">
-                <p class="font-semibold text-indigo-900">{{ event.title }}</p>
-                <p class="text-indigo-700 text-sm">{{ event.get_event_type_display }} - {{ event.date }}</p>
-                {% if event.description %}
-                <p class="text-indigo-600 text-xs mt-1">{{ event.description }}</p>
-                {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-
-    <!-- Insurance Information (Visible to Doctors/Engineers/Admins) -->
-    {% if show_insurance and profile.insurance_provider %}
-    <div class="bg-teal-50 border-l-4 border-teal-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-teal-800 text-lg mb-2">🏢 Insurance Information</h3>
-        <p class="text-teal-900"><strong>Provider:</strong> {{ profile.insurance_provider }}</p>
-        {% if profile.insurance_number %}
-        <p class="text-teal-900"><strong>Policy Number:</strong> {{ profile.insurance_number }}</p>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    <!-- User/Owner Info (Visible to Engineers/Admins - for band/device info) -->
-    {% if show_engineer_info %}
-    <div class="bg-slate-50 border-l-4 border-slate-500 rounded-lg p-4 mb-4">
-        <h3 class="font-bold text-slate-800 text-lg mb-2">👤 Owner Information</h3>
-        <p class="text-slate-900"><strong>Name:</strong> {{ profile.user.get_full_name|default:profile.user.username }}</p>
-        {% if national_id_masked %}
-        <p class="text-slate-900"><strong>National ID:</strong> {{ national_id_masked }}</p>
-        {% endif %}
-        {% if profile.user.date_of_birth %}
-        <p class="text-slate-900"><strong>Date of Birth:</strong> {{ profile.user.date_of_birth }}</p>
-        {% endif %}
-        {% if profile.user.phone_number %}
-        <p class="text-slate-900"><strong>Phone:</strong> {{ profile.user.phone_number }}</p>
-        {% endif %}
-    </div>
-    {% endif %}
 
     <!-- Footer -->
-    <div class="text-center mt-8 text-gray-500 text-sm">
-        <p>Provided by SYRA Medical ID</p>
-        <p class="mt-1">Last updated: {{ profile.updated_at|date:"M d, Y" }}</p>
-        <p class="mt-1">Public ID: {{ profile.public_id }}</p>
+    <div class="mt-4 text-center text-gray-400 dark:text-gray-500 text-xs">
+        <p>SYRA Emergency Medical ID • {% trans "Last updated" %}: {% if profile.updated_at %}{{ profile.updated_at|date:"M d, Y" }}{% else %}{% trans "Unknown" %}{% endif %}</p>
     </div>
 </div>
 {% endblock %}

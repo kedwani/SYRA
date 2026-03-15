@@ -8,6 +8,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db.models import F
+from django.db import transaction
+from django.core.exceptions import ValidationError
 
 from .models import (
     SyraBandType,
@@ -18,6 +21,7 @@ from .models import (
     Cart,
     CartItem,
     BandRegistration,
+    BandReview,
 )
 from .serializers import (
     SyraBandTypeSerializer,
@@ -31,6 +35,7 @@ from .serializers import (
     CartItemSerializer,
     CartSerializer,
     BandRegistrationSerializer,
+    BandReviewSerializer,
 )
 
 
@@ -40,7 +45,10 @@ class IsStoreAdmin(IsAdminUser):
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        return request.user.is_staff or request.user.store_role in [
+        # Check both is_staff and store_role for consistency
+        if request.user.is_staff:
+            return True
+        return request.user.store_role in [
             "store_admin",
             "product_manager",
             "price_manager",
@@ -126,12 +134,7 @@ class SyraBandViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [CanManageProducts()]
-        return [AllowAny()]
-
-    def get_permissions(self):
-        if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [IsAdminUser()]
+            return [IsStoreAdmin()]
         return [AllowAny()]
 
     def get_queryset(self):
@@ -188,6 +191,11 @@ class SyraBandViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     """ViewSet for Orders."""
 
+    queryset = (
+        Order.objects.select_related("user")
+        .prefetch_related("items", "items__product")
+        .all()
+    )
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
@@ -199,9 +207,18 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
-            return Order.objects.all()
-        return Order.objects.filter(user=user)
+        # Use store_role for consistent admin permissions
+        if user.is_staff or user.store_role in ["store_admin", "store_viewer"]:
+            return (
+                Order.objects.select_related("user")
+                .prefetch_related("items", "items__product")
+                .all()
+            )
+        return (
+            Order.objects.select_related("user")
+            .prefetch_related("items", "items__product")
+            .filter(user=user)
+        )
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -216,11 +233,11 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Restore stock
-        for item in order.items.all():
-            product = item.product
-            product.stock_quantity += item.quantity
-            product.save()
+        # Restore stock atomically
+        for item in order.items.select_related("product").all():
+            SyraBand.objects.filter(id=item.product.id).update(
+                stock_quantity=F("stock_quantity") + item.quantity
+            )
 
         order.status = "cancelled"
         order.save()
@@ -231,7 +248,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def mark_paid(self, request, pk=None):
         """Mark order as paid (admin only)."""
-        if not request.user.is_staff:
+        if not request.user.is_staff and request.user.store_role not in [
+            "store_admin",
+            "price_manager",
+        ]:
             return Response(
                 {"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN
             )
@@ -247,7 +267,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def update_status(self, request, pk=None):
         """Update order status (admin only)."""
-        if not request.user.is_staff:
+        if not request.user.is_staff and request.user.store_role not in ["store_admin"]:
             return Response(
                 {"error": "Permission denied."}, status=status.HTTP_403_FORBIDDEN
             )
@@ -278,11 +298,20 @@ class OrderViewSet(viewsets.ModelViewSet):
 class CartViewSet(viewsets.ModelViewSet):
     """ViewSet for Shopping Cart."""
 
+    queryset = (
+        Cart.objects.select_related("user")
+        .prefetch_related("items", "items__product")
+        .all()
+    )
     permission_classes = [IsAuthenticated]
     serializer_class = CartSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user)
+        return (
+            Cart.objects.select_related("user")
+            .prefetch_related("items", "items__product")
+            .filter(user=self.request.user)
+        )
 
     def get_object(self):
         """Get or create cart for current user."""
@@ -304,14 +333,29 @@ class CartViewSet(viewsets.ModelViewSet):
         size = request.data.get("size", "medium")
         color = request.data.get("color", "black")
 
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         try:
-            product = SyraBand.objects.get(id=product_id, is_active=True)
+            product = SyraBand.objects.select_for_update().get(
+                id=product_id, is_active=True
+            )
         except SyraBand.DoesNotExist:
             return Response(
                 {"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        if not product.is_available and product.stock_quantity < quantity:
+        # DEBUG: Log stock check details for diagnosis
+        logger.debug(
+            f"[STOCK_CHECK] product={product.name}, is_available={product.is_available}, stock={product.stock_quantity}, requested={quantity}"
+        )
+
+        # Check if product is available (now in atomic transaction)
+        if not product.is_available or product.stock_quantity < quantity:
+            logger.warning(
+                f"[STOCK_CHECK] BLOCKED: Product {product.name} - is_available={product.is_available}, stock={product.stock_quantity} < requested={quantity}"
+            )
             return Response(
                 {"error": "Product is not available in requested quantity."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -401,39 +445,56 @@ class CartViewSet(viewsets.ModelViewSet):
         tax_amount = subtotal * tax_rate
         total = subtotal + shipping_cost + tax_amount
 
-        order = Order.objects.create(
-            user=request.user,
-            subtotal=subtotal,
-            shipping_cost=shipping_cost,
-            tax_amount=tax_amount,
-            total=total,
-            payment_method=request.data.get("payment_method", "cash"),
-            shipping_name=request.data.get("shipping_name"),
-            shipping_phone=request.data.get("shipping_phone"),
-            shipping_address=request.data.get("shipping_address"),
-            shipping_city=request.data.get("shipping_city"),
-            shipping_area=request.data.get("shipping_area", ""),
-            shipping_notes=request.data.get("shipping_notes", ""),
-            user_notes=request.data.get("user_notes", ""),
-        )
+        # Use atomic transaction to prevent race conditions
+        with transaction.atomic():
+            # Lock cart items for update
+            cart_items = list(cart.items.select_for_update())
 
-        # Create order items
-        for item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                unit_price=item.product.current_price,
-                total=item.total_price,
+            # Check stock availability
+            for item in cart_items:
+                product = item.product
+                if product.stock_quantity < item.quantity:
+                    return Response(
+                        {
+                            "error": f"{product.name} is out of stock. Available: {product.stock_quantity}"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            # Create order
+            order = Order.objects.create(
+                user=request.user,
+                subtotal=subtotal,
+                shipping_cost=shipping_cost,
+                tax_amount=tax_amount,
+                total=total,
+                payment_method=request.data.get("payment_method", "cash"),
+                shipping_name=request.data.get("shipping_name"),
+                shipping_phone=request.data.get("shipping_phone"),
+                shipping_address=request.data.get("shipping_address"),
+                shipping_city=request.data.get("shipping_city"),
+                shipping_area=request.data.get("shipping_area", ""),
+                shipping_notes=request.data.get("shipping_notes", ""),
+                user_notes=request.data.get("user_notes", ""),
             )
 
-            # Update stock
-            product = item.product
-            product.stock_quantity -= item.quantity
-            product.save()
+            # Create order items and atomically update stock
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    unit_price=item.product.current_price,
+                    total=item.total_price,
+                )
 
-        # Clear cart
-        cart.items.all().delete()
+                # Atomic decrement using F() to prevent race conditions
+                SyraBand.objects.filter(id=item.product.id).update(
+                    stock_quantity=F("stock_quantity") - item.quantity
+                )
+
+            # Clear cart
+            cart.items.all().delete()
 
         serializer = OrderDetailSerializer(order)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -442,14 +503,15 @@ class CartViewSet(viewsets.ModelViewSet):
 class BandRegistrationViewSet(viewsets.ModelViewSet):
     """ViewSet for Band Registrations."""
 
+    queryset = BandRegistration.objects.select_related("user", "band").all()
     serializer_class = BandRegistrationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return BandRegistration.objects.all()
-        return BandRegistration.objects.filter(user=user)
+            return BandRegistration.objects.select_related("user", "band").all()
+        return BandRegistration.objects.select_related("user", "band").filter(user=user)
 
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
@@ -494,4 +556,38 @@ class BandRegistrationViewSet(viewsets.ModelViewSet):
         registration.save()
 
         serializer = self.get_serializer(registration)
+        return Response(serializer.data)
+
+
+class BandReviewViewSet(viewsets.ModelViewSet):
+    """ViewSet for Band Reviews."""
+
+    serializer_class = BandReviewSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["rating", "product"]
+    search_fields = ["title", "comment"]
+    ordering_fields = ["created_at", "rating"]
+
+    def get_queryset(self):
+        # Allow admins to see all reviews
+        if self.request.user.is_staff:
+            return BandReview.objects.all()
+        # Regular users only see approved reviews
+        return BandReview.objects.filter(is_approved=True)
+
+    def perform_create(self, serializer):
+        # Check if user already reviewed this product
+        product = serializer.validated_data["product"]
+        if BandReview.objects.filter(user=self.request.user, product=product).exists():
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError({"detail": "You have already reviewed this product."})
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def my_reviews(self, request):
+        """Get current user's reviews."""
+        reviews = BandReview.objects.filter(user=request.user)
+        serializer = self.get_serializer(reviews, many=True)
         return Response(serializer.data)

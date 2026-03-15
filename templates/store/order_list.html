@@ -1,6 +1,49 @@
 {% extends 'base.html' %}
 
+{% block hide_navigation %}true{% endblock %}
+
 {% block title %}My Orders - Syra Store{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Order list styling */
+    .order-card {
+        transition: all 0.2s ease;
+    }
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Dark mode support - Enhanced for accessibility */
+    .dark .bg-white { background-color: #1e293b; }
+    .dark .bg-light { background-color: #1e293b; }
+    .dark .text-muted { color: #94a3b8; }
+    .dark .text-dark { color: #f1f5f9; }
+    .dark .card {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    .dark .card-body {
+        background-color: #1e293b;
+    }
+    .dark .btn-outline-primary {
+        border-color: #3b82f6;
+        color: #60a5fa;
+    }
+    .dark .btn-outline-primary:hover {
+        background-color: #3b82f6;
+        color: #ffffff;
+    }
+    .dark .badge.bg-primary {
+        background-color: #3b82f6 !important;
+    }
+    .dark .badge.bg-secondary {
+        background-color: #64748b !important;
+    }
+    .dark .border-bottom { border-color: #334155; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">

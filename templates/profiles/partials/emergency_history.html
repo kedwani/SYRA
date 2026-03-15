@@ -1,0 +1,37 @@
+<!-- HTMX Partial: Medical History Section (Full Access) -->
+<div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-lg p-4 mb-4"
+     x-show="historyLoaded"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100">
+    
+    <h3 class="font-bold text-indigo-800 text-lg mb-3">📋 Medical History</h3>
+    
+    {% if medical_events %}
+    <ul class="space-y-2">
+        {% for event in medical_events %}
+        <li class="bg-white p-3 rounded-lg shadow-sm border border-indigo-100">
+            <p class="font-semibold text-indigo-900">{{ event.title }}</p>
+            <p class="text-indigo-700 text-sm">
+                {{ event.get_event_type_display }} - {{ event.date|date:"M d, Y" }}
+            </p>
+            {% if event.notes %}
+            <p class="text-indigo-600 text-xs mt-1">{{ event.notes|truncatechars:100 }}</p>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-indigo-600">No medical history recorded.</p>
+    {% endif %}
+</div>
+
+<!-- Loading State -->
+<div id="history-loading" class="hidden">
+    <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-lg p-4 mb-4">
+        <div class="flex items-center gap-3">
+            <div class="loading-spinner"></div>
+            <span class="text-indigo-700">Loading medical history...</span>
+        </div>
+    </div>
+</div>

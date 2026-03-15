@@ -1,0 +1,664 @@
+# Arabic translations for SYRA project.
+msgid ""
+msgstr ""
+"Project-Id-Version: SYRA\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-12 18:07+0200\n"
+"PO-Revision-Date: 2026-03-12 18:07+0200\n"
+"Last-Translator: \n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5;\n"
+
+#: .\templates\accounts\login.html:4
+msgid "Login"
+msgstr "تسجيل الدخول"
+
+#: .\templates\accounts\login.html:16
+msgid "Welcome Back"
+msgstr "مرحباً"
+
+#: .\templates\accounts\login.html:17
+msgid "Sign in to access your SYRA account"
+msgstr "سجل الدخول لحسابك في سيرا"
+
+#: .\templates\accounts\login.html:29 .\templates\accounts\register.html:49
+#: .\templates\profiles\doctor_portal.html:21
+msgid "Egyptian National ID"
+msgstr "الرقم الوطني المصري"
+
+#: .\templates\accounts\login.html:40 .\templates\accounts\register.html:60
+#: .\templates\profiles\doctor_portal.html:25
+msgid "Enter 14-digit National ID"
+msgstr "أدخل الرقم الوطني المكون من 14 رقماً"
+
+#: .\templates\accounts\login.html:52 .\templates\accounts\register.html:136
+msgid "Password"
+msgstr "كلمة المرور"
+
+#: .\templates\accounts\login.html:63
+msgid "Enter your password"
+msgstr "أدخل كلمة المرور"
+
+#: .\templates\accounts\login.html:72 .\templates\accounts\register.html:216
+msgid "Sign In"
+msgstr "تسجيل الدخول"
+
+#: .\templates\accounts\login.html:79
+msgid "Don't have an account?"
+msgstr "ليس لديك حساب؟"
+
+#: .\templates\accounts\login.html:81 .\templates\accounts\register.html:207
+msgid "Create Account"
+msgstr "إنشاء حساب"
+
+#: .\templates\accounts\login.html:90
+msgid "Protected by SYRA Medical ID Security"
+msgstr "محمي بأمان سيرا للهوية الطبية"
+
+#: .\templates\accounts\register.html:4
+msgid "Register"
+msgstr "تسجيل"
+
+#: .\templates\accounts\register.html:16
+msgid "Create Your Account"
+msgstr "إنشاء حسابك"
+
+#: .\templates\accounts\register.html:17
+msgid "Join SYRA Medical ID today"
+msgstr "انضم إلى سيرا للهوية الطبية اليوم"
+
+#: .\templates\accounts\register.html:29
+msgid "Username"
+msgstr "اسم المستخدم"
+
+#: .\templates\accounts\register.html:40
+msgid "Choose a username"
+msgstr "اختر اسم مستخدم"
+
+#: .\templates\accounts\register.html:73
+msgid "First Name"
+msgstr "الاسم الأول"
+
+#: .\templates\accounts\register.html:83
+msgid "Last Name"
+msgstr "اسم العائلة"
+
+#: .\templates\accounts\register.html:96
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+#: .\templates\profiles\contact_form.html:16
+msgid "Emergency Contact"
+msgstr "جهة اتصال الطوارئ"
+
+#: .\templates\profiles\contact_form.html:18
+msgid "Add someone who should be contacted in case of emergency"
+msgstr "أضف شخصاً يجب الاتصال به في حالة الطوارئ"
+
+#: .\templates\profiles\contact_form.html:16
+msgid "Add Contact"
+msgstr "إضافة جهة اتصال"
+
+#: .\templates\profiles\contact_form.html:16
+msgid "Edit Contact"
+msgstr "تعديل جهة الاتصال"
+
+#: .\templates\profiles\contact_form.html:29
+msgid "Contact Name"
+msgstr "اسم جهة الاتصال"
+
+#: .\templates\profiles\contact_form.html:30
+msgid "Enter contact's full name"
+msgstr "أدخل الاسم الكامل لجهة الاتصال"
+
+#: .\templates\profiles\contact_form.html:50
+msgid "Relationship"
+msgstr "العلاقة"
+
+#: .\templates\profiles\contact_form.html:62
+msgid "Select relationship..."
+msgstr "اختر العلاقة..."
+
+#: .\templates\profiles\contact_form.html:80
+msgid "Phone Number"
+msgstr "رقم الهاتف"
+
+#: .\templates\profiles\contact_form.html:93
+msgid "01xxxxxxxxx"
+msgstr "01xxxxxxxxx"
+
+#: .\templates\profiles\contact_form.html:100
+msgid "Alternate Phone"
+msgstr "رقم هاتف بديل"
+
+#: .\templates\profiles\contact_form.html:112
+msgid "Alternative contact number"
+msgstr "رقم اتصال بديل"
+
+#: .\templates\profiles\contact_form.html:124
+msgid "Set as Primary Contact"
+msgstr "تعيين كجهة اتصال أساسية"
+
+#: .\templates\profiles\contact_form.html:125
+msgid "This person will be contacted first in emergencies"
+msgstr "سيتم الاتصال بهذه الشخص أولاً في حالات الطوارئ"
+
+#: .\templates\profiles\contact_form.html:137
+msgid "Cancel"
+msgstr "إلغاء"
+
+#: .\templates\accounts\register.html:148
+msgid "Confirm Password"
+msgstr "تأكيد كلمة المرور"
+
+#: .\templates\accounts\register.html:162
+msgid "Register As"
+msgstr "سجل كـ"
+
+#: .\templates\accounts\register.html:184
+msgid "Medical License Number"
+msgstr "رقم الترخيص الطبي"
+
+#: .\templates\accounts\register.html:194
+msgid "Medical Specialty"
+msgstr "التخصص الطبي"
+
+#: .\templates\accounts\register.html:214
+msgid "Already have an account?"
+msgstr "لديك حساب بالفعل؟"
+
+#: .\templates\base.html:7
+msgid "SYRA - Medical ID"
+msgstr "سيرا - الهوية الطبية"
+
+#: .\templates\base.html:481
+msgid "Skip to main content"
+msgstr "انتقل إلى المحتوى الرئيسي"
+
+#: .\templates\base.html:574 .\templates\profiles\dashboard.html:5
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+#: .\templates\base.html:583 .\templates\profiles\doctor_portal.html:4
+#: .\templates\profiles\doctor_portal.html:6
+#: .\templates\profiles\doctor_portal.html:12
+msgid "Doctor Portal"
+msgstr "بوابة الطبيب"
+
+#: .\templates\base.html:592
+msgid "Profile"
+msgstr "الملف الشخصي"
+
+#: .\templates\base.html:600 .\templates\profiles\dashboard.html:59
+#: .\templates\profiles\dashboard.html:120
+#: .\templates\profiles\doctor_portal.html:74
+#: .\templates\profiles\medications.html:4
+msgid "Medications"
+msgstr "الأدوية"
+
+#: .\templates\base.html:608 .\templates\profiles\dashboard.html:127
+#: .\templates\profiles\doctor_portal.html:78
+msgid "Contacts"
+msgstr "جهات الاتصال"
+
+#: .\templates\base.html:616 .\templates\profiles\dashboard.html:134
+msgid "History"
+msgstr "السجل"
+
+#: .\templates\base.html:624
+msgid "Approvals"
+msgstr "الموافقات"
+
+#: .\templates\base.html:630
+msgid "Logout"
+msgstr "تسجيل الخروج"
+
+#: .\templates\base.html:655
+msgid "All rights reserved."
+msgstr "جميع الحقوق محفوظة."
+
+#: .\templates\profiles\contacts.html:4 .\templates\profiles\contacts.html:11
+#: .\templates\profiles\dashboard.html:72
+#: .\templates\profiles\emergency_scan.html:451
+msgid "Emergency Contacts"
+msgstr "جهات اتصال الطوارئ"
+
+#: .\templates\profiles\contacts.html:12
+#, python-format
+msgid "Maximum %(max)s contacts allowed"
+msgstr "مسموح بحد أقصى %(max)s جهة اتصال"
+
+#: .\templates\profiles\contacts.html:18 .\templates\profiles\events.html:18
+#: .\templates\profiles\medications.html:18
+#: .\templates\profiles\pending_approvals.html:23
+msgid "Back to Dashboard"
+msgstr "العودة إلى لوحة التحكم"
+
+#: .\templates\profiles\contacts.html:36
+msgid "Maximum contacts reached"
+msgstr "تم الوصول للحد الأقصى"
+
+#: .\templates\profiles\contacts.html:48
+msgid "Name"
+msgstr "الاسم"
+
+#: .\templates\profiles\contacts.html:50
+msgid "Phone"
+msgstr "الهاتف"
+
+#: .\templates\profiles\contacts.html:51 .\templates\profiles\contacts.html:84
+#: .\templates\profiles\emergency_scan.html:459
+msgid "Primary"
+msgstr "أساسي"
+
+#: .\templates\profiles\contacts.html:67
+msgid "Spouse"
+msgstr "زوج/زوجة"
+
+#: .\templates\profiles\contacts.html:68
+msgid "Parent"
+msgstr "والد/والدة"
+
+#: .\templates\profiles\contacts.html:69
+msgid "Sibling"
+msgstr "أخ/أخت"
+
+#: .\templates\profiles\contacts.html:70
+msgid "Child"
+msgstr "ابن/ابنة"
+
+#: .\templates\profiles\contacts.html:71
+msgid "Friend"
+msgstr "صديق"
+
+#: .\templates\profiles\contacts.html:72 .\templates\profiles\events.html:64
+msgid "Other"
+msgstr "أخرى"
+
+#: .\templates\profiles\contacts.html:102
+msgid "No emergency contacts yet"
+msgstr "لا توجد جهات اتصال طوارئ بعد"
+
+#: .\templates\profiles\dashboard.html:10
+msgid "Welcome"
+msgstr "مرحباً"
+
+#: .\templates\profiles\dashboard.html:11
+msgid "Manage your medical profile and emergency information"
+msgstr "إدارة ملفك الطبي ومعلومات الطوارئ"
+
+#: .\templates\profiles\dashboard.html:22
+msgid "Get Started with SYRA"
+msgstr "ابدأ مع سيرا"
+
+#: .\templates\profiles\dashboard.html:31
+msgid "Create Medical Profile"
+msgstr "إنشاء ملف طبي"
+
+#: .\templates\profiles\dashboard.html:46
+#: .\templates\profiles\dashboard.html:96
+#: .\templates\profiles\doctor_portal.html:70
+#: .\templates\profiles\profile_edit.html:25
+msgid "Blood Type"
+msgstr "فصيلة الدم"
+
+#: .\templates\profiles\dashboard.html:84
+msgid "Your Medical Profile"
+msgstr "ملفك الطبي"
+
+#: .\templates\profiles\dashboard.html:90
+#: .\templates\profiles\profile_edit.html:12
+msgid "Edit"
+msgstr "تعديل"
+
+#: .\templates\profiles\dashboard.html:100
+#: .\templates\profiles\profile_edit.html:57
+msgid "Chronic Diseases"
+msgstr "الأمراض المزمنة"
+
+#: .\templates\profiles\dashboard.html:101
+#: .\templates\profiles\dashboard.html:105
+#: .\templates\profiles\dashboard.html:109
+msgid "None"
+msgstr "لا يوجد"
+
+#: .\templates\profiles\dashboard.html:104
+#: .\templates\profiles\profile_edit.html:64
+msgid "Allergies"
+msgstr "الحساسية"
+
+#: .\templates\profiles\dashboard.html:108
+#: .\templates\profiles\profile_edit.html:71
+msgid "Emergency Notes"
+msgstr "ملاحظات الطوارئ"
+
+#: .\templates\profiles\dashboard.html:142
+msgid "Your Emergency QR Code"
+msgstr "رمز QR الطوارئ الخاص بك"
+
+#: .\templates\profiles\dashboard.html:149
+msgid "View Full Page"
+msgstr "عرض الصفحة الكاملة"
+
+#: .\templates\profiles\dashboard.html:153
+msgid "Share this QR code with first responders or print it on your wristband."
+msgstr "شارك رمز QR هذا مع المسعفين أو طباعته على سوارك"
+
+#: .\templates\profiles\dashboard.html:159
+msgid "SYRA QR Code"
+msgstr "رمز QR سيرا"
+
+#: .\templates\profiles\dashboard.html:165
+msgid "ID:"
+msgstr "المعرف:"
+
+#: .\templates\profiles\dashboard.html:174
+msgid "Print"
+msgstr "طباعة"
+
+#: .\templates\profiles\dashboard.html:182
+msgid "Open"
+msgstr "فتح"
+
+#: .\templates\profiles\dashboard.html:192
+msgid "Recent Medical History"
+msgstr "التاريخ الطبي الأخير"
+
+#: .\templates\profiles\dashboard.html:193
+msgid "View All"
+msgstr "عرض الكل"
+
+#: .\templates\profiles\doctor_portal.html:18
+msgid "Search Patient by National ID"
+msgstr "البحث عن مريض بالرقم الوطني"
+
+#: .\templates\profiles\doctor_portal.html:38
+msgid "Search"
+msgstr "بحث"
+
+#: .\templates\profiles\doctor_portal.html:50
+msgid "Patient Found"
+msgstr "تم العثور على المريض"
+
+#: .\templates\profiles\doctor_portal.html:57
+msgid "Patient Name"
+msgstr "اسم المريض"
+
+#: .\templates\profiles\doctor_portal.html:61
+msgid "National ID"
+msgstr "الرقم الوطني"
+
+#: .\templates\profiles\doctor_portal.html:82
+msgid "Events"
+msgstr "الأحداث"
+
+#: .\templates\profiles\doctor_portal.html:96
+msgid "View Emergency Profile"
+msgstr "عرض ملف الطوارئ"
+
+#: .\templates\profiles\doctor_portal.html:103
+msgid "Add Medical Event"
+msgstr "إضافة حدث طبي"
+
+#: .\templates\profiles\doctor_portal.html:110
+#: .\templates\profiles\medications.html:28
+msgid "Add Medication"
+msgstr "إضافة دواء"
+
+#: .\templates\profiles\doctor_portal.html:118
+msgid "How it works"
+msgstr "كيف يعمل"
+
+#: .\templates\profiles\emergency_scan.html:4
+#: .\templates\profiles\emergency_scan.html:6
+msgid "Emergency Medical ID"
+msgstr "الهوية الطبية الطارئة"
+
+#: .\templates\profiles\emergency_scan.html:154
+msgid ""
+"No hospitals found nearby. Please search manually or call emergency services."
+msgstr "لم يتم العثور على مستشفيات قريبة. يرجى البحث يدوياً أو الاتصال بخدمات الطوارئ"
+
+#: .\templates\profiles\emergency_scan.html:481
+msgid "Height"
+msgstr "الطول"
+
+#: .\templates\profiles\emergency_scan.html:485
+msgid "Weight"
+msgstr "الوزن"
+
+#: .\templates\profiles\emergency_scan.html:445
+msgid "Register here"
+msgstr "سجل هنا"
+
+#: .\templates\profiles\events.html:4
+msgid "Medical History"
+msgstr "التاريخ الطبي"
+
+#: .\templates\profiles\events.html:5
+msgid "Track your medical events and history"
+msgstr "تتبع أحداثك الطبية وتاريخك"
+
+#: .\templates\profiles\events.html:28
+msgid "Add Event"
+msgstr "إضافة حدث"
+
+#: .\templates\profiles\events.html:36
+msgid "Date"
+msgstr "التاريخ"
+
+#: .\templates\profiles\events.html:42
+msgid "Type"
+msgstr "النوع"
+
+#: .\templates\profiles\events.html:48
+msgid "Title"
+msgstr "العنوان"
+
+#: .\templates\profiles\events.html:54
+msgid "Hospital"
+msgstr "المستشفى"
+
+#: .\templates\profiles\events.html:74
+msgid "No medical events yet"
+msgstr "لا توجد أحداث طبية بعد"
+
+#: .\templates\profiles\medications.html:5
+msgid "Your Medications"
+msgstr "أدويتك"
+
+#: .\templates\profiles\medications.html:6
+msgid "Manage your current medications"
+msgstr "إدارة أدويتك الحالية"
+
+#: .\templates\profiles\medications.html:38
+msgid "Medication"
+msgstr "الدواء"
+
+#: .\templates\profiles\medications.html:44
+msgid "Dosage"
+msgstr "الجرعة"
+
+#: .\templates\profiles\medications.html:50
+msgid "Frequency"
+msgstr "التكرار"
+
+#: .\templates\profiles\medications.html:56
+msgid "Status"
+msgstr "الحالة"
+
+#: .\templates\profiles\medications.html:62
+msgid "Active"
+msgstr "نشط"
+
+#: .\templates\profiles\medications.html:68
+msgid "Inactive"
+msgstr "غير نشط"
+
+#: .\templates\profiles\medications.html:77
+msgid "No medications yet"
+msgstr "لا توجد أدوية بعد"
+
+#: .\templates\profiles\medications.html:82
+msgid "Add First Medication"
+msgstr "إضافة أول دواء"
+
+#: .\templates\profiles\pending_approvals.html:4
+msgid "Pending Approvals"
+msgstr "الموافقات المعلقة"
+
+#: .\templates\profiles\pending_approvals.html:5
+msgid "Review items added by doctors to your profile"
+msgstr "مراجعة العناصر المضافة بواسطة الأطباء إلى ملفك"
+
+#: .\templates\profiles\pending_approvals.html:15
+msgid "All Caught Up!"
+msgstr "كل شيء على ما يرام!"
+
+#: .\templates\profiles\pending_approvals.html:16
+msgid "You have no pending items to review."
+msgstr "لا توجد عناصر معلقة للمراجعة"
+
+#: .\templates\profiles\pending_approvals.html:29
+msgid "Pending Medications"
+msgstr "الأدوية المعلقة"
+
+#: .\templates\profiles\pending_approvals.html:36
+msgid "Approve"
+msgstr "موافقة"
+
+#: .\templates\profiles\pending_approvals.html:40
+msgid "Reject"
+msgstr "رفض"
+
+#: .\templates\profiles\profile_edit.html:4
+msgid "Edit Profile"
+msgstr "تعديل الملف الشخصي"
+
+#: .\templates\profiles\profile_edit.html:16
+msgid "Medical Profile"
+msgstr "الملف الطبي"
+
+#: .\templates\profiles\profile_edit.html:20
+msgid "Personal Information"
+msgstr "المعلومات الشخصية"
+
+#: .\templates\profiles\profile_edit.html:32
+msgid "Date of Birth"
+msgstr "تاريخ الميلاد"
+
+#: .\templates\profiles\profile_edit.html:39
+msgid "Height (cm)"
+msgstr "الطول (سم)"
+
+#: .\templates\profiles\profile_edit.html:46
+msgid "Weight (kg)"
+msgstr "الوزن (كجم)"
+
+#: .\templates\profiles\profile_edit.html:146
+msgid "Save Profile"
+msgstr "حفظ الملف الشخصي"
+
+#: .\templates\profiles\profile_edit.html:151
+msgid "Create"
+msgstr "إنشاء"
+
+#: .\templates\store\analytics.html:4
+msgid "Analytics Dashboard"
+msgstr "لوحة التحليلات"
+
+#: .\templates\store\band_list.html:4
+msgid "Medical Bands"
+msgstr "الأحزمة الطبية"
+
+#: .\templates\store\cart.html:4
+msgid "Shopping Cart"
+msgstr "سلة التسوق"
+
+#: .\templates\store\cart.html:15
+msgid "Total"
+msgstr "المجموع"
+
+#: .\templates\store\cart.html:22
+msgid "Checkout"
+msgstr "الدفع"
+
+#: .\templates\store\cart.html:28
+msgid "Continue Shopping"
+msgstr "متابعة التسوق"
+
+#: .\templates\store\cart.html:35
+msgid "Remove"
+msgstr "إزالة"
+
+#: .\templates\store\checkout.html:4
+msgid "Shipping Information"
+msgstr "معلومات الشحن"
+
+#: .\templates\store\checkout.html:15
+msgid "Full Name"
+msgstr "الاسم الكامل"
+
+#: .\templates\store\checkout.html:21
+msgid "Address"
+msgstr "العنوان"
+
+#: .\templates\store\checkout.html:27
+msgid "City"
+msgstr "المدينة"
+
+#: .\templates\store\checkout.html:33
+msgid "Area"
+msgstr "المنطقة"
+
+#: .\templates\store\checkout.html:51
+msgid "Payment Method"
+msgstr "طريقة الدفع"
+
+#: .\templates\store\checkout.html:63
+msgid "Place Order"
+msgstr "تقديم الطلب"
+
+#: .\templates\store\home.html:4
+msgid "Welcome to SYRA Store"
+msgstr "مرحباً بك في متجر سيرا"
+
+#: .\templates\store\home.html:12
+msgid "View Details"
+msgstr "عرض التفاصيل"
+
+#: .\templates\store\home.html:18
+msgid "Add to Cart"
+msgstr "أضف إلى السلة"
+
+#: .\templates\store\my_bands.html:4
+msgid "My Medical Bands"
+msgstr "أحزمتي الطبية"
+
+#: .\templates\store\order_list.html:4
+msgid "My Orders"
+msgstr "طلباتي"
+
+#: .\templates\store\order_list.html:12
+msgid "Order Number"
+msgstr "رقم الطلب"
+
+#: .\templates\store\order_list.html:30
+msgid "Total Amount"
+msgstr "المبلغ الإجمالي"
+
+#: .\templates\store\order_detail.html:4
+msgid "Order Details"
+msgstr "تفاصيل الطلب"
+
+#: .\templates\store\order_detail.html:12
+msgid "Order Status"
+msgstr "حالة الطلب"
+
+#: .\templates\store\order_detail.html:24
+msgid "Items"
+msgstr "المنتجات"

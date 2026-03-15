@@ -70,6 +70,11 @@ class SyraUser(AbstractUser):
     specialty = models.CharField(
         max_length=100, blank=True, verbose_name="Medical Specialty (for doctors)"
     )
+    is_approved_doctor = models.BooleanField(
+        default=False,
+        verbose_name="Doctor Account Approved",
+        help_text="Whether doctor account has been approved by admin",
+    )
     organization = models.CharField(
         max_length=200, blank=True, verbose_name="Organization/Company"
     )
@@ -88,6 +93,11 @@ class SyraUser(AbstractUser):
     def is_doctor(self):
         """Check if user is a doctor."""
         return self.profile_role == self.ProfileRole.DOCTOR
+
+    @property
+    def is_approved_doctor_account(self):
+        """Check if doctor account is approved by admin."""
+        return self.is_doctor and self.is_approved_doctor
 
     @property
     def is_engineer(self):

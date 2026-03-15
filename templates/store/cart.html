@@ -1,6 +1,69 @@
 {% extends 'base.html' %}
 
+{% block hide_navigation %}true{% endblock %}
+
 {% block title %}Shopping Cart - Syra Store{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cart page styling */
+    .cart-item {
+        transition: all 0.2s ease;
+    }
+    .cart-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    /* Dark mode support - Enhanced for accessibility */
+    .dark .bg-white { background-color: #1e293b; }
+    .dark .bg-light { background-color: #1e293b; }
+    .dark .text-muted { color: #94a3b8; }
+    .dark .text-dark { color: #f1f5f9; }
+    .dark .border-bottom { border-color: #334155; }
+    .dark .card {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    .dark .card-header {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    .dark .card-body {
+        background-color: #1e293b;
+    }
+    .dark .btn-outline-primary {
+        border-color: #3b82f6;
+        color: #60a5fa;
+    }
+    .dark .btn-outline-primary:hover {
+        background-color: #3b82f6;
+        color: #ffffff;
+    }
+    .dark .btn-outline-danger {
+        border-color: #dc2626;
+        color: #f87171;
+    }
+    .dark .btn-outline-danger:hover {
+        background-color: #dc2626;
+        color: #ffffff;
+    }
+    .dark .btn-link {
+        color: #60a5fa;
+    }
+    .dark hr {
+        border-color: #334155;
+    }
+    .dark .form-control {
+        background-color: #1e293b;
+        border-color: #475569;
+        color: #f1f5f9;
+    }
+    .dark .form-control:focus {
+        background-color: #0f172a;
+        border-color: #3b82f6;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">

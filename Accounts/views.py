@@ -13,6 +13,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema, OpenApiExample
 
 from .serializers import SyraUserSerializer, RegisterSerializer, LoginSerializer
 
@@ -65,6 +66,9 @@ def register_template_view(request):
         first_name = request.POST.get("first_name", "")
         last_name = request.POST.get("last_name", "")
         phone_number = request.POST.get("phone_number", "")
+        profile_role = request.POST.get("profile_role", "user")
+        license_number = request.POST.get("license_number", "")
+        specialty = request.POST.get("specialty", "")
 
         # Validation
         errors = []
@@ -97,8 +101,19 @@ def register_template_view(request):
                 first_name=first_name,
                 last_name=last_name,
                 phone_number=phone_number,
+                profile_role=profile_role,
+                license_number=license_number if profile_role == "doctor" else "",
+                specialty=specialty if profile_role == "doctor" else "",
             )
-            messages.success(request, "Registration successful! Please login.")
+
+            # Set appropriate message based on role
+            if profile_role == "doctor":
+                messages.success(
+                    request,
+                    "Registration successful! Your doctor account is pending approval.",
+                )
+            else:
+                messages.success(request, "Registration successful! Please login.")
             return redirect("login")
 
     return render(request, "accounts/register.html")
@@ -140,6 +155,18 @@ class RegisterView(generics.CreateAPIView):
         )
 
 
+@extend_schema(
+    methods=["POST"],
+    request=LoginSerializer,
+    responses=SyraUserSerializer,
+    examples=[
+        OpenApiExample(
+            "Login Example",
+            value={"national_id": "12345678901234", "password": "password123"},
+            request_only=True,
+        ),
+    ],
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @ratelimit(key="ip", rate="10/m", method="POST")
@@ -177,6 +204,15 @@ def login_view(request):
     )
 
 
+@extend_schema(
+    methods=["GET"],
+    responses=SyraUserSerializer,
+)
+@extend_schema(
+    methods=["PUT"],
+    request=SyraUserSerializer,
+    responses=SyraUserSerializer,
+)
 @api_view(["GET", "PUT"])
 @permission_classes([IsAuthenticated])
 def profile_view(request):

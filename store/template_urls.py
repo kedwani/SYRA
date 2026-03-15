@@ -3,7 +3,7 @@ URL configuration for the Syra Store template views.
 """
 
 from django.urls import path
-from . import template_views
+from . import template_views, analytics
 
 app_name = "store"
 
@@ -56,4 +56,7 @@ urlpatterns = [
     # AJAX endpoints
     path("api/cart-count/", template_views.get_cart_count, name="cart_count"),
     path("api/filter-bands/", template_views.filter_bands, name="filter_bands"),
+    # Analytics (admin only)
+    path("analytics/", analytics.analytics_dashboard, name="analytics"),
+    path("analytics/sales/", analytics.sales_report, name="sales_report"),
 ]

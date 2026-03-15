@@ -1,48 +1,232 @@
 {% extends 'base.html' %}
+{% load qr_code %}
+{% load i18n %}
 
-{% block title %}Dashboard - SYRA{% endblock %}
+{% block title %}{% trans "Dashboard" %} - SYRA{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fixed header styles */
+    .fixed-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+    
+    /* Dropdown menu styles */
+    .dropdown-menu-custom {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-menu-custom.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    /* Compact card hover effect */
+    .compact-card {
+        transition: all 0.2s ease;
+    }
+    
+    .compact-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Main content padding for fixed header */
+    .main-content-pad {
+        padding-top: 80px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2>Welcome, {{ user.first_name|default:user.username }}</h2>
-
-{% if not profile %}
-<div class="card">
-    <h2>Get Started</h2>
-    <p>You haven't created your medical profile yet. Create one now to generate your QR code/NFC tag.</p>
-    <a href="{% url 'profile-edit' %}" class="btn">Create Medical Profile</a>
-</div>
-{% else %}
-<div class="card">
-    <h2>Your Medical Profile</h2>
-    <p><strong>Blood Type:</strong> {{ profile.get_blood_type_display }}</p>
-    <p><strong>Chronic Diseases:</strong> {{ profile.chronic_diseases|default:"None" }}</p>
-    <p><strong>Allergies:</strong> {{ profile.allergies|default:"None" }}</p>
-    <p><strong>Emergency Notes:</strong> {{ profile.emergency_notes|default:"None" }}</p>
-    <p><strong>Public ID (for QR/NFC):</strong> {{ profile.public_id }}</p>
-    <a href="{% url 'profile-edit' %}" class="btn">Edit Profile</a>
-</div>
-
-<div class="card">
-    <h2>Quick Stats</h2>
-    <p><strong>Medications:</strong> {{ profile.medications.count }}</p>
-    <p><strong>Emergency Contacts:</strong> {{ profile.emergency_contacts.count }}/2</p>
-    <p><strong>Medical Events:</strong> {{ profile.medical_events.count }}</p>
-</div>
-
-<div class="card">
-    <h2>Your QR Code</h2>
-    <p>Share this QR code with first responders or print it on your wristband/keychain.</p>
-    <div style="background: white; padding: 1rem; display: inline-block; margin: 1rem 0;">
-        <!-- QR Code placeholder - in production, use a QR library -->
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ request.scheme }}://{{ request.get_host }}/api/profiles/scan/{{ profile.public_id }}/" 
-             alt="SYRA QR Code" 
-             style="max-width: 200px;">
+<!-- Main Content with padding for fixed header -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    {% if not profile %}
+    <!-- No Profile Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center card-accent-primary">
+        <div class="w-20 h-20 bg-medical-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-10 h-10 text-medical-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">{% trans "Get Started with SYRA" %}</h2>
+        <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            {% trans "You haven't created your medical profile yet. Create one now to generate your QR code and NFC tag for emergency situations." %}
+        </p>
+        <a href="{% url 'profile-edit' %}" 
+           class="inline-flex items-center gap-2 bg-medical-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-medical-primaryDark transition-all shadow-md">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            {% trans "Create Medical Profile" %}
+        </a>
     </div>
-    <br>
-    <a href="{% url 'emergency-scan-html' profile.public_id %}" class="btn" target="_blank">View Emergency Profile</a>
-    <a href="{% url 'medications' %}" class="btn">Manage Medications</a>
-    <a href="{% url 'contacts' %}" class="btn">Manage Contacts</a>
-    <a href="{% url 'events' %}" class="btn">View History</a>
-</div>
-{% endif %}
+    
+    {% else %}
+    
+
+    
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- Doctor Portal Panel (Only for Doctors) - Show First -->
+        {% if user.profile_role == 'doctor' or user.profile_role == 'admin' %}
+        <div class="card-medical card-accent-accent p-4 lg:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-900">{% trans "Doctor Portal" %}</h2>
+                </div>
+                <a href="{% url 'doctor-portal' %}" 
+                   class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1">
+                    {% trans "Open Portal" %}
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </a>
+            </div>
+            
+            <p class="text-sm text-gray-600 mb-3">{% trans "Search for patient profiles and add medical information" %}</p>
+            
+            <!-- Quick Search Form -->
+            <form method="get" action="{% url 'doctor-portal' %}" class="flex gap-2">
+                <input type="text" 
+                       name="national_id" 
+                       placeholder="{% trans 'Enter National ID' %}"
+                       maxlength="14"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                    {% trans "Search" %}
+                </button>
+            </form>
+        </div>
+        {% endif %}
+        
+        <!-- Profile Summary Card - Compact -->
+        <div class="card-medical card-accent-primary p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-gray-900">{% trans "Medical Profile" %}</h2>
+                <a href="{% url 'profile-edit' %}" 
+                   class="text-medical-primary hover:text-medical-primaryDark font-medium text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                    {% trans "Edit" %}
+                </a>
+            </div>
+            
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">{% trans "Blood Type" %}</span>
+                    <span class="font-semibold text-gray-900 medical-data">{{ profile.get_blood_type_display }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">{% trans "Chronic Diseases" %}</span>
+                    <span class="font-semibold text-gray-900">{% if profile.chronic_diseases %}{{ profile.chronic_diseases|truncatechars:30 }}{% else %}{% trans "None" %}{% endif %}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">{% trans "Allergies" %}</span>
+                    <span class="font-semibold text-gray-900">{% if profile.allergies %}{{ profile.allergies|truncatechars:30 }}{% else %}{% trans "None" %}{% endif %}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">{% trans "Height/Weight" %}</span>
+                    <span class="font-semibold text-gray-900">{% if profile.height %}{{ profile.height }}cm / {{ profile.weight }}kg{% else %}{% trans "Not set" %}{% endif %}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">{% trans "Medications" %}</span>
+                    <span class="font-semibold text-gray-900">{{ profile.medications.count }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 border-b border-gray-100">
+                    <span class="text-gray-500">{% trans "Emergency Contacts" %}</span>
+                    <span class="font-semibold text-gray-900">{{ profile.emergency_contacts.count }}/2</span>
+                </div>
+                <div class="flex justify-between py-1.5">
+                    <span class="text-gray-500">{% trans "Medical History" %}</span>
+                    <span class="font-semibold text-gray-900">{{ profile.medical_events.count }}</span>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="mt-3 flex flex-wrap gap-2">
+                <a href="{% url 'medications' %}" 
+                   class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs font-medium">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                    {% trans "Drugs" %}
+                </a>
+                <a href="{% url 'emergency-contacts' %}" 
+                   class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs font-medium">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                    {% trans "Contacts" %}
+                </a>
+                <a href="{% url 'events' %}" 
+                   class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs font-medium">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    {% trans "History" %}
+                </a>
+            </div>
+        </div>
+        
+        <!-- QR Code Card - Compact -->
+        <div class="card-medical card-accent-primary p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-gray-900">{% trans "Emergency QR" %}</h2>
+            </div>
+            
+            <div class="flex items-start justify-between gap-4">
+                <!-- Large QR Code -->
+                <div class="bg-white p-3 rounded-lg border border-gray-200 flex-shrink-0">
+                    {% url 'emergency-scan-html' profile.public_id as emergency_url %}
+                    {% with full_url=request.scheme|add:'://'|add:request.get_host|add:emergency_url %}
+                    <img src="{{ full_url|qr_code:140 }}" 
+                         alt="{% trans "SYRA QR Code" %}" 
+                         class="w-32 h-32">
+                    {% endwith %}
+                </div>
+                
+                <!-- Print and View buttons stacked vertically -->
+                <div class="flex flex-col gap-2 flex-1">
+                    <p class="text-xs text-gray-500">{% trans "ID:" %} {{ profile.public_id|truncatechars:12 }}</p>
+                    <button onclick="window.open('{% url 'emergency-scan-html' profile.public_id %}', '_blank').print()" 
+                            class="flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        {% trans "Print" %}
+                    </button>
+                    <a href="{% url 'emergency-scan-html' profile.public_id %}" 
+                       target="_blank"
+                       class="flex items-center justify-center gap-1.5 bg-medical-primary text-white px-3 py-2 rounded-lg hover:bg-medical-primaryDark transition-colors text-sm font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                        {% trans "View" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    {% endif %}
+</main>
 {% endblock %}

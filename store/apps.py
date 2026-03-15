@@ -9,3 +9,6 @@ class StoreConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "store"
     verbose_name = "Syra Store"
+
+    def ready(self):
+        import store.signals  # Import signals on app load
