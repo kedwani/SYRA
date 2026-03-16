@@ -40,9 +40,9 @@ if not SECRET_KEY:
             "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(50))'"
         )
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(
-    ","
-)
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS", "localhost,127.0.0.1,testserver,syra.pythonanywhere.com"
+).split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -147,10 +147,19 @@ LOCALE_PATHS = [
     BASE_DIR / "locale",
 ]
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = "media/"
+# Additional directories where Django will look for static files during collectstatic
+STATICFILES_DIRS = (
+    [
+        BASE_DIR / "static",
+    ]
+    if (BASE_DIR / "static").exists()
+    else []
+)
+
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -217,7 +226,8 @@ if DEBUG:
     ]
 else:
     CORS_ALLOWED_ORIGINS = os.environ.get(
-        "CORS_ALLOWED_ORIGINS", "https://syra-app.com,https://www.syra-app.com"
+        "CORS_ALLOWED_ORIGINS",
+        "https://syra-app.com,https://www.syra-app.com,https://syra.pythonanywhere.com",
     ).split(",")
 
 # Security Headers for Production
