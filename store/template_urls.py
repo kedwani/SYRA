@@ -53,6 +53,18 @@ urlpatterns = [
         template_views.registration_update_nickname,
         name="registration_update_nickname",
     ),
+    # Addresses
+    path("addresses/", template_views.addresses_view, name="addresses"),
+    path(
+        "addresses/<int:address_id>/delete/",
+        template_views.address_delete,
+        name="address_delete",
+    ),
+    path(
+        "addresses/<int:address_id>/set-default/",
+        template_views.address_set_default,
+        name="address_set_default",
+    ),
     # AJAX endpoints
     path("api/cart-count/", template_views.get_cart_count, name="cart_count"),
     path("api/filter-bands/", template_views.filter_bands, name="filter_bands"),

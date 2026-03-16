@@ -1,224 +1,237 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block hide_navigation %}true{% endblock %}
 
-{% block title %}Order {{ order.order_number }} - Syra Store{% endblock %}
+{% block title %}{% trans "Order" %} {{ order.order_number }} - {% trans "Syra Store" %}{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Order detail styling */
-    .breadcrumb-item a {
-        color: #3b82f6;
-        text-decoration: none;
-    }
-    .breadcrumb-item a:hover {
-        text-decoration: underline;
-    }
-    .breadcrumb-item.active {
-        color: #6b7280;
+    /* Apple-inspired Design */
+    .apple-card {
+        @apply bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700;
     }
     
-    /* Dark mode support - Enhanced for accessibility */
-    .dark .bg-white { background-color: #1e293b; }
-    .dark .bg-light { background-color: #1e293b; }
-    .dark .text-muted { color: #94a3b8; }
-    .dark .text-dark { color: #f1f5f9; }
-    .dark .text-success { color: #4ade80 !important; }
-    .dark .text-warning { color: #fbbf24 !important; }
-    .dark .text-primary { color: #60a5fa !important; }
-    .dark .card {
-        background-color: #1e293b;
-        border-color: #334155;
+    .apple-badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
     }
-    .dark .card-header {
-        background-color: #1e293b !important;
-        border-color: #334155;
+    
+    .apple-badge-pending { @apply bg-yellow-500/10 text-yellow-600 dark:text-yellow-400; }
+    .apple-badge-processing { @apply bg-blue-500/10 text-blue-600 dark:text-blue-400; }
+    .apple-badge-shipped { @apply bg-purple-500/10 text-purple-600 dark:text-purple-400; }
+    .apple-badge-delivered { @apply bg-green-500/10 text-green-600 dark:text-green-400; }
+    .apple-badge-cancelled { @apply bg-red-500/10 text-red-600 dark:text-red-400; }
+    
+    .apple-btn {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 font-medium rounded-xl transition-all duration-200;
     }
-    .dark .card-body {
-        background-color: #1e293b;
+    
+    .apple-btn-secondary {
+        @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200;
     }
-    .dark .breadcrumb {
-        background-color: transparent;
-    }
-    .dark .breadcrumb-item a {
-        color: #60a5fa;
-    }
-    .dark .breadcrumb-item.active {
-        color: #64748b;
-    }
-    .dark .breadcrumb-item + .breadcrumb-item::before {
-        color: #475569;
-    }
-    .dark .border-bottom { border-color: #334155; }
-    .dark .badge.bg-primary {
-        background-color: #3b82f6 !important;
-    }
-    .dark hr {
-        border-color: #334155;
-    }
-    .dark .btn-outline-danger {
-        border-color: #dc2626;
-        color: #f87171;
-    }
-    .dark .btn-outline-danger:hover {
-        background-color: #dc2626;
-        color: #ffffff;
+    
+    .apple-btn-danger {
+        @apply border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'store:home' %}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'store:order_list' %}">My Orders</a></li>
-            <li class="breadcrumb-item active">{{ order.order_number }}</li>
-        </ol>
-    </nav>
-
-    <div class="row">
-        <div class="col-lg-8">
-            <!-- Order Status -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Order #{{ order.order_number }}</h5>
-                    <span class="badge bg-primary">{{ order.get_status_display }}</span>
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <!-- Header -->
+    <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center gap-2 text-sm mb-4">
+                <a href="{% url 'store:home' %}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    {% trans "Home" %}
+                </a>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <a href="{% url 'store:order_list' %}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">
+                    {% trans "Orders" %}
+                </a>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                <span class="text-slate-500 dark:text-slate-400">{{ order.order_number }}</span>
+            </nav>
+            
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
+                        {% trans "Order" %} #{{ order.order_number }}
+                    </h1>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        {% trans "Placed on" %} {{ order.created_at|date:"F d, Y" }}
+                    </p>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <small class="text-muted">Order Date</small>
-                            <p class="mb-0">{{ order.created_at|date:"F d, Y" }}</p>
+                <span class="apple-badge 
+                    {% if order.status == 'pending' %}apple-badge-pending
+                    {% elif order.status == 'processing' %}apple-badge-processing
+                    {% elif order.status == 'shipped' %}apple-badge-shipped
+                    {% elif order.status == 'delivered' %}apple-badge-delivered
+                    {% elif order.status == 'cancelled' %}apple-badge-cancelled{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Main Content -->
+            <div class="flex-1 space-y-6">
+                <!-- Order Status -->
+                <div class="apple-card">
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{% trans "Order Details" %}</h2>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Order Date" %}</p>
+                            <p class="mt-1 font-medium text-slate-900 dark:text-white">{{ order.created_at|date:"F d, Y" }}</p>
                         </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">Payment Method</small>
-                            <p class="mb-0">{{ order.get_payment_method_display }}</p>
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Payment Method" %}</p>
+                            <p class="mt-1 font-medium text-slate-900 dark:text-white">{{ order.get_payment_method_display }}</p>
                         </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">Payment Status</small>
-                            <p class="mb-0">
-                                {% if order.payment_status %}
-                                <span class="text-success">Paid</span>
-                                {% else %}
-                                <span class="text-warning">Pending</span>
-                                {% endif %}
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Payment Status" %}</p>
+                            <p class="mt-1 font-medium {% if order.payment_status %}text-green-600 dark:text-green-400{% else %}text-yellow-600 dark:text-yellow-400{% endif %}">
+                                {% if order.payment_status %}{% trans "Paid" %}{% else %}{% trans "Pending" %}{% endif %}
                             </p>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Order Items -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Order Items</h5>
-                </div>
-                <div class="card-body">
-                    {% for item in order.items.all %}
-                    <div class="row align-items-center border-bottom py-3">
-                        <div class="col-md-2">
-                            {% if item.product.thumbnail %}
-                            <img src="{{ item.product.thumbnail.url }}" alt="{{ item.product_name }}" class="img-fluid rounded">
-                            {% else %}
-                            <div class="bg-light rounded p-2 text-center">
-                                <i class="bi bi-watch text-muted"></i>
+                <!-- Order Items -->
+                <div class="apple-card">
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{% trans "Items" %}</h2>
+                    </div>
+                    <div class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for item in order.items.all %}
+                        <div class="p-4 sm:p-6">
+                            <div class="flex gap-4">
+                                <div class="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-xl overflow-hidden flex-shrink-0">
+                                    {% if item.product.thumbnail %}
+                                    <img src="{{ item.product.thumbnail.url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-slate-900 dark:text-white">{{ item.product_name }}</h3>
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        {{ item.product_size }} · {{ item.product_color }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-slate-500 dark:text-slate-400">x{{ item.quantity }}</p>
+                                    <p class="mt-1 font-semibold text-slate-900 dark:text-white">EGP {{ item.total }}</p>
+                                </div>
                             </div>
-                            {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="mb-1">{{ item.product_name }}</h6>
-                            <small class="text-muted">{{ item.product_size }} / {{ item.product_color }}</small>
-                        </div>
-                        <div class="col-md-2 text-center">
-                            <span class="text-muted">x{{ item.quantity }}</span>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            <strong>EGP {{ item.total }}</strong>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
 
-            <!-- Shipping Information -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Shipping Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <small class="text-muted">Name</small>
-                            <p class="mb-2">{{ order.shipping_name }}</p>
+                <!-- Shipping Info -->
+                <div class="apple-card">
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            {% trans "Shipping Address" %}
+                        </h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Recipient" %}</p>
+                            <p class="font-medium text-slate-900 dark:text-white">{{ order.shipping_name }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">Phone</small>
-                            <p class="mb-2">{{ order.shipping_phone }}</p>
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Phone" %}</p>
+                            <p class="font-medium text-slate-900 dark:text-white">{{ order.shipping_phone }}</p>
                         </div>
-                    </div>
-                    <small class="text-muted">Address</small>
-                    <p class="mb-0">{{ order.shipping_address }}, {{ order.shipping_area }}, {{ order.shipping_city }}</p>
-                    {% if order.shipping_notes %}
-                    <small class="text-muted">Notes</small>
-                    <p class="mb-0">{{ order.shipping_notes }}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Order Summary -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Order Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal</span>
-                        <span>EGP {{ order.subtotal }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Shipping</span>
-                        <span>EGP {{ order.shipping_cost }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Tax</span>
-                        <span>EGP {{ order.tax_amount }}</span>
-                    </div>
-                    {% if order.discount_amount > 0 %}
-                    <div class="d-flex justify-content-between mb-2 text-success">
-                        <span>Discount</span>
-                        <span>-EGP {{ order.discount_amount }}</span>
-                    </div>
-                    {% endif %}
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Total</strong>
-                        <strong class="text-primary">EGP {{ order.total }}</strong>
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Address" %}</p>
+                            <p class="font-medium text-slate-900 dark:text-white">
+                                {{ order.shipping_address }}, {{ order.shipping_area }}, {{ order.shipping_city }}
+                            </p>
+                        </div>
+                        {% if order.shipping_notes %}
+                        <div>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Notes" %}</p>
+                            <p class="font-medium text-slate-900 dark:text-white">{{ order.shipping_notes }}</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            {% if order.user_notes %}
-            <div class="card border-0 shadow-sm mt-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Your Notes</h5>
+            <!-- Sidebar -->
+            <div class="lg:w-80">
+                <!-- Order Summary -->
+                <div class="apple-card sticky top-6">
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{% trans "Summary" %}</h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">{% trans "Subtotal" %}</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ order.subtotal }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">{% trans "Shipping" %}</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ order.shipping_cost }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">{% trans "Tax" %}</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ order.tax_amount }}</span>
+                        </div>
+                        {% if order.discount_amount > 0 %}
+                        <div class="flex justify-between text-sm text-green-600 dark:text-green-400">
+                            <span>{% trans "Discount" %}</span>
+                            <span>-EGP {{ order.discount_amount }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <div class="flex justify-between">
+                                <span class="font-semibold text-slate-900 dark:text-white">{% trans "Total" %}</span>
+                                <span class="text-xl font-bold text-blue-600 dark:text-blue-400">EGP {{ order.total }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="mb-0">{{ order.user_notes }}</p>
-                </div>
-            </div>
-            {% endif %}
 
-            {% if order.status == 'pending' %}
-            <form method="post" action="{% url 'store:order_cancel' order.id %}" class="mt-4">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Are you sure you want to cancel this order?')">
-                    Cancel Order
-                </button>
-            </form>
-            {% endif %}
+                <!-- Actions -->
+                {% if order.status == 'pending' %}
+                <div class="mt-4">
+                    <form method="post" action="{% url 'store:order_cancel' order.id %}">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('{% trans "Cancel this order?" %}')"
+                                class="apple-btn apple-btn-danger w-full">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            {% trans "Cancel Order" %}
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

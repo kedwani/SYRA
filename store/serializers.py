@@ -4,6 +4,7 @@ Serializers for the Syra Store API.
 
 from rest_framework import serializers
 from django.db.models import F
+from decimal import Decimal, ROUND_HALF_UP
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.plumbing import build_basic_type
 from .models import (
@@ -340,16 +341,29 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
         order_items = []
         for item_data in items_data:
-            product = SyraBand.objects.get(id=item_data["product_id"])
-            quantity = item_data["quantity"]
-            unit_price = product.current_price
-            item_total = unit_price * quantity
-            subtotal += item_total
+            product_id = item_data.get("product_id")
+            quantity = item_data.get("quantity", 1)
 
-            # DEBUG: Log stock before decrement
-            logger.debug(
-                f"[ORDER_CREATE] product={product.name}, current_stock={product.stock_quantity}, requested={quantity}"
+            # Validate product exists and is available
+            try:
+                product = SyraBand.objects.get(id=product_id, is_active=True)
+            except SyraBand.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Product with ID {product_id} not found or is no longer available."
+                )
+
+            # Validate stock availability
+            if not product.is_available or product.stock_quantity < quantity:
+                raise serializers.ValidationError(
+                    f"Product '{product.name}' is not available in requested quantity. "
+                    f"Available: {product.stock_quantity}"
+                )
+
+            unit_price = product.current_price
+            item_total = (unit_price * quantity).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
             )
+            subtotal += item_total
 
             order_items.append(
                 {
@@ -386,15 +400,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
             # Update stock atomically using F() to prevent race conditions
             product = item["product"]
-            old_stock = product.stock_quantity
             SyraBand.objects.filter(id=product.id).update(
                 stock_quantity=F("stock_quantity") - item["quantity"]
             )
             # Refresh to get new value
             product.refresh_from_db()
-            logger.warning(
-                f"[ORDER_CREATE] Stock decremented: {product.name} {old_stock} -> {product.stock_quantity} (atomic)"
-            )
 
         return order
 

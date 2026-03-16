@@ -120,6 +120,9 @@ class MedicalProfileSerializer(serializers.ModelSerializer):
             "show_contacts_public",
             "show_physical_public",
             "show_history_public",
+            "show_chronic_diseases_public",
+            "show_notes_public",
+            "show_insurance_public",
             "premium_access_logging",
             "created_at",
             "updated_at",
@@ -156,6 +159,8 @@ class EmergencyProfileSerializer(serializers.ModelSerializer):
             "show_contacts_public",
             "show_physical_public",
             "show_history_public",
+            "show_chronic_diseases_public",
+            "show_notes_public",
         ]
 
     def to_representation(self, instance):

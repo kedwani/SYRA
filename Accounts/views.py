@@ -66,6 +66,9 @@ def register_template_view(request):
         first_name = request.POST.get("first_name", "")
         last_name = request.POST.get("last_name", "")
         phone_number = request.POST.get("phone_number", "")
+        date_of_birth = request.POST.get("date_of_birth", None)
+        gender = request.POST.get("gender", "")
+        nationality = request.POST.get("nationality", "")
         profile_role = request.POST.get("profile_role", "user")
         license_number = request.POST.get("license_number", "")
         specialty = request.POST.get("specialty", "")
@@ -92,6 +95,16 @@ def register_template_view(request):
             for error in errors:
                 messages.error(request, error)
         else:
+            # Parse date of birth if provided
+            from datetime import date
+
+            dob = None
+            if date_of_birth:
+                try:
+                    dob = date.fromisoformat(date_of_birth)
+                except ValueError:
+                    dob = None
+
             # Create user
             user = User.objects.create_user(
                 username=username,
@@ -101,6 +114,9 @@ def register_template_view(request):
                 first_name=first_name,
                 last_name=last_name,
                 phone_number=phone_number,
+                date_of_birth=dob,
+                gender=gender,
+                nationality=nationality,
                 profile_role=profile_role,
                 license_number=license_number if profile_role == "doctor" else "",
                 specialty=specialty if profile_role == "doctor" else "",

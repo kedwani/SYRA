@@ -15,11 +15,17 @@ def encode_emergency_data(
     allergies: str = "",
     emergency_notes: str = "",
     medications: list = None,
+    date_of_birth: str = None,
+    height: int = None,
+    weight: int = None,
+    first_name: str = "",
+    last_name: str = "",
+    phone_number: str = "",
 ) -> str:
     """
     Encode critical emergency data into a compact URL-safe string.
 
-    Format: blood_type|allergies|emergency_notes|medication1;medication2
+    Format: short_id|blood_type|allergies|emergency_notes|medications|date_of_birth|height|weight|first_name|last_name|phone_number
 
     This data is embedded in the QR code URL so basic emergency info
     can be displayed even if the server is slow or down.
@@ -36,6 +42,12 @@ def encode_emergency_data(
         (
             ";".join([m[:30] for m in medications[:3]]) if medications else ""
         ),  # Max 3 meds, 30 chars each
+        str(date_of_birth) if date_of_birth else "",  # Date of birth (ISO format)
+        str(height) if height else "",  # Height in cm
+        str(weight) if weight else "",  # Weight in kg
+        first_name[:30] if first_name else "",  # First name
+        last_name[:30] if last_name else "",  # Last name
+        phone_number[:15] if phone_number else "",  # Phone number
     ]
 
     # Encode as base64 for URL safety
@@ -58,11 +70,17 @@ def decode_emergency_data(encoded: str) -> Optional[dict]:
             return None
 
         return {
-            "short_id": parts[0],
-            "blood_type": parts[1],
-            "allergies": parts[2],
+            "short_id": parts[0] if len(parts) > 0 else "",
+            "blood_type": parts[1] if len(parts) > 1 else "Unknown",
+            "allergies": parts[2] if len(parts) > 2 else "",
             "emergency_notes": parts[3] if len(parts) > 3 else "",
             "medications": parts[4].split(";") if len(parts) > 4 and parts[4] else [],
+            "date_of_birth": parts[5] if len(parts) > 5 else None,
+            "height": int(parts[6]) if len(parts) > 6 and parts[6] else None,
+            "weight": int(parts[7]) if len(parts) > 7 and parts[7] else None,
+            "first_name": parts[8] if len(parts) > 8 else "",
+            "last_name": parts[9] if len(parts) > 9 else "",
+            "phone_number": parts[10] if len(parts) > 10 else "",
         }
     except Exception:
         return None
@@ -75,13 +93,29 @@ def build_emergency_url(
     allergies: str = "",
     emergency_notes: str = "",
     medications: list = None,
+    date_of_birth: str = None,
+    height: int = None,
+    weight: int = None,
+    first_name: str = "",
+    last_name: str = "",
+    phone_number: str = "",
 ) -> str:
     """
     Build the full emergency URL with embedded critical data.
     This URL will work even if the server is slow.
     """
     encoded = encode_emergency_data(
-        public_id, blood_type, allergies, emergency_notes, medications
+        public_id,
+        blood_type,
+        allergies,
+        emergency_notes,
+        medications,
+        date_of_birth,
+        height,
+        weight,
+        first_name,
+        last_name,
+        phone_number,
     )
 
     # Build URL with embedded data as query param

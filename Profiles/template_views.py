@@ -24,6 +24,7 @@ from .serializers import (
     MedicalEventSerializer,
 )
 from .emergency_utils import decode_emergency_data
+from .views import get_user_role
 
 
 def get_client_ip(request):
@@ -44,14 +45,31 @@ def dashboard_view(request):
     except MedicalProfile.DoesNotExist:
         profile = None
 
-    # Calculate pending count for badge display
+    # Calculate pending count using annotation to avoid N+1 queries
     pending_count = 0
     if profile:
-        pending_count = (
-            profile.medications.filter(pending_approval=True).count()
-            + profile.emergency_contacts.filter(pending_approval=True).count()
-            + profile.medical_events.filter(pending_approval=True).count()
+        from django.db.models import Count, Q
+
+        result = (
+            MedicalProfile.objects.filter(id=profile.id)
+            .annotate(
+                pending_meds=Count(
+                    "medications", filter=Q(medications__pending_approval=True)
+                ),
+                pending_contacts=Count(
+                    "emergency_contacts",
+                    filter=Q(emergency_contacts__pending_approval=True),
+                ),
+                pending_events=Count(
+                    "medical_events", filter=Q(medical_events__pending_approval=True)
+                ),
+            )
+            .first()
         )
+        if result:
+            pending_count = (
+                result.pending_meds + result.pending_contacts + result.pending_events
+            )
 
     context = {
         "profile": profile,
@@ -99,8 +117,86 @@ def profile_edit_view(request):
     else:
         serializer = MedicalProfileSerializer(profile)
 
+    # Get related data for display
+    medications = profile.medications.all()
+    contacts = profile.emergency_contacts.all()
+    medical_events = profile.medical_events.all()
+
+    # Calculate BMI
+    calculated_bmi = None
+    bmi_category = None
+    if profile.height and profile.weight:
+        height_m = profile.height / 100
+        calculated_bmi = round(profile.weight / (height_m**2), 1)
+        if calculated_bmi < 18.5:
+            bmi_category = "underweight"
+        elif calculated_bmi < 25:
+            bmi_category = "normal"
+        elif calculated_bmi < 30:
+            bmi_category = "overweight"
+        else:
+            bmi_category = "obese"
+
     return render(
-        request, "profiles/profile_edit.html", {"form": serializer, "profile": profile}
+        request,
+        "profiles/profile_edit.html",
+        {
+            "form": serializer,
+            "profile": profile,
+            "medications": medications,
+            "contacts": contacts,
+            "medical_events": medical_events,
+            "calculated_bmi": calculated_bmi,
+            "bmi_category": bmi_category,
+        },
+    )
+
+
+@login_required
+def personal_profile_edit_view(request):
+    """Edit personal profile - personal details and physical info."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        profile = MedicalProfile.objects.create(user=request.user)
+
+    if request.method == "POST":
+        # Create mutable copy of POST data
+        post_data = request.POST.copy()
+
+        serializer = MedicalProfileSerializer(profile, data=post_data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, "Personal profile updated successfully.")
+            return redirect("dashboard")
+    else:
+        serializer = MedicalProfileSerializer(profile)
+
+    # Calculate BMI
+    calculated_bmi = None
+    bmi_category = None
+    if profile.height and profile.weight:
+        height_m = profile.height / 100
+        calculated_bmi = round(profile.weight / (height_m**2), 1)
+        if calculated_bmi < 18.5:
+            bmi_category = "underweight"
+        elif calculated_bmi < 25:
+            bmi_category = "normal"
+        elif calculated_bmi < 30:
+            bmi_category = "overweight"
+        else:
+            bmi_category = "obese"
+
+    return render(
+        request,
+        "profiles/personal_profile_edit.html",
+        {
+            "form": serializer,
+            "profile": profile,
+            "calculated_bmi": calculated_bmi,
+            "bmi_category": bmi_category,
+        },
     )
 
 
@@ -244,6 +340,45 @@ def emergency_scan_template_view(request, public_id):
         if decoded:
             # Verify the short ID matches
             if str(public_id).startswith(decoded.get("short_id", "")):
+                # Calculate age from embedded date of birth
+                embedded_age = None
+                if decoded.get("date_of_birth"):
+                    from datetime import date
+
+                    try:
+                        dob = decoded["date_of_birth"]
+                        if isinstance(dob, str):
+                            dob = date.fromisoformat(dob)
+                        today = date.today()
+                        embedded_age = (
+                            today.year
+                            - dob.year
+                            - ((today.month, today.day) < (dob.month, dob.day))
+                        )
+                    except:
+                        pass
+
+                # Calculate BMI from embedded height/weight
+                embedded_bmi = None
+                embedded_bmi_category = None
+                if (
+                    decoded.get("height")
+                    and decoded.get("height") > 0
+                    and decoded.get("weight")
+                    and decoded.get("weight") > 0
+                ):
+                    height_m = decoded["height"] / 100
+                    embedded_bmi = round(decoded["weight"] / (height_m**2), 1)
+                    if embedded_bmi:
+                        if embedded_bmi < 18.5:
+                            embedded_bmi_category = "underweight"
+                        elif embedded_bmi < 25:
+                            embedded_bmi_category = "normal"
+                        elif embedded_bmi < 30:
+                            embedded_bmi_category = "overweight"
+                        else:
+                            embedded_bmi_category = "obese"
+
                 # Use embedded data for instant display (no DB hit!)
                 context = {
                     "profile": None,  # Will use embedded data
@@ -258,17 +393,16 @@ def emergency_scan_template_view(request, public_id):
                     "show_insurance": False,
                     "national_id_masked": None,
                     "is_embedded": True,  # Flag to use embedded data in template
+                    "is_profile_owner": False,
+                    "calculated_age": embedded_age,
+                    "calculated_bmi": embedded_bmi,
+                    "bmi_category": embedded_bmi_category,
                 }
                 return render(request, "profiles/emergency_scan.html", context)
 
     # ======= No embedded data - fetch from cache or database =======
-    # Get user role (default to 'user' for anonymous)
-    user_role = "user"
-    if request.user.is_authenticated:
-        try:
-            user_role = getattr(request.user, "profile_role", "user")
-        except AttributeError:
-            user_role = "user"
+    # Get user role using utility function
+    user_role = get_user_role(request.user)
 
     # Cache key varies by profile and role
     cache_key = f"emergency_profile_{public_id}_role_{user_role}"
@@ -278,6 +412,23 @@ def emergency_scan_template_view(request, public_id):
     if cached_context is not None:
         # Add role info for template
         cached_context["user_role"] = user_role
+        # Check if user is the profile owner
+        is_profile_owner = False
+        if request.user.is_authenticated:
+            try:
+                if (
+                    request.user.medical_profile
+                    and request.user.medical_profile.public_id == public_id
+                ):
+                    is_profile_owner = True
+            except MedicalProfile.DoesNotExist:
+                is_profile_owner = False
+        cached_context["is_profile_owner"] = is_profile_owner
+        # Update visibility for owners
+        if is_profile_owner:
+            cached_context["show_full_medical"] = True
+            cached_context["show_engineer_info"] = True
+            cached_context["show_insurance"] = True
         return render(request, "profiles/emergency_scan.html", cached_context)
 
     # Optimized query: single query for profile+user, plus prefetched related data
@@ -305,10 +456,20 @@ def emergency_scan_template_view(request, public_id):
     # Get user role (default to 'user' for anonymous)
     user_role = "user"
     accessed_by = None
+    is_profile_owner = False
     if request.user.is_authenticated:
         try:
             user_role = getattr(request.user, "profile_role", "user")
             accessed_by = request.user
+            # Check if user owns this profile
+            try:
+                if (
+                    request.user.medical_profile
+                    and request.user.medical_profile.public_id == profile.public_id
+                ):
+                    is_profile_owner = True
+            except MedicalProfile.DoesNotExist:
+                is_profile_owner = False
         except AttributeError:
             user_role = "user"
 
@@ -327,13 +488,21 @@ def emergency_scan_template_view(request, public_id):
 
     # Determine data visibility based on role
     show_basic_emergency = True  # Everyone sees this
-    show_full_medical = user_role in ["doctor", "admin"]  # Doctors and admins
-    show_engineer_info = user_role in ["engineer", "admin"]  # Engineers and admins
-    show_insurance = user_role in [
-        "doctor",
-        "admin",
-        "engineer",
-    ]  # More access for medical/worker
+    show_full_medical = (
+        user_role in ["doctor", "admin"] or is_profile_owner
+    )  # Doctors, admins, and owners
+    show_engineer_info = (
+        user_role in ["engineer", "admin"] or is_profile_owner
+    )  # Engineers, admins, and owners
+    show_insurance = (
+        user_role
+        in [
+            "doctor",
+            "admin",
+            "engineer",
+        ]
+        or is_profile_owner
+    )  # More access for medical/worker or owners
 
     # Use prefetched active medications (already filtered in query)
     medications = profile.active_meds_list
@@ -350,6 +519,39 @@ def emergency_scan_template_view(request, public_id):
         nat_id = profile.user.national_id
         national_id_masked = f"{nat_id[:4]}****{nat_id[-4:]}"
 
+    # Calculate age from date of birth
+    calculated_age = None
+    if profile.user.date_of_birth:
+        from datetime import date
+
+        today = date.today()
+        calculated_age = (
+            today.year
+            - profile.user.date_of_birth.year
+            - (
+                (today.month, today.day)
+                < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)
+            )
+        )
+
+    # Calculate BMI
+    calculated_bmi = None
+    if profile.height and profile.height > 0 and profile.weight and profile.weight > 0:
+        height_m = profile.height / 100  # Convert cm to m
+        calculated_bmi = round(profile.weight / (height_m**2), 1)
+
+    # Determine BMI category
+    bmi_category = None
+    if calculated_bmi:
+        if calculated_bmi < 18.5:
+            bmi_category = "underweight"
+        elif calculated_bmi < 25:
+            bmi_category = "normal"
+        elif calculated_bmi < 30:
+            bmi_category = "overweight"
+        else:
+            bmi_category = "obese"
+
     context = {
         "profile": profile,
         "medications": medications,
@@ -361,6 +563,10 @@ def emergency_scan_template_view(request, public_id):
         "show_engineer_info": show_engineer_info,
         "show_insurance": show_insurance,
         "national_id_masked": national_id_masked,
+        "is_profile_owner": is_profile_owner,
+        "calculated_age": calculated_age,
+        "calculated_bmi": calculated_bmi,
+        "bmi_category": bmi_category,
     }
     # Cache the context for 15 minutes (900 seconds)
     # This dramatically speeds up repeated scans of the same profile
@@ -443,11 +649,8 @@ def htmx_emergency_history(request, public_id):
     HTMX endpoint for loading medical history section.
     Returns partial HTML for medical events list.
     """
-    # Use authenticated user's actual role, not query param (prevents role spoofing)
-    if request.user.is_authenticated:
-        user_role = getattr(request.user, "profile_role", "user")
-    else:
-        user_role = "user"
+    # Use utility function for role detection (prevents role spoofing)
+    user_role = get_user_role(request.user)
 
     # Only doctors and admins can see full medical history
     show_full_medical = user_role in ["doctor", "admin"]

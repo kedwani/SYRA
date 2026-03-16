@@ -10,6 +10,8 @@ from .views import (
     emergency_scan_view,
     emergency_access_check,
     search_medical_data,
+    serve_insurance_image,
+    reveal_all_data_view,
 )
 from .emergency_alerts import send_emergency_alert, get_nearby_hospitals
 
@@ -27,7 +29,17 @@ urlpatterns = [
         emergency_access_check,
         name="emergency-access-check",
     ),
+    path(
+        "insurance-image/<uuid:public_id>/",
+        serve_insurance_image,
+        name="serve-insurance-image",
+    ),
     path("alert/<uuid:public_id>/", send_emergency_alert, name="emergency-alert"),
     path("hospitals/", get_nearby_hospitals, name="nearby-hospitals"),
     path("search/", search_medical_data, name="search-medical-data"),
+    path(
+        "reveal-all-data/<uuid:public_id>/",
+        reveal_all_data_view,
+        name="reveal-all-data",
+    ),
 ]

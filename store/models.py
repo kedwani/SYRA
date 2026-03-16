@@ -368,22 +368,26 @@ class Cart(models.Model):
 
     @property
     def total_items(self):
-        # Use prefetched items if available to avoid N+1 queries
+        """Get total items count, using prefetched cache if available."""
         if (
             hasattr(self, "_prefetched_objects_cache")
             and "items" in self._prefetched_objects_cache
         ):
-            return sum(item.quantity for item in self.items.all())
+            return sum(
+                item.quantity for item in self._prefetched_objects_cache["items"]
+            )
         return sum(item.quantity for item in self.items.all())
 
     @property
     def total_price(self):
-        # Use prefetched items if available to avoid N+1 queries
+        """Get total price, using prefetched cache if available."""
         if (
             hasattr(self, "_prefetched_objects_cache")
             and "items" in self._prefetched_objects_cache
         ):
-            return sum(item.total_price for item in self.items.all())
+            return sum(
+                item.total_price for item in self._prefetched_objects_cache["items"]
+            )
         return sum(item.total_price for item in self.items.all())
 
 
@@ -459,6 +463,36 @@ class BandRegistration(models.Model):
 
     def __str__(self):
         return f"{self.nickname or self.public_id} - {self.user.username}"
+
+
+class SavedAddress(models.Model):
+    """
+    Saved shipping addresses for users.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_addresses",
+    )
+    label = models.CharField(max_length=50, blank=True, help_text="e.g., Home, Work")
+    name = models.CharField(max_length=200, help_text="Full name")
+    phone = models.CharField(max_length=15, help_text="Phone number")
+    address = models.TextField(help_text="Full address")
+    city = models.CharField(max_length=100)
+    area = models.CharField(max_length=100, blank=True, help_text="Neighborhood/Area")
+    notes = models.TextField(blank=True, help_text="Delivery notes")
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Saved Address"
+        verbose_name_plural = "Saved Addresses"
+        ordering = ["-is_default", "-created_at"]
+
+    def __str__(self):
+        return f"{self.label or 'Address'} - {self.name} ({self.city})"
 
 
 class BandReview(models.Model):

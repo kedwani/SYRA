@@ -11,6 +11,18 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django.db.models import F
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.conf import settings
+
+
+def get_shipping_cost():
+    """Get shipping cost from settings with default."""
+    return getattr(settings, "STORE_SHIPPING_COST", 50)
+
+
+def get_tax_rate():
+    """Get tax rate from settings with default."""
+    return getattr(settings, "STORE_TAX_RATE", 0.14)
+
 
 from .models import (
     SyraBandType,
@@ -346,16 +358,8 @@ class CartViewSet(viewsets.ModelViewSet):
                 {"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # DEBUG: Log stock check details for diagnosis
-        logger.debug(
-            f"[STOCK_CHECK] product={product.name}, is_available={product.is_available}, stock={product.stock_quantity}, requested={quantity}"
-        )
-
         # Check if product is available (now in atomic transaction)
         if not product.is_available or product.stock_quantity < quantity:
-            logger.warning(
-                f"[STOCK_CHECK] BLOCKED: Product {product.name} - is_available={product.is_available}, stock={product.stock_quantity} < requested={quantity}"
-            )
             return Response(
                 {"error": "Product is not available in requested quantity."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -440,8 +444,8 @@ class CartViewSet(viewsets.ModelViewSet):
 
         # Create order from cart
         subtotal = cart.total_price
-        shipping_cost = 50
-        tax_rate = 0.14
+        shipping_cost = get_shipping_cost()
+        tax_rate = get_tax_rate()
         tax_amount = subtotal * tax_rate
         total = subtotal + shipping_cost + tax_amount
 
@@ -450,9 +454,21 @@ class CartViewSet(viewsets.ModelViewSet):
             # Lock cart items for update
             cart_items = list(cart.items.select_for_update())
 
+            # Lock products and verify stock availability
+            product_ids = [item.product_id for item in cart_items]
+            products = {
+                p.id: p
+                for p in SyraBand.objects.select_for_update().filter(id__in=product_ids)
+            }
+
             # Check stock availability
             for item in cart_items:
-                product = item.product
+                product = products.get(item.product_id)
+                if not product:
+                    return Response(
+                        {"error": f"Product no longer exists."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 if product.stock_quantity < item.quantity:
                     return Response(
                         {
@@ -482,16 +498,31 @@ class CartViewSet(viewsets.ModelViewSet):
             for item in cart_items:
                 OrderItem.objects.create(
                     order=order,
-                    product=item.product,
+                    product=products[item.product_id],
                     quantity=item.quantity,
-                    unit_price=item.product.current_price,
+                    unit_price=products[item.product_id].current_price,
                     total=item.total_price,
                 )
 
-                # Atomic decrement using F() to prevent race conditions
-                SyraBand.objects.filter(id=item.product.id).update(
-                    stock_quantity=F("stock_quantity") - item.quantity
-                )
+                # Atomic decrement using F() with minimum 0 constraint to prevent negative stock
+                updated = SyraBand.objects.filter(
+                    id=item.product_id, stock_quantity__gte=item.quantity
+                ).update(stock_quantity=F("stock_quantity") - item.quantity)
+
+                # Verify stock was actually updated (check that filter matched)
+                if updated == 0:
+                    # Stock was insufficient - rollback and return error
+                    transaction.set_rollback(True)
+                    return Response(
+                        {
+                            "error": f"Insufficient stock for '{products[item.product_id].name}'. "
+                            f"Available: {products[item.product_id].stock_quantity}, Requested: {item.quantity}"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Refresh to get new value
+                products[item.product_id].refresh_from_db()
 
             # Clear cart
             cart.items.all().delete()

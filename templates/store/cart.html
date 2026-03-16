@@ -1,158 +1,232 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block hide_navigation %}true{% endblock %}
 
-{% block title %}Shopping Cart - Syra Store{% endblock %}
+{% block title %}{% trans "Shopping Cart" %} - Syra Store{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Cart page styling */
-    .cart-item {
-        transition: all 0.2s ease;
-    }
-    .cart-item:hover {
-        background-color: rgba(0, 0, 0, 0.02);
+    /* Apple-inspired Cart Design */
+    .apple-card {
+        @apply bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700;
     }
     
-    /* Dark mode support - Enhanced for accessibility */
-    .dark .bg-white { background-color: #1e293b; }
-    .dark .bg-light { background-color: #1e293b; }
-    .dark .text-muted { color: #94a3b8; }
-    .dark .text-dark { color: #f1f5f9; }
-    .dark .border-bottom { border-color: #334155; }
-    .dark .card {
-        background-color: #1e293b;
-        border-color: #334155;
+    .apple-btn-primary {
+        @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200;
     }
-    .dark .card-header {
-        background-color: #1e293b;
-        border-color: #334155;
+    
+    .apple-btn-secondary {
+        @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 px-6 rounded-xl transition-all duration-200;
     }
-    .dark .card-body {
-        background-color: #1e293b;
+    
+    .apple-btn-danger {
+        @apply bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200;
     }
-    .dark .btn-outline-primary {
-        border-color: #3b82f6;
-        color: #60a5fa;
+    
+    .apple-input {
+        @apply w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
     }
-    .dark .btn-outline-primary:hover {
-        background-color: #3b82f6;
-        color: #ffffff;
+    
+    .apple-quantity-btn {
+        @apply w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200;
     }
-    .dark .btn-outline-danger {
-        border-color: #dc2626;
-        color: #f87171;
+    
+    /* Subtle shadows like Apple */
+    .apple-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
-    .dark .btn-outline-danger:hover {
-        background-color: #dc2626;
-        color: #ffffff;
+    
+    .apple-shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
     }
-    .dark .btn-link {
-        color: #60a5fa;
+    
+    /* Status badges - Apple style */
+    .apple-badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
     }
-    .dark hr {
-        border-color: #334155;
+    
+    .apple-badge-success {
+        @apply bg-green-500/10 text-green-600 dark:text-green-400;
     }
-    .dark .form-control {
-        background-color: #1e293b;
-        border-color: #475569;
-        color: #f1f5f9;
+    
+    .apple-badge-warning {
+        @apply bg-yellow-500/10 text-yellow-600 dark:text-yellow-400;
     }
-    .dark .form-control:focus {
-        background-color: #0f172a;
-        border-color: #3b82f6;
+    
+    .apple-badge-info {
+        @apply bg-blue-500/10 text-blue-600 dark:text-blue-400;
+    }
+    
+    .apple-badge-danger {
+        @apply bg-red-500/10 text-red-600 dark:text-red-400;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <h2 class="mb-4">Shopping Cart</h2>
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <!-- Header -->
+    <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+            <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
+                {% trans "Shopping Cart" %}
+            </h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                {% blocktrans with count=cart.items.count %}{{ count }} item{% endblocktrans %}
+            </p>
+        </div>
+    </div>
 
     {% if cart.items.exists %}
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    {% for item in cart.items.all %}
-                    <div class="row align-items-center border-bottom py-3">
-                        <div class="col-md-2">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Cart Items -->
+            <div class="flex-1 space-y-4">
+                {% for item in cart.items.all %}
+                <div class="apple-card apple-shadow p-4 sm:p-6">
+                    <div class="flex gap-4 sm:gap-6">
+                        <!-- Product Image -->
+                        <div class="w-24 h-24 sm:w-28 sm:h-28 bg-slate-100 dark:bg-slate-700 rounded-2xl overflow-hidden flex-shrink-0">
                             {% if item.product.thumbnail %}
-                            <img src="{{ item.product.thumbnail.url }}" alt="{{ item.product.name }}" class="img-fluid rounded">
+                            <img src="{{ item.product.thumbnail.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover">
                             {% else %}
-                            <div class="bg-light rounded p-2 text-center">
-                                <i class="bi bi-watch text-muted"></i>
+                            <div class="w-full h-full flex items-center justify-center">
+                                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
                             </div>
                             {% endif %}
                         </div>
-                        <div class="col-md-4">
-                            <h6 class="mb-1">{{ item.product.name }}</h6>
-                            <small class="text-muted">{{ item.size|title }} / {{ item.color|title }}</small>
-                        </div>
-                        <div class="col-md-2 text-center">
-                            <span class="text-muted">EGP {{ item.product.current_price }}</span>
-                        </div>
-                        <div class="col-md-2">
-                            <form method="post" action="{% url 'store:update_cart_item' item.id %}">
-                                {% csrf_token %}
-                                <input type="number" name="quantity" value="{{ item.quantity }}" 
-                                       min="0" max="10" class="form-control form-control-sm">
-                                <button type="submit" class="btn btn-sm btn-link">Update</button>
-                            </form>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            <strong>EGP {{ item.total_price }}</strong>
-                            <form method="post" action="{% url 'store:remove_from_cart' item.id %}" class="mt-2">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                            </form>
+                        
+                        <!-- Product Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="min-w-0">
+                                    <h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">
+                                        {{ item.product.name }}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        {{ item.size|title }} · {{ item.color|title }}
+                                    </p>
+                                </div>
+                                <p class="text-lg font-semibold text-slate-900 dark:text-white whitespace-nowrap">
+                                    EGP {{ item.total_price }}
+                                </p>
+                            </div>
+                            
+                            <!-- Quantity & Actions -->
+                            <div class="flex items-center justify-between mt-4">
+                                <!-- Quantity Controls -->
+                                <form method="post" action="{% url 'store:update_cart_item' item.id %}" class="flex items-center gap-1">
+                                    {% csrf_token %}
+                                    <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}"
+                                            class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity <= 1 %}opacity-50 cursor-not-allowed{% endif %}"
+                                            {% if item.quantity <= 1 %}disabled{% endif %}>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                        </svg>
+                                    </button>
+                                    <span class="w-12 text-center font-medium text-slate-900 dark:text-white bg-transparent">
+                                        {{ item.quantity }}
+                                    </span>
+                                    <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}"
+                                            class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity >= 10 %}opacity-50 cursor-not-allowed{% endif %}"
+                                            {% if item.quantity >= 10 %}disabled{% endif %}>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                
+                                <!-- Remove Button -->
+                                <form method="post" action="{% url 'store:remove_from_cart' item.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
+                
+                <!-- Continue Shopping -->
+                <a href="{% url 'store:band_list' %}" class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    {% trans "Continue Shopping" %}
+                </a>
             </div>
-            <a href="{% url 'store:band_list' %}" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-left"></i> Continue Shopping
-            </a>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Order Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal</span>
-                        <span>EGP {{ cart.total_price }}</span>
+            
+            <!-- Order Summary -->
+            <div class="lg:w-80">
+                <div class="apple-card apple-shadow-lg sticky top-6">
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">{% trans "Order Summary" %}</h2>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Shipping</span>
-                        <span>EGP 50.00</span>
+                    <div class="p-6 space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">{% trans "Subtotal" %}</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ cart.total_price }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">{% trans "Shipping" %}</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP 50.00</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500 dark:text-slate-400">{% trans "Tax" %} (14%)</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ cart.total_price|add:0|floatformat:2 }}</span>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 dark:border-slate-700">
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-semibold text-slate-900 dark:text-white">{% trans "Total" %}</span>
+                                <span class="text-xl font-bold text-blue-600 dark:text-blue-400">EGP {{ cart.total_price|add:50|add:cart.total_price|add:0|floatformat:2 }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Tax (14%)</span>
-                        <span>EGP {{ cart.total_price|add:0|floatformat:2 }}</span>
+                    <div class="px-6 pb-6">
+                        <a href="{% url 'store:checkout' %}" class="apple-btn-primary w-full flex items-center justify-center gap-2 text-base">
+                            <span>{% trans "Checkout" %}</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                        <div class="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            <span>{% trans "Secure checkout" %}</span>
+                        </div>
                     </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-3">
-                        <strong>Total</strong>
-                        <strong>EGP {{ cart.total_price|add:50|add:cart.total_price|add:0|floatformat:2 }}</strong>
-                    </div>
-                    <a href="{% url 'store:checkout' %}" class="btn btn-primary w-100">
-                        Proceed to Checkout
-                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-cart-x display-1 text-muted"></i>
-        <h3 class="mt-3">Your Cart is Empty</h3>
-        <p class="text-muted">Looks like you haven't added any items to your cart yet.</p>
-        <a href="{% url 'store:band_list' %}" class="btn btn-primary mt-3">Start Shopping</a>
+    <!-- Empty Cart -->
+    <div class="max-w-lg mx-auto px-4 py-16">
+        <div class="apple-card apple-shadow-lg p-12 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">{% trans "Your cart is empty" %}</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-8">{% trans "Add items to your cart to get started" %}</p>
+            <a href="{% url 'store:band_list' %}" class="apple-btn-primary inline-flex items-center gap-2">
+                <span>{% trans "Browse Products" %}</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+        </div>
     </div>
     {% endif %}
 </div>

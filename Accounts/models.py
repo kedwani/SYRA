@@ -48,6 +48,19 @@ class SyraUser(AbstractUser):
     date_of_birth = models.DateField(
         null=True, blank=True, verbose_name="Date of Birth"
     )
+    gender = models.CharField(
+        max_length=10,
+        choices=[
+            ("male", "Male"),
+            ("female", "Female"),
+            ("other", "Other"),
+        ],
+        blank=True,
+        verbose_name="Gender",
+    )
+    nationality = models.CharField(
+        max_length=100, blank=True, verbose_name="Nationality"
+    )
 
     # Role fields
     profile_role = models.CharField(

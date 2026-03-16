@@ -108,6 +108,21 @@ class MedicalProfile(models.Model):
         verbose_name="Show Medical History to Public",
         help_text="Anyone can view medical history (doctors only by default)",
     )
+    show_chronic_diseases_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Chronic Diseases to Public",
+        help_text="Everyone can see chronic diseases in emergencies",
+    )
+    show_notes_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Emergency Notes to Public",
+        help_text="Everyone can see emergency notes in emergencies",
+    )
+    show_insurance_public = models.BooleanField(
+        default=False,
+        verbose_name="Show Insurance to Public",
+        help_text="Anyone can view insurance info (doctors only by default)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -124,16 +139,11 @@ class MedicalProfile(models.Model):
 
     def save(self, *args, **kwargs):
         """Encrypt insurance image before saving."""
-        import logging
-
-        logger = logging.getLogger(__name__)
-
         # Check if we have a new file to upload that needs encryption
         if self.insurance_image:
             # Check if this is a new upload (not previously saved)
             if not self.pk:
                 # New profile - encrypt the image
-                logger.debug("New profile - encrypting insurance image...")
                 self._encrypt_insurance_image()
             else:
                 # Check if the image has changed
@@ -141,13 +151,9 @@ class MedicalProfile(models.Model):
                     old_instance = MedicalProfile.objects.get(pk=self.pk)
                     if old_instance.insurance_image != self.insurance_image:
                         # New image uploaded - encrypt it
-                        logger.debug("New image uploaded - encrypting...")
                         self._encrypt_insurance_image()
-                    else:
-                        logger.debug("Image unchanged - skipping encryption")
                 except MedicalProfile.DoesNotExist:
                     # Shouldn't happen, but encrypt if it does
-                    logger.debug("Could not find old instance - encrypting...")
                     self._encrypt_insurance_image()
 
         super().save(*args, **kwargs)
@@ -167,27 +173,14 @@ class MedicalProfile(models.Model):
 
     def _encrypt_insurance_image(self):
         """Encrypt the insurance image."""
-        import logging
-
-        logger = logging.getLogger(__name__)
-
         if not self.insurance_image:
-            logger.debug("No insurance_image to encrypt")
             return
-
-        logger.debug(
-            f"_encrypt_insurance_image: file object type: {type(self.insurance_image)}"
-        )
-        logger.debug(
-            f"_encrypt_insurance_image: file closed status: {self.insurance_image.closed if hasattr(self.insurance_image, 'closed') else 'N/A'}"
-        )
 
         from django.core.files.base import ContentFile
         from cryptography.fernet import Fernet
 
         fernet_key = settings.FERNET_KEY.encode() if settings.FERNET_KEY else None
         if not fernet_key:
-            logger.debug("No FERNET_KEY configured, skipping encryption")
             return
 
         f = Fernet(fernet_key)
@@ -197,14 +190,11 @@ class MedicalProfile(models.Model):
             # First try normal open with context manager
             with self.insurance_image.open() as image_file:
                 image_data = image_file.read()
-            logger.debug(f"Successfully read {len(image_data)} bytes for encryption")
-        except ValueError as e:
+        except ValueError:
             # Handle case where file is closed - try to reopen from storage
-            logger.debug(f"File was closed, attempting to reopen: {e}")
             self.insurance_image.open(mode="rb")
             image_data = self.insurance_image.read()
             self.insurance_image.close()
-            logger.debug(f"Successfully read {len(image_data)} bytes after reopen")
 
         # Encrypt the data
         encrypted_data = f.encrypt(image_data)

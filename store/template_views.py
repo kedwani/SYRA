@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.db import transaction
@@ -19,6 +20,7 @@ from .models import (
     CartItem,
     Order,
     BandRegistration,
+    SavedAddress,
 )
 
 
@@ -158,6 +160,7 @@ def cart_view(request):
 
 
 @login_required
+@csrf_protect
 def add_to_cart(request, band_id):
     """Add a product to the cart."""
     if request.method == "POST":
@@ -194,6 +197,7 @@ def add_to_cart(request, band_id):
 
 
 @login_required
+@csrf_protect
 def update_cart_item(request, item_id):
     """Update cart item quantity."""
     if request.method == "POST":
@@ -216,6 +220,7 @@ def update_cart_item(request, item_id):
 
 
 @login_required
+@csrf_protect
 def remove_from_cart(request, item_id):
     """Remove item from cart."""
     if request.method == "POST":
@@ -233,6 +238,7 @@ def remove_from_cart(request, item_id):
 
 @login_required
 @transaction.atomic
+@csrf_protect
 def checkout(request):
     """Checkout process."""
     cart, _ = Cart.objects.select_for_update().get_or_create(user=request.user)
@@ -256,14 +262,7 @@ def checkout(request):
         # Check stock availability first
         for item in cart.items.select_for_update():
             product = item.product
-            # DEBUG: Log stock check
-            logger.debug(
-                f"[CHECKOUT_STOCK] product={product.name}, stock={product.stock_quantity}, cart_qty={item.quantity}"
-            )
             if product.stock_quantity < item.quantity:
-                logger.warning(
-                    f"[CHECKOUT_STOCK] INSUFFICIENT STOCK: {product.name} has {product.stock_quantity} but cart has {item.quantity}"
-                )
                 messages.error(
                     request,
                     f"{product.name} is out of stock. Only {product.stock_quantity} available.",
@@ -364,7 +363,7 @@ def order_detail(request, order_id):
 def my_bands(request):
     """View user's registered Syra Bands."""
     registrations = (
-        BandRegistration.objects.select_related("user", "band", "medical_profile")
+        BandRegistration.objects.select_related("user", "order_item", "medical_profile")
         .filter(user=request.user)
         .order_by("-created_at")
     )
@@ -501,3 +500,87 @@ def registration_update_nickname(request, reg_id):
         messages.success(request, "Band nickname updated!")
 
     return redirect("store:my_bands")
+
+
+@login_required
+def addresses_view(request):
+    """View and manage saved addresses."""
+    addresses = SavedAddress.objects.filter(user=request.user)
+
+    # Also get addresses from previous orders
+    order_addresses = (
+        Order.objects.filter(user=request.user)
+        .values(
+            "shipping_name",
+            "shipping_phone",
+            "shipping_address",
+            "shipping_city",
+            "shipping_area",
+        )
+        .distinct()
+    )
+
+    if request.method == "POST":
+        # Add new address
+        label = request.POST.get("label", "")
+        name = request.POST.get("name")
+        phone = request.POST.get("phone")
+        address = request.POST.get("address")
+        city = request.POST.get("city")
+        area = request.POST.get("area", "")
+        notes = request.POST.get("notes", "")
+        is_default = request.POST.get("is_default", False) == "on"
+
+        if is_default:
+            # Unset other default addresses
+            SavedAddress.objects.filter(user=request.user, is_default=True).update(
+                is_default=False
+            )
+
+        SavedAddress.objects.create(
+            user=request.user,
+            label=label,
+            name=name,
+            phone=phone,
+            address=address,
+            city=city,
+            area=area,
+            notes=notes,
+            is_default=is_default,
+        )
+        messages.success(request, "Address saved successfully!")
+        return redirect("store:addresses")
+
+    context = {
+        "addresses": addresses,
+        "order_addresses": order_addresses,
+    }
+    return render(request, "store/addresses.html", context)
+
+
+@login_required
+@csrf_protect
+def address_delete(request, address_id):
+    """Delete a saved address."""
+    address = get_object_or_404(SavedAddress, id=address_id, user=request.user)
+    address.delete()
+    messages.success(request, "Address deleted!")
+    return redirect("store:addresses")
+
+
+@login_required
+@csrf_protect
+def address_set_default(request, address_id):
+    """Set an address as default."""
+    # Unset all defaults
+    SavedAddress.objects.filter(user=request.user, is_default=True).update(
+        is_default=False
+    )
+
+    # Set new default
+    address = get_object_or_404(SavedAddress, id=address_id, user=request.user)
+    address.is_default = True
+    address.save()
+
+    messages.success(request, "Default address updated!")
+    return redirect("store:addresses")

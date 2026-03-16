@@ -1,232 +1,233 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block hide_navigation %}true{% endblock %}
 
-{% block title %}My Syra Bands - Syra Store{% endblock %}
+{% block title %}{% trans "My Syra Bands" %} - {% trans "Syra Store" %}{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* My bands styling */
-    .band-card {
-        transition: all 0.2s ease;
+    /* Apple-inspired Design */
+    .apple-card {
+        @apply bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700;
     }
-    .band-card:hover {
+    
+    .apple-card-hover {
+        @apply transition-all duration-200;
+    }
+    
+    .apple-card-hover:hover {
+        @apply shadow-md;
         transform: translateY(-2px);
     }
     
-    /* Dark mode support - Enhanced for accessibility */
-    .dark .bg-white { background-color: #1e293b; }
-    .dark .bg-light { background-color: #1e293b; }
-    .dark .text-muted { color: #94a3b8 !important; }
-    .dark .text-dark { color: #f1f5f9; }
-    .dark .card {
-        background-color: #1e293b;
-        border-color: #334155;
-    }
-    .dark .card-header {
-        background-color: #1e293b !important;
-        border-color: #334155;
-    }
-    .dark .card-body {
-        background-color: #1e293b;
-    }
-    .dark .card-footer {
-        background-color: #1e293b !important;
-        border-color: #334155;
-    }
-    .dark .border-0 { border-color: #334155; }
-    
-    /* Dark mode badges */
-    .dark .badge.bg-success { background-color: #16a34a !important; }
-    .dark .badge.bg-danger { background-color: #dc2626 !important; }
-    .dark .badge.bg-secondary { background-color: #64748b !important; }
-    .dark .badge.bg-warning { background-color: #d97706 !important; }
-    
-    /* Dark mode buttons */
-    .dark .btn-outline-primary {
-        border-color: #3b82f6;
-        color: #60a5fa;
-    }
-    .dark .btn-outline-primary:hover {
-        background-color: #3b82f6;
-        color: #ffffff;
-    }
-    .dark .btn-outline-warning {
-        border-color: #d97706;
-        color: #fbbf24;
-    }
-    .dark .btn-outline-warning:hover {
-        background-color: #d97706;
-        color: #ffffff;
-    }
-    .dark .btn-outline-success {
-        border-color: #16a34a;
-        color: #4ade80;
-    }
-    .dark .btn-outline-success:hover {
-        background-color: #16a34a;
-        color: #ffffff;
+    .apple-badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
     }
     
-    /* Dark mode modal */
-    .dark .modal-content {
-        background-color: #1e293b;
-        border-color: #334155;
+    .apple-badge-active { @apply bg-green-500/10 text-green-600 dark:text-green-400; }
+    .apple-badge-inactive { @apply bg-slate-500/10 text-slate-600 dark:text-slate-400; }
+    .apple-badge-lost { @apply bg-red-500/10 text-red-600 dark:text-red-400; }
+    .apple-badge-damaged { @apply bg-orange-500/10 text-orange-600 dark:text-orange-400; }
+    
+    .apple-btn {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 font-medium rounded-xl transition-all duration-200;
     }
-    .dark .modal-header {
-        border-color: #334155;
+    
+    .apple-btn-primary {
+        @apply bg-blue-600 hover:bg-blue-700 text-white;
     }
-    .dark .modal-footer {
-        border-color: #334155;
+    
+    .apple-btn-secondary {
+        @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200;
     }
-    .dark .modal-title {
-        color: #f1f5f9;
+    
+    .apple-btn-warning {
+        @apply border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20;
     }
-    .dark .btn-close {
-        filter: invert(1);
-    }
-    .dark .form-label {
-        color: #cbd5e1;
-    }
-    .dark .form-control {
-        background-color: #1e293b;
-        border-color: #475569;
-        color: #f1f5f9;
-    }
-    .dark .form-control:focus {
-        background-color: #0f172a;
-        border-color: #3b82f6;
-    }
-    .dark .btn-secondary {
-        background-color: #475569;
-        border-color: #475569;
-        color: #e2e8f0;
-    }
-    .dark .btn-danger {
-        background-color: #dc2626;
-        border-color: #dc2626;
-        color: #ffffff;
+    
+    .apple-btn-success {
+        @apply border border-green-300 dark:border-green-700 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Syra Bands</h2>
-        <a href="{% url 'store:band_list' %}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Buy New Band
-        </a>
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <!-- Header -->
+    <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white">
+                        {% trans "My Bands" %}
+                    </h1>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        {% trans "Manage your registered SYRA bands" %}
+                    </p>
+                </div>
+                <a href="{% url 'store:band_list' %}" class="apple-btn apple-btn-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    {% trans "Buy New" %}
+                </a>
+            </div>
+        </div>
     </div>
 
-    {% if registrations %}
-    <div class="row g-4">
-        {% for reg in registrations %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">{{ reg.nickname|default:"My Band" }}</h6>
-                    <span class="badge bg-{% if reg.status == 'active' %}success{% elif reg.status == 'lost' %}danger{% else %}secondary{% endif %}">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        {% if registrations %}
+        <!-- Bands Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for reg in registrations %}
+            <div class="apple-card apple-card-hover">
+                <!-- Card Header -->
+                <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-900 dark:text-white truncate">
+                        {{ reg.nickname|default:"My Band" }}
+                    </h3>
+                    <span class="apple-badge 
+                        {% if reg.status == 'active' %}apple-badge-active
+                        {% elif reg.status == 'inactive' %}apple-badge-inactive
+                        {% elif reg.status == 'lost' %}apple-badge-lost
+                        {% elif reg.status == 'damaged' %}apple-badge-damaged{% endif %}">
                         {{ reg.get_status_display }}
                     </span>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <small class="text-muted">Public ID</small>
-                        <p class="mb-0 font-monospace">{{ reg.public_id }}</p>
-                    </div>
-                    <div class="mb-3">
-                        <small class="text-muted">Product</small>
-                        <p class="mb-0">{{ reg.order_item.product_name }}</p>
-                    </div>
-                    <div class="mb-3">
-                        <small class="text-muted">Activated</small>
-                        <p class="mb-0">
-                            {% if reg.activated_at %}
-                            {{ reg.activated_at|date:"M d, Y" }}
-                            {% else %}
-                            Not activated
-                            {% endif %}
+                
+                <!-- Card Body -->
+                <div class="p-5 space-y-3">
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Public ID</p>
+                        <p class="font-mono text-sm text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg">
+                            {{ reg.public_id }}
                         </p>
                     </div>
-                    {% if reg.expires_at %}
-                    <div class="mb-3">
-                        <small class="text-muted">Expires</small>
-                        <p class="mb-0">{{ reg.expires_at|date:"M d, Y" }}</p>
+                    <div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Product</p>
+                        <p class="font-medium text-slate-900 dark:text-white">
+                            {{ reg.order_item.product_name }}
+                        </p>
                     </div>
-                    {% endif %}
-                </div>
-                <div class="card-footer bg-white border-0">
-                    <div class="d-flex gap-2">
-                        {% if reg.status == 'active' %}
-                        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#reportLostModal{{ reg.id }}">
-                            Report Lost
-                        </button>
-                        {% elif reg.status == 'lost' %}
-                        <button class="btn btn-outline-success btn-sm">
-                            Mark Found
-                        </button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Activated</p>
+                            <p class="font-medium text-slate-900 dark:text-white">
+                                {% if reg.activated_at %}
+                                {{ reg.activated_at|date:"M d, Y" }}
+                                {% else %}
+                                <span class="text-yellow-600 dark:text-yellow-400">Pending</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if reg.expires_at %}
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Expires</p>
+                            <p class="font-medium text-slate-900 dark:text-white">
+                                {{ reg.expires_at|date:"M d, Y" }}
+                            </p>
+                        </div>
                         {% endif %}
-                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editNicknameModal{{ reg.id }}">
-                            Edit Name
-                        </button>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Edit Nickname Modal -->
-        <div class="modal fade" id="editNicknameModal{{ reg.id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Band Nickname</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <form method="post" action="{% url 'store:registration_update_nickname' reg.id %}">
-                        {% csrf_token %}
-                        <div class="modal-body">
-                            <label class="form-label">Nickname</label>
-                            <input type="text" name="nickname" class="form-control" value="{{ reg.nickname }}">
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
+                
+                <!-- Card Footer -->
+                <div class="px-5 py-4 bg-slate-50 dark:bg-slate-700/50 border-t border-slate-100 dark:border-slate-700 flex flex-wrap gap-2">
+                    {% if reg.status == 'active' %}
+                    <button class="apple-btn apple-btn-warning flex-1" data-bs-toggle="modal" data-bs-target="#reportLostModal{{ reg.id }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        {% trans "Lost" %}
+                    </button>
+                    {% elif reg.status == 'lost' %}
+                    <button class="apple-btn apple-btn-success flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        {% trans "Found" %}
+                    </button>
+                    {% endif %}
+                    <button class="apple-btn apple-btn-secondary flex-1" data-bs-toggle="modal" data-bs-target="#editNicknameModal{{ reg.id }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        {% trans "Edit" %}
+                    </button>
                 </div>
             </div>
-        </div>
-        
-        <!-- Report Lost Modal -->
-        <div class="modal fade" id="reportLostModal{{ reg.id }}" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Report Band as Lost</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to mark this band as lost? You can mark it as found later.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <form method="post" action="{% url 'store:registration_report_lost' reg.id %}">
+            
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editNicknameModal{{ reg.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content apple-card border-0 m-4">
+                        <div class="modal-header border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                            <h5 class="modal-title font-semibold text-slate-900 dark:text-white">{% trans "Edit Nickname" %}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form method="post" action="{% url 'store:registration_update_nickname' reg.id %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Report Lost</button>
+                            <div class="modal-body px-6 py-4">
+                                <input type="text" name="nickname" value="{{ reg.nickname }}" 
+                                       class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="modal-footer border-t border-slate-100 dark:border-slate-700 px-6 py-4 gap-2">
+                                <button type="button" class="apple-btn apple-btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                                <button type="submit" class="apple-btn apple-btn-primary">{% trans "Save" %}</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
+            
+            <!-- Report Lost Modal -->
+            <div class="modal fade" id="reportLostModal{{ reg.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content apple-card border-0 m-4">
+                        <div class="modal-header border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+                            <h5 class="modal-title font-semibold text-slate-900 dark:text-white">{% trans "Report as Lost" %}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body px-6 py-4">
+                            <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
+                                <svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <p class="text-slate-700 dark:text-slate-300">{% trans "Mark this band as lost?" %}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-t border-slate-100 dark:border-slate-700 px-6 py-4 gap-2">
+                            <button type="button" class="apple-btn apple-btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                            <form method="post" action="{% url 'store:registration_report_lost' reg.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="apple-btn apple-btn-warning">{% trans "Report Lost" %}</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="apple-card p-12 text-center max-w-md mx-auto">
+            <div class="w-20 h-20 mx-auto mb-6 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">{% trans "No Bands Yet" %}</h2>
+            <p class="text-slate-500 dark:text-slate-400 mb-8">{% trans "Purchase a SYRA band to get started" %}</p>
+            <a href="{% url 'store:band_list' %}" class="apple-btn apple-btn-primary inline-flex">
+                <span>{% trans "Browse Bands" %}</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+            </a>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-watch display-1 text-muted"></i>
-        <h3 class="mt-3">No Bands Yet</h3>
-        <p class="text-muted">You haven't purchased any Syra Bands yet.</p>
-        <a href="{% url 'store:band_list' %}" class="btn btn-primary mt-3">Buy Your First Band</a>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}

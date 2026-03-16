@@ -8,13 +8,41 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY", "django-insecure-dev-key-change-in-production"
-)
-
+# DEBUG must be defined first
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# Logging configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "syra.middleware": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        # Generate temporary key for development only
+        SECRET_KEY = "django-insecure-dev-key-for-development-only-change-in-production"
+    else:
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY environment variable is required in production! "
+            "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(50))'"
+        )
+
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(
+    ","
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -38,6 +66,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",  # i18n
+    "syra.middleware.ForceLanguageMiddleware",  # Force language activation
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -58,6 +87,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "store.context_processors.cart_item_count",
             ],
         },
     },
@@ -67,10 +97,21 @@ WSGI_APPLICATION = "syra.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("DB_NAME", str(BASE_DIR / "db.sqlite3")),
+        # PostgreSQL options (used when DB_ENGINE is postgresql)
+        "USER": os.environ.get("DB_USER", ""),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
     }
 }
+
+# For SQLite, add connection options for production use
+if os.environ.get("DB_ENGINE") != "django.db.backends.postgresql":
+    DATABASES["default"]["OPTIONS"] = {
+        "timeout": 20,
+    }
 
 # Cache Configuration
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
@@ -91,6 +132,10 @@ LANGUAGES = [
     ("en", "English"),
     ("ar", "العربية"),
 ]
+
+# Language cookie and session settings for i18n
+LANGUAGE_COOKIE_NAME = "django_language"
+LANGUAGE_SESSION_KEY = "_language"
 
 TIME_ZONE = "Africa/Cairo"
 USE_I18N = True
@@ -144,8 +189,10 @@ if not FERNET_KEY:
             "FERNET_KEY is required in production! "
             "Generate with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
         )
-    # Generate temporary key for development
-    FERNET_KEY = Fernet.generate_key().decode()
+    # Use persistent dev key for development to avoid data loss on restart
+    FERNET_KEY = os.environ.get(
+        "FERNET_DEV_KEY", "dev-fernet-key-for-testing-only-do-not-use-in-prod=="
+    )
 
 # Email Configuration
 EMAIL_BACKEND = (

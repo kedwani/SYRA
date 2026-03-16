@@ -499,6 +499,54 @@ msgstr "نشط"
 msgid "Inactive"
 msgstr "غير نشط"
 
+#: templates/profiles/emergency_scan.html
+msgid "Not specified"
+msgstr "غير محدد"
+
+#: templates/profiles/emergency_scan.html
+msgid "No allergies listed"
+msgstr "لا توجد حساسية مذكورة"
+
+#: templates/profiles/emergency_scan.html
+msgid "Notes"
+msgstr "ملاحظات"
+
+#: templates/profiles/emergency_scan.html
+msgid "No notes"
+msgstr "لا توجد ملاحظات"
+
+#: templates/profiles/emergency_scan.html
+msgid "No emergency notes"
+msgstr "لا توجد ملاحظات طوارئ"
+
+#: templates/profiles/emergency_scan.html
+msgid "No medications listed"
+msgstr "لا توجد أدوية مذكورة"
+
+#: templates/profiles/emergency_scan.html
+msgid "No emergency contacts"
+msgstr "لا توجد جهات اتصال طوارئ"
+
+#: templates/profiles/emergency_scan.html
+msgid "No physical data"
+msgstr "لا توجد بيانات جسدية"
+
+#: templates/profiles/emergency_scan.html
+msgid "No medical history recorded"
+msgstr "لا يوجد تاريخ طبي مسجل"
+
+#: templates/profiles/emergency_scan.html
+msgid "Doctor authorization required"
+msgstr "يتطلب تفويض الطبيب"
+
+#: templates/profiles/emergency_scan.html
+msgid "Protected"
+msgstr "محمي"
+
+#: templates/profiles/emergency_scan.html
+msgid "Sign in as a verified doctor to view medical history."
+msgstr "سجل الدخول كطبيب معتمد لعرض التاريخ الطبي."
+
 #: .\templates\profiles\medications.html:77
 msgid "No medications yet"
 msgstr "لا توجد أدوية بعد"
@@ -558,6 +606,26 @@ msgstr "الطول (سم)"
 #: .\templates\profiles\profile_edit.html:46
 msgid "Weight (kg)"
 msgstr "الوزن (كجم)"
+
+#: .\templates\profiles\emergency_scan.html
+msgid "Access Denied"
+msgstr "تم رفض الوصول"
+
+#: .\templates\profiles\emergency_scan.html
+msgid "Login to Reveal"
+msgstr "تسجيل الدخول للكشف"
+
+#: .\templates\profiles\emergency_scan.html
+msgid "Reveal Additional Data"
+msgstr "كشف البيانات الإضافية"
+
+#: .\templates\profiles\emergency_scan.html
+msgid "Hide Additional Data"
+msgstr "إخفاء البيانات الإضافية"
+
+#: .\templates\profiles\emergency_scan.html
+msgid "Unauthorized access"
+msgstr "وصول غير مصرح به"
 
 #: .\templates\profiles\profile_edit.html:146
 msgid "Save Profile"
@@ -620,8 +688,11 @@ msgid "Payment Method"
 msgstr "طريقة الدفع"
 
 #: .\templates\store\checkout.html:63
-msgid "Place Order"
-msgstr "تقديم الطلب"
+msgid "Cash on Delivery"
+msgstr "الدفع عند الاستلام"
+
+msgid "Pay when you receive your order"
+msgstr "ادفع عند استلام طلبك"
 
 #: .\templates\store\home.html:4
 msgid "Welcome to SYRA Store"
@@ -662,3 +733,237 @@ msgstr "حالة الطلب"
 #: .\templates\store\order_detail.html:24
 msgid "Items"
 msgstr "المنتجات"
+
+msgid "Update"
+msgstr "تحديث"
+
+msgid "Proceed to Checkout"
+msgstr "المتابعة للدفع"
+
+msgid "Complete your order"
+msgstr "أكمل طلبك"
+
+msgid "Enter your full name"
+msgstr "أدخل اسمك الكامل"
+
+msgid "Enter your full address"
+msgstr "أدخل عنوانك الكامل"
+
+msgid "e.g., Cairo, Alexandria"
+msgstr "مثال: القاهرة، الإسكندرية"
+
+msgid "e.g., Maadi, Nasr City"
+msgstr "مثال: المعادي، مدينة نصر"
+
+msgid "Shipping Notes"
+msgstr "ملاحظات الشحن"
+
+msgid "Any special instructions for delivery..."
+msgstr "أي تعليمات خاصة للتسليم..."
+
+msgid "Home"
+msgstr "الرئيسية"
+
+msgid "Medical Bracelets"
+msgstr "أسورة طبية"
+
+msgid "SYRA Store"
+msgstr "متجر سيرا"
+
+msgid "Medical ID Bands"
+msgstr "الأسورة الطبية"
+
+msgid "My Syra Bands"
+msgstr "أساورتي"
+
+msgid "No Orders Yet"
+msgstr "لا توجد طلبات بعد"
+
+msgid "You haven't placed any orders yet."
+msgstr "لم تقم بتقديم أي طلبات بعد."
+
+msgid "Data revealed successfully. Reloading..."
+msgstr "تم الكشف عن البيانات بنجاح. جاري إعادة التحميل..."
+
+#: templates/profiles/emergency_scan.html
+msgid "Login as Doctor to View Protected Data"
+msgstr "تسجيل الدخول كطبيب لعرض البيانات المحمية"
+
+msgid "Show Protected Data"
+msgstr "عرض البيانات المحمية"
+
+msgid "Medical History Protected"
+msgstr "السجل الطبي محمي"
+
+#: templates/profiles/emergency_scan.html
+msgid "Insurance Information"
+msgstr "معلومات التأمين"
+
+#: templates/profiles/emergency_scan.html
+msgid "Insurance Provider"
+msgstr "شركة التأمين"
+
+#: templates/profiles/emergency_scan.html
+msgid "Insurance Number"
+msgstr "رقم التأمين"
+
+#: templates/profiles/emergency_scan.html
+msgid "No chronic diseases listed"
+msgstr "لا توجد أمراض مزمنة مذكورة"
+
+#: templates/store/home.html
+msgid "Seconds Matter"
+msgstr "ثوانٍ معدودة قد تنقذ حياة"
+
+#: templates/store/home.html
+msgid "SYRA is Your Smart Guardian in Every Emergency"
+msgstr "SYRA رفيقك الذكي في الطوارئ"
+
+#: templates/store/home.html
+msgid "Total protection for your family with smart wearables that link medical profiles to your phone, ensuring the right care at the right time."
+msgstr "حماية متكاملة لعائلتك عبر أساور ذكية تربط تاريخك الطبي بهاتفك، لضمان وصول الرعاية الصحيحة في الوقت المناسب."
+
+#: templates/store/home.html
+msgid "Start Your Safety Journey with SYRA"
+msgstr "ابدأ رحلة الأمان مع SYRA الآن"
+
+#: templates/store/home.html
+msgid "Get Your Smart Protection Today"
+msgstr "احصل على حمايتك الذكية اليوم"
+
+#: templates/store/home.html
+msgid "Adult Collection"
+msgstr "مجموعة البالغين"
+
+#: templates/store/home.html
+msgid "SYRA Main Bracelet"
+msgstr "أسورة سيرا الذكية"
+
+#: templates/store/home.html
+msgid "Style meets safety"
+msgstr "أناقة لا تتنازل عن الأمان"
+
+#: templates/store/home.html
+msgid "Kids Collection"
+msgstr "مجموعة الأطفال"
+
+#: templates/store/home.html
+msgid "SYRA Kids Bracelet"
+msgstr "إصدار الأطفال"
+
+#: templates/store/home.html
+msgid "Peace of mind for every parent"
+msgstr "راحة بال لكل أب وأم"
+
+#: templates/store/home.html
+msgid "Shop Now"
+msgstr "تسوق الآن"
+
+#: templates/store/home.html
+msgid "Ultra Privacy"
+msgstr "خصوصية فائقة"
+
+#: templates/store/home.html
+msgid "Your sensitive data remains hidden and only accessible when strictly needed."
+msgstr "بياناتك الحساسة لا تظهر إلا عند الضرورة القصوى بضغطة زر."
+
+#: templates/store/analytics.html
+msgid "No sales yet"
+msgstr "لا توجد مبيعات بعد"
+
+#: templates/store/analytics.html
+msgid "No orders yet"
+msgstr "لا توجد طلبات بعد"
+
+#: templates/store/sales_report.html
+msgid "No sales data"
+msgstr "لا توجد بيانات مبيعات"
+
+#: templates/store/band_list.html
+msgid "No Products Found"
+msgstr "لم يتم العثور على منتجات"
+
+#: templates/store/band_list.html
+msgid "We couldn't find any products matching your criteria. Try adjusting your filters."
+msgstr "لم نتمكن من العثور على منتجات تطابق معاييرك. حاول تعديل الفلاتر."
+
+#: templates/store/checkout.html
+msgid "Credit/Debit Card"
+msgstr "بطاقة ائتمان/خصم"
+
+#: templates/store/checkout.html
+msgid "Pay securely with your card"
+msgstr "ادفع بأمان عبر بطاقتك"
+
+#: templates/store/checkout.html
+msgid "Vodafone Cash"
+msgstr "فودافون كاش"
+
+#: templates/store/checkout.html
+msgid "Pay using Vodafone Cash"
+msgstr "ادفع باستخدام فودافون كاش"
+
+#: templates/store/checkout.html
+msgid "InstaPay"
+msgstr "إنستا باي"
+
+#: templates/store/checkout.html
+msgid "Pay using InstaPay"
+msgstr "ادفع باستخدام إنستا باي"
+
+#: templates/store/checkout.html
+msgid "Bank Transfer"
+msgstr "تحويل بنكي"
+
+#: templates/store/checkout.html
+msgid "Transfer directly to our bank account"
+msgstr "تحويل مباشرة إلى حسابنا البنكي"
+
+#: templates/store/band_list.html
+msgid "🩺 SYRA Medical Bracelets"
+msgstr "🩺 الأسورة الطبية سيرا"
+
+#: templates/store/band_list.html
+msgid "Premium smart medical ID bracelets with QR Code for emergencies"
+msgstr "أساور ذكية طبية مميزة برمز QR للطوارئ"
+
+#: templates/store/band_list.html
+msgid "Free Shipping"
+msgstr "شحن مجاني"
+
+#: templates/store/band_list.html
+#, python-format
+msgid "On orders over %(amount)s EGP"
+msgstr "للطلبات超过 %(amount)s جنيه مصري"
+
+#: templates/store/band_list.html
+msgid "Sort by:"
+msgstr "ترتيب حسب:"
+
+#: templates/store/home.html
+msgid "Trusted by 10,000+ customers"
+msgstr "يثق بنا أكثر من 10,000 عميل"
+
+#: templates/store/home.html
+msgid "Protection Meets Technology"
+msgstr "الحماية تلتقي بالتكنولوجيا"
+
+#: templates/store/home.html
+msgid "Advanced features designed to keep you and your loved ones safe"
+msgstr "ميزات متقدمة مصممة للحفاظ على سلامة أنت وأحبائك"
+
+#: templates/store/home.html
+msgid "Data Encryption"
+msgstr "تشفير البيانات"
+
+#: templates/store/home.html
+msgid "Advanced encryption for insurance card photos and sensitive medical documents."
+msgstr "حماية كاملة وتشفير متطور لصور بطاقات التأمين والوثائق الطبية."
+
+#: templates/store/home.html
+msgid "Instant Updates"
+msgstr "تحديث فوري"
+
+#: templates/store/home.html
+msgid "Instantly update medical records, emergency meds, or contacts anytime."
+msgstr "عدّل بياناتك الطبية، أدوية الطوارئ، أو جهات الاتصال في أي وقت."
