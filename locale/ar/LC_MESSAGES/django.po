@@ -867,6 +867,10 @@ msgstr "خصوصية فائقة"
 msgid "Your sensitive data remains hidden and only accessible when strictly needed."
 msgstr "بياناتك الحساسة لا تظهر إلا عند الضرورة القصوى بضغطة زر."
 
+#: templates/profiles/doctor_add_medication.html
+msgid "Add a medication to"
+msgstr "إضافة دواء إلى"
+
 #: templates/store/analytics.html
 msgid "No sales yet"
 msgstr "لا توجد مبيعات بعد"

@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
-{% block page_name %}<span class="text-xs text-red-200 font-normal ml-2">| Add Medication</span>{% endblock %}
+{% block page_name %}<span class="text-xs text-red-600 dark:text-red-400 font-normal ml-2">{% trans "Add Medication" %}</span>{% endblock %}
 
-{% block title %}Add Medication - SYRA{% endblock %}
+{% block title %}{% trans "Add Medication" %} - SYRA{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-8">
     <!-- Page Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Add Medication 💊</h1>
-        <p class="text-gray-600 mt-1">Add a medication to {{ profile.user.get_full_name|default:profile.user.username }}'s profile</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Add Medication" %} 💊</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">{% trans "Add a medication to" %} {{ profile.user.get_full_name|default:profile.user.username }}'s profile</p>
     </div>
 
     <!-- Patient Info -->
@@ -74,7 +74,7 @@
                 </a>
                 <button type="submit" 
                         class="flex-1 bg-gradient-to-r from-purple-600 to-purple-500 text-white px-4 py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-600">
-                    Add Medication
+                    {% trans "Add Medication" %}
                 </button>
             </div>
         </form>
