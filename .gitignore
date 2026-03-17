@@ -10,7 +10,7 @@ __pycache__/
 db.sqlite3
 
 # Media uploads
-media/
+#media/
 
 # dependencies
 /node_modules
