@@ -151,10 +151,26 @@ def band_detail(request, band_id):
 @login_required
 def cart_view(request):
     """View the shopping cart."""
-    cart, created = Cart.objects.get_or_create(user=request.user)
+    from django.conf import settings
+    from decimal import Decimal
+
+    cart = Cart.objects.prefetch_related("items", "items__product").get_or_create(
+        user=request.user
+    )[0]
+
+    # Calculate order summary values (consistent with checkout)
+    subtotal = cart.total_price
+    shipping_cost = Decimal(str(settings.STORE_SHIPPING_COST))
+    tax_rate = Decimal(str(settings.STORE_TAX_RATE))
+    tax_amount = (subtotal + shipping_cost) * tax_rate
+    total = subtotal + shipping_cost + tax_amount
 
     context = {
         "cart": cart,
+        "subtotal": subtotal,
+        "shipping_cost": shipping_cost,
+        "tax_amount": tax_amount,
+        "total": total,
     }
     return render(request, "store/cart.html", context)
 
@@ -205,11 +221,27 @@ def update_cart_item(request, item_id):
         quantity = int(request.POST.get("quantity", 1))
 
         try:
-            cart_item = CartItem.objects.get(id=item_id, cart=cart)
+            cart_item = CartItem.objects.select_related("product").get(
+                id=item_id, cart=cart
+            )
+
+            # Verify ownership - ensure cart_item belongs to this user's cart
+            if cart_item.cart.user != request.user:
+                messages.error(request, "Item not found in cart.")
+                return redirect("store:cart")
+
             if quantity <= 0:
                 cart_item.delete()
                 messages.success(request, "Item removed from cart.")
             else:
+                # Validate stock availability before updating
+                if quantity > cart_item.product.stock_quantity:
+                    messages.error(
+                        request,
+                        f"Sorry, only {cart_item.product.stock_quantity} items available in stock.",
+                    )
+                    return redirect("store:cart")
+
                 cart_item.quantity = min(quantity, 10)
                 cart_item.save()
                 messages.success(request, "Cart updated.")
@@ -228,6 +260,12 @@ def remove_from_cart(request, item_id):
 
         try:
             cart_item = CartItem.objects.get(id=item_id, cart=cart)
+
+            # Verify ownership - ensure cart_item belongs to this user's cart
+            if cart_item.cart.user != request.user:
+                messages.error(request, "Item not found in cart.")
+                return redirect("store:cart")
+
             cart_item.delete()
             messages.success(request, "Item removed from cart.")
         except CartItem.DoesNotExist:
@@ -253,9 +291,11 @@ def checkout(request):
         logger = logging.getLogger(__name__)
 
         # Calculate totals (use Decimal for precision)
+        from django.conf import settings
+
         subtotal = cart.total_price
-        shipping_cost = Decimal("50")  # Fixed shipping cost
-        tax_rate = Decimal("0.14")
+        shipping_cost = Decimal(str(settings.STORE_SHIPPING_COST))
+        tax_rate = Decimal(str(settings.STORE_TAX_RATE))
         tax_amount = (subtotal + shipping_cost) * tax_rate
         total = subtotal + shipping_cost + tax_amount
 
@@ -310,9 +350,11 @@ def checkout(request):
         return redirect("store:order_detail", order_id=order.id)
 
     # Calculate totals for display
+    from django.conf import settings
+
     subtotal = cart.total_price
-    shipping_cost = Decimal("50")
-    tax_rate = Decimal("0.14")
+    shipping_cost = Decimal(str(settings.STORE_SHIPPING_COST))
+    tax_rate = Decimal(str(settings.STORE_TAX_RATE))
     tax_amount = subtotal * tax_rate
     total = subtotal + shipping_cost + tax_amount
 

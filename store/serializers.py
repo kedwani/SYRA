@@ -4,6 +4,7 @@ Serializers for the Syra Store API.
 
 from rest_framework import serializers
 from django.db.models import F
+from django.db import transaction
 from decimal import Decimal, ROUND_HALF_UP
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.plumbing import build_basic_type
@@ -338,10 +339,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
         # Calculate totals
         from decimal import Decimal
+        from django.conf import settings
 
         subtotal = Decimal("0")
-        tax_rate = Decimal("0.14")  # 14% VAT
-        shipping_cost = Decimal("50")  # Default shipping cost
+        tax_rate = Decimal(str(settings.STORE_TAX_RATE))
+        shipping_cost = Decimal(str(settings.STORE_SHIPPING_COST))
 
         order_items = []
         for item_data in items_data:
@@ -381,34 +383,36 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         tax_amount = subtotal * tax_rate
         total = subtotal + shipping_cost + tax_amount
 
-        # Create order
-        order = Order.objects.create(
-            user=user,
-            subtotal=subtotal,
-            shipping_cost=shipping_cost,
-            tax_amount=tax_amount,
-            total=total,
-            **validated_data,
-        )
-
-        # Create order items
-        # Use atomic stock update to prevent race conditions
-        for item in order_items:
-            OrderItem.objects.create(
-                order=order,
-                product=item["product"],
-                quantity=item["quantity"],
-                unit_price=item["unit_price"],
-                total=item["total"],
+        # Use atomic transaction to ensure data consistency
+        with transaction.atomic():
+            # Create order
+            order = Order.objects.create(
+                user=user,
+                subtotal=subtotal,
+                shipping_cost=shipping_cost,
+                tax_amount=tax_amount,
+                total=total,
+                **validated_data,
             )
 
-            # Update stock atomically using F() to prevent race conditions
-            product = item["product"]
-            SyraBand.objects.filter(id=product.id).update(
-                stock_quantity=F("stock_quantity") - item["quantity"]
-            )
-            # Refresh to get new value
-            product.refresh_from_db()
+            # Create order items
+            # Use atomic stock update to prevent race conditions
+            for item in order_items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item["product"],
+                    quantity=item["quantity"],
+                    unit_price=item["unit_price"],
+                    total=item["total"],
+                )
+
+                # Update stock atomically using F() to prevent race conditions
+                product = item["product"]
+                SyraBand.objects.filter(id=product.id).update(
+                    stock_quantity=F("stock_quantity") - item["quantity"]
+                )
+                # Refresh to get new value
+                product.refresh_from_db()
 
         return order
 

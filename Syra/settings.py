@@ -214,7 +214,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # API Keys
-NINJAS_API_KEY = "3jIsUMFu3r2qh2ObQ62w4ISGO3R58v3SOEUdiDVI"
+NINJAS_API_KEY = os.environ.get("NINJAS_API_KEY")
+if not NINJAS_API_KEY and not DEBUG:
+    raise ImproperlyConfigured(
+        "NINJAS_API_KEY environment variable is required in production! "
+    )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -299,10 +303,11 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@syra.app")
 
 # Brevo API Configuration (for future use)
-BREVO_API_KEY = os.environ.get(
-    "BREVO_API_KEY",
-    "eyJhcGlfa2V5IjoieGtleXNpYi0zOGVmYWZhMzcwYWRiMGVmY2JiNWFjOGY1ZGJmYTJkNDlhY2YyYzZlN2JiYzNjOTk0MDY3YzZhMWIxZGNiYTgyLXNROU9WaElrZVNLU0tkRnkifQ==",
-)
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
+if not BREVO_API_KEY and not DEBUG:
+    raise ImproperlyConfigured(
+        "BREVO_API_KEY environment variable is required in production! "
+    )
 
 # CORS Configuration
 CORS_ALLOW_CREDENTIALS = True
@@ -329,3 +334,7 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# Store Configuration
+STORE_SHIPPING_COST = 50.00
+STORE_TAX_RATE = 0.14

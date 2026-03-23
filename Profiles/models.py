@@ -146,22 +146,11 @@ class MedicalProfile(models.Model):
 
     def save(self, *args, **kwargs):
         """Encrypt insurance image before saving."""
-        # Check if we have a new file to upload that needs encryption
+        # Check if we have a file to encrypt
         if self.insurance_image:
-            # Check if this is a new upload (not previously saved)
-            if not self.pk:
-                # New profile - encrypt the image
+            # Only encrypt if not already encrypted
+            if not self._is_encrypted():
                 self._encrypt_insurance_image()
-            else:
-                # Check if the image has changed
-                try:
-                    old_instance = MedicalProfile.objects.get(pk=self.pk)
-                    if old_instance.insurance_image != self.insurance_image:
-                        # New image uploaded - encrypt it
-                        self._encrypt_insurance_image()
-                except MedicalProfile.DoesNotExist:
-                    # Shouldn't happen, but encrypt if it does
-                    self._encrypt_insurance_image()
 
         super().save(*args, **kwargs)
 
@@ -190,27 +179,38 @@ class MedicalProfile(models.Model):
         if not fernet_key:
             return
 
-        f = Fernet(fernet_key)
-
-        # Read the image data - handle case where file might be closed
         try:
-            # First try normal open with context manager
-            with self.insurance_image.open() as image_file:
-                image_data = image_file.read()
-        except ValueError:
-            # Handle case where file is closed - try to reopen from storage
-            self.insurance_image.open(mode="rb")
-            image_data = self.insurance_image.read()
-            self.insurance_image.close()
+            f = Fernet(fernet_key)
 
-        # Encrypt the data
-        encrypted_data = f.encrypt(image_data)
+            # Read the image data - handle case where file might be closed
+            try:
+                # First try normal open with context manager
+                with self.insurance_image.open() as image_file:
+                    image_data = image_file.read()
+            except ValueError:
+                # Handle case where file is closed - try to reopen from storage
+                self.insurance_image.open(mode="rb")
+                image_data = self.insurance_image.read()
+                self.insurance_image.close()
 
-        # Store encrypted data - get current name before replacing
-        current_name = self.insurance_image.name
+            # Encrypt the data
+            encrypted_data = f.encrypt(image_data)
 
-        # Replace the file with encrypted content
-        self.insurance_image.save(current_name, ContentFile(encrypted_data), save=False)
+            # Store encrypted data - get current name before replacing
+            current_name = self.insurance_image.name
+
+            # Replace the file with encrypted content
+            self.insurance_image.save(
+                current_name, ContentFile(encrypted_data), save=False
+            )
+        except Exception as e:
+            # Log error but don't crash - encryption is best-effort
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"Failed to encrypt insurance image for profile {self.pk}: {e}"
+            )
 
     def get_insurance_image_url(self):
         """Return decrypted image URL for authorized access."""

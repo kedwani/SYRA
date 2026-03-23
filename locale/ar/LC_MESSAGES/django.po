@@ -736,8 +736,85 @@ msgid "View Details"
 msgstr "عرض التفاصيل"
 
 #: .\templates\store\home.html:18
+#: .\templates\store\band_detail.html:471
 msgid "Add to Cart"
 msgstr "أضف إلى السلة"
+
+#: .\templates\store\band_detail.html:260
+#: .\templates\store\band_list.html:502
+msgid "In Stock"
+msgstr "متوفر"
+
+#: .\templates\store\band_detail.html:260
+#, python-format
+msgid "In Stock (%(count)s available)"
+msgstr "متوفر (%(count)s متاح)"
+
+#: .\templates\store\band_detail.html:267
+#: .\templates\store\band_list.html:506
+msgid "Out of Stock"
+msgstr "غير متوفر"
+
+#: .\templates\store\band_list.html:293
+#: .\templates\store\band_list.html:309
+msgid "Filters"
+msgstr "الفلاتر"
+
+#: .\templates\store\band_list.html:401
+msgid "Active Filters"
+msgstr "الفلاتر النشطة"
+
+#: .\templates\store\band_list.html:458
+msgid "Featured"
+msgstr "مميز"
+
+#: .\templates\store\band_list.html:459
+msgid "Price: Low to High"
+msgstr "السعر: من الأقل للأعلى"
+
+#: .\templates\store\band_list.html:460
+msgid "Price: High to Low"
+msgstr "السعر: من الأعلى للأقل"
+
+#: .\templates\store\band_list.html:461
+msgid "Newest First"
+msgstr "الأحدث أولاً"
+
+#: .\templates\store\band_list.html:620
+msgid "Clear All Filters"
+msgstr "مسح جميع الفلاتر"
+
+#: .\templates\store\band_detail.html:479
+msgid "This item is currently out of stock"
+msgstr "هذا المنتج غير متوفر حالياً"
+
+#: .\templates\store\band_detail.html:480
+msgid "Check back later or browse similar products"
+msgstr "تحقق لاحقاً أو تصفح منتجات مماثلة"
+
+#: .\templates\profiles\doctor_add_medication.html:56
+msgid "Additional Notes"
+msgstr "ملاحظات إضافية"
+
+#: .\templates\profiles\doctor_add_medication.html:58
+msgid "Any special instructions or notes"
+msgstr "أي تعليمات خاصة أو ملاحظات"
+
+#: .\templates\profiles\doctor_add_medication.html:52
+msgid "Leave empty for ongoing/long-term medications"
+msgstr "اتركه فارغاً للأدوية المستمرة/طويلة المدى"
+
+#: .\templates\profiles\doctor_add_medication.html:65
+msgid "Note"
+msgstr "ملاحظة"
+
+#: .\templates\profiles\doctor_add_medication.html:65
+msgid "This medication will be pending user approval. The patient will be notified and can approve or reject this addition."
+msgstr "سيكون هذا medication في انتظار موافقة المستخدم. سيتم إشعار المريض ويمكنه الموافقة على هذا الإضافة أو رفضها."
+
+#: .\templates\base.html:1323
+msgid "English"
+msgstr "English"
 
 #: .\templates\store\my_bands.html:4
 msgid "My Medical Bands"

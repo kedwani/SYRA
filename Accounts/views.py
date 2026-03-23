@@ -289,6 +289,7 @@ def admin_doctor_approvals_view(request):
 
 
 @login_required
+@ratelimit(key="ip", rate="10/h", method="POST")
 @require_http_methods(["POST"])
 def approve_doctor_view(request):
     """
@@ -315,6 +316,7 @@ def approve_doctor_view(request):
 
 
 @login_required
+@ratelimit(key="ip", rate="10/h", method="POST")
 @require_http_methods(["POST"])
 def reject_doctor_view(request):
     """
@@ -368,6 +370,7 @@ def doctor_detail_view(request, doctor_id):
 
 
 @login_required
+@ratelimit(key="ip", rate="10/h", method="POST")
 @require_http_methods(["POST"])
 def revoke_doctor_view(request):
     """

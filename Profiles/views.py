@@ -220,7 +220,11 @@ def emergency_scan_view(request, public_id):
     ip = request.META.get("REMOTE_ADDR")
     from django.core.cache import cache
 
+    # Use both IP and user ID for cache key when available
     cache_key = f"emergency_scan_attempts_{ip}"
+    if request.user.is_authenticated:
+        cache_key = f"emergency_scan_{request.user.id}_{ip}"
+
     attempts = cache.get(cache_key, 0)
 
     if attempts > 50:  # More than 50 different profiles in 1 hour
@@ -233,11 +237,25 @@ def emergency_scan_view(request, public_id):
             {"error": "Medical profile not found."}, status=status.HTTP_404_NOT_FOUND
         )
 
-    # Increment access counter
     cache.set(cache_key, attempts + 1, 3600)  # Expire after 1 hour
+
+    # Also update the simple IP-based counter for backward compatibility
+    if request.user.is_authenticated:
+        ip_cache_key = f"emergency_scan_attempts_{ip}"
+        cache.set(ip_cache_key, cache.get(ip_cache_key, 0) + 1, 3600)
 
     # Log access for security monitoring
     logger.info(f"Emergency scan from IP {ip} for profile {public_id}")
+
+    # Log the access for audit trail
+    ProfileAccessLog.objects.create(
+        profile=profile,
+        accessed_by=None,
+        access_role="anonymous",
+        access_type="emergency",
+        ip_address=ip,
+        user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+    )
 
     serializer = EmergencyProfileSerializer(profile)
     return Response(serializer.data)
@@ -458,6 +476,7 @@ def search_medical_data(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@ratelimit(key="ip", rate="10/m", method="GET")
 def serve_insurance_image(request, public_id):
     """
     Serve decrypted insurance image for authorized users only.

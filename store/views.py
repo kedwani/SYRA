@@ -505,6 +505,20 @@ class CartViewSet(viewsets.ModelViewSet):
         tax_amount = subtotal * tax_rate
         total = subtotal + shipping_cost + tax_amount
 
+        # Validate shipping phone - Egyptian format (before transaction)
+        shipping_phone = request.data.get("shipping_phone")
+        if shipping_phone:
+            import re
+
+            phone_pattern = re.compile(r"^01[0125][0-9]{8}$")
+            if not phone_pattern.match(shipping_phone):
+                return Response(
+                    {
+                        "error": "Invalid phone number. Egyptian numbers must be 11 digits starting with 010, 011, 012, or 015."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         # Use atomic transaction to prevent race conditions
         with transaction.atomic():
             # Lock cart items for update

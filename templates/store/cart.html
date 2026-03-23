@@ -9,27 +9,99 @@
 <style>
     /* Apple-inspired Cart Design */
     .apple-card {
-        @apply bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700;
+        background-color: white;
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .dark .apple-card {
+        background-color: #1e293b;
+        border-color: #334155;
     }
     
     .apple-btn-primary {
-        @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200;
+        background-color: #2563eb;
+        color: white;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .apple-btn-primary:hover {
+        background-color: #1d4ed8;
     }
     
     .apple-btn-secondary {
-        @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium py-3 px-6 rounded-xl transition-all duration-200;
+        background-color: #f1f5f9;
+        color: #334155;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .apple-btn-secondary:hover {
+        background-color: #e2e8f0;
+    }
+    
+    .dark .apple-btn-secondary {
+        background-color: #334155;
+        color: #e2e8f0;
+    }
+    
+    .dark .apple-btn-secondary:hover {
+        background-color: #475569;
     }
     
     .apple-btn-danger {
-        @apply bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200;
+        background-color: #ef4444;
+        color: white;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .apple-btn-danger:hover {
+        background-color: #dc2626;
     }
     
     .apple-input {
-        @apply w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        color: #0f172a;
+        transition: all 0.2s;
+    }
+    
+    .dark .apple-input {
+        background-color: #334155;
+        border-color: #475569;
+        color: white;
+    }
+    
+    .apple-input::placeholder {
+        color: #94a3b8;
+    }
+    
+    .apple-input:focus {
+        outline: none;
+        ring: 2px solid #2563eb;
+        border-color: transparent;
     }
     
     .apple-quantity-btn {
-        @apply w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200;
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        transition: all 0.2s;
     }
     
     /* Subtle shadows like Apple */
@@ -43,23 +115,48 @@
     
     /* Status badges - Apple style */
     .apple-badge {
-        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
     
     .apple-badge-success {
-        @apply bg-green-500/10 text-green-600 dark:text-green-400;
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+    
+    .dark .apple-badge-success {
+        color: #34d399;
     }
     
     .apple-badge-warning {
-        @apply bg-yellow-500/10 text-yellow-600 dark:text-yellow-400;
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    .dark .apple-badge-warning {
+        color: #fbbf24;
     }
     
     .apple-badge-info {
-        @apply bg-blue-500/10 text-blue-600 dark:text-blue-400;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+    }
+    
+    .dark .apple-badge-info {
+        color: #60a5fa;
     }
     
     .apple-badge-danger {
-        @apply bg-red-500/10 text-red-600 dark:text-red-400;
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    .dark .apple-badge-danger {
+        color: #f87171;
     }
 </style>
 {% endblock %}
@@ -122,8 +219,8 @@
                                 <form method="post" action="{% url 'store:update_cart_item' item.id %}" class="flex items-center gap-1">
                                     {% csrf_token %}
                                     <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}"
-                                            class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity <= 1 %}opacity-50 cursor-not-allowed{% endif %}"
-                                            {% if item.quantity <= 1 %}disabled{% endif %}
+                                            class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity <= 1 %}opacity-50 cursor-not-allowed pointer-events-none{% endif %}"
+                                            {% if item.quantity <= 1 %}disabled onclick="return false;"{% endif %}
                                             aria-label="{% trans 'Decrease quantity' %}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
@@ -133,8 +230,8 @@
                                         {{ item.quantity }}
                                     </span>
                                     <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}"
-                                            class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity >= 10 %}opacity-50 cursor-not-allowed{% endif %}"
-                                            {% if item.quantity >= 10 %}disabled{% endif %}
+                                            class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity >= 10 %}opacity-50 cursor-not-allowed pointer-events-none{% endif %}"
+                                            {% if item.quantity >= 10 %}disabled onclick="return false;"{% endif %}
                                             aria-label="{% trans 'Increase quantity' %}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -180,16 +277,16 @@
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 dark:text-slate-400">{% trans "Shipping" %}</span>
-                            <span class="text-slate-900 dark:text-white font-medium">EGP 50.00</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ shipping_cost|floatformat:2 }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-slate-500 dark:text-slate-400">{% trans "Tax" %} (14%)</span>
-                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ cart.total_price|add:0|floatformat:2 }}</span>
+                            <span class="text-slate-900 dark:text-white font-medium">EGP {{ tax_amount|floatformat:2 }}</span>
                         </div>
                         <div class="pt-3 border-t border-slate-100 dark:border-slate-700">
                             <div class="flex justify-between items-center">
                                 <span class="text-lg font-semibold text-slate-900 dark:text-white">{% trans "Total" %}</span>
-                                <span class="text-xl font-bold text-blue-600 dark:text-blue-400">EGP {{ cart.total_price|add:50|add:cart.total_price|add:0|floatformat:2 }}</span>
+                                <span class="text-xl font-bold text-blue-600 dark:text-blue-400">EGP {{ total|floatformat:2 }}</span>
                             </div>
                         </div>
                     </div>

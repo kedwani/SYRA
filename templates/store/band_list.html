@@ -286,13 +286,13 @@
         <!-- Mobile Filter Toggle -->
         <div class="lg:hidden">
             <button onclick="document.getElementById('mobileFilters').classList.toggle('open')" 
-                    class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 px-6 py-3 rounded-xl font-semibold text-slate-700 transition-colors">
+                    class="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-6 py-3 rounded-xl font-semibold text-slate-700 dark:text-slate-200 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                 </svg>
-                Filters
+                {% trans "Filters" %}
                 {% if current_filters.type or current_filters.size or current_filters.price %}
-                <span class="bg-cyan-500 text-white text-xs px-2 py-0.5 rounded-full">Active</span>
+                <span class="bg-cyan-500 text-white text-xs px-2 py-0.5 rounded-full">{% trans "Active" %}</span>
                 {% endif %}
             </button>
         </div>
@@ -301,12 +301,12 @@
         <div id="mobileFilters" class="filter-drawer lg:block lg:w-72 flex-shrink-0">
             <div class="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden lg:sticky lg:top-24">
                 <!-- Filter Header -->
-                <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="bg-slate-50 dark:bg-slate-800 px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
-                        <h3 class="font-bold text-slate-900">Filters</h3>
+                        <h3 class="font-bold text-slate-900 dark:text-slate-100">{% trans "Filters" %}</h3>
                     </div>
                     <a href="{% url 'store:band_list' %}" class="text-sm text-cyan-600 hover:text-cyan-700 font-medium">
                         Clear All
@@ -395,10 +395,10 @@
 
                     <!-- Active Filters -->
                     {% if current_filters.type or current_filters.size or current_filters.price %}
-                    <div class="pt-4 border-t border-slate-100">
-                        <h4 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <h4 class="font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
                             <span class="w-2 h-2 bg-cyan-500 rounded-full"></span>
-                            Active Filters
+                            {% trans "Active Filters" %}
                         </h4>
                         <div class="flex flex-wrap gap-2">
                             {% if current_filters.type %}
@@ -454,11 +454,11 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-sm text-slate-500 dark:text-slate-400">{% trans "Sort by:" %}</span>
-                    <select class="form-select text-sm border-slate-200 rounded-xl focus:ring-cyan-500 focus:border-cyan-500 py-2.5 px-4 font-medium">
-                        <option>Featured</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
-                        <option>Newest First</option>
+                    <select class="form-select text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 rounded-xl focus:ring-cyan-500 focus:border-cyan-500 py-2.5 px-4 font-medium">
+                        <option>{% trans "Featured" %}</option>
+                        <option>{% trans "Price: Low to High" %}</option>
+                        <option>{% trans "Price: High to Low" %}</option>
+                        <option>{% trans "Newest First" %}</option>
                     </select>
                 </div>
             </div>
@@ -497,13 +497,13 @@
                         <!-- Stock Badge -->
                         <div class="absolute top-3 right-3">
                             {% if band.stock_quantity > 0 %}
-                            <span class="px-3 py-1.5 text-xs font-semibold rounded-full bg-white/95 backdrop-blur-sm text-emerald-600 flex items-center gap-1.5 shadow">
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-full bg-white/95 dark:bg-gray-800 backdrop-blur-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 shadow">
                                 <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                                In Stock
+                                {% trans "In Stock" %}
                             </span>
                             {% else %}
-                            <span class="px-3 py-1.5 text-xs font-semibold rounded-full bg-red-100 text-red-600 shadow">
-                                Out of Stock
+                            <span class="px-3 py-1.5 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 shadow">
+                                {% trans "Out of Stock" %}
                             </span>
                             {% endif %}
                         </div>
@@ -613,11 +613,11 @@
                 </div>
                 <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-3">{% trans "No Products Found" %}</h3>
                 <p class="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">{% trans "We couldn't find any products matching your criteria. Try adjusting your filters." %}</p>
-                <a href="{% url 'store:band_list' %}" class="inline-flex items-center px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors">
+                <a href="{% url 'store:band_list' %}" class="inline-flex items-center px-8 py-3 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white font-semibold rounded-xl transition-colors">
                     <svg class="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
-                    Clear All Filters
+                    {% trans "Clear All Filters" %}
                 </a>
             </div>
             {% endif %}
