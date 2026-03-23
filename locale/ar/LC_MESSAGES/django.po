@@ -1012,4 +1012,173 @@ msgstr "مثال: المركز الطبي بالقاهرة"
 msgid "e.g., Dr. Ahmed Hassan"  
 msgstr "مثال: د. أحمد حسن"  
 msgid "Additional details about this event..."  
-msgstr "تفاصيل إضافية حول هذا الحدث..." 
+msgstr "تفاصيل إضافية حول هذا الحدث..."
+
+msgid "Public"
+msgstr "عام"
+
+msgid "Doctors Only"
+msgstr "أطباء فقط"
+
+msgid "Edit Medical Profile"
+msgstr "تعديل الملف الطبي"
+
+msgid "Manage your medical information and visibility settings for each field"
+msgstr "إدارة معلوماتك الطبية وإعدادات الرؤية لكل حقل"
+
+msgid "Unknown"
+msgstr "غير معروف"
+
+msgid "e.g., Diabetes, Hypertension"
+msgstr "مثال: السكري، ارتفاع ضغط الدم"
+
+msgid "e.g., Penicillin, Peanuts"
+msgstr "مثال: البنسلين، الفول"
+
+msgid "Current Medications"
+msgstr "الأدوية الحالية"
+
+msgid "Add medications from the medications management page"
+msgstr "أضف الأدوية من صفحة إدارة الأدوية"
+
+msgid "No medications added yet"
+msgstr "لم تُضف أدوية بعد"
+
+msgid "Manage Medications"
+msgstr "إدارة الأدوية"
+
+msgid "Critical information for first responders"
+msgstr "معلومات مهمة لفرق الإنقاذ"
+
+msgid "Add emergency contacts from the contacts management page"
+msgstr "أضف جهات اتصال طوارئ من صفحة إدارة جهات الاتصال"
+
+msgid "No emergency contacts added yet"
+msgstr "لم تُضف جهات اتصال طوارئ بعد"
+
+msgid "Manage Emergency Contacts"
+msgstr "إدارة جهات اتصال الطوارئ"
+
+msgid "Medical History Timeline"
+msgstr "الجدول الزمني للتاريخ الطبي"
+
+msgid "Add medical events from the events management page"
+msgstr "أضف الأحداث الطبية من صفحة إدارة الأحداث"
+
+msgid "No medical history recorded yet"
+msgstr "لم يُسجل تاريخ طبي بعد"
+
+msgid "Manage Medical History"
+msgstr "إدارة التاريخ الطبي"
+
+msgid "Showing 5 of"
+msgstr "عرض 5 من"
+
+msgid "events"
+msgstr "أحداث"
+
+msgid "Personal Details"
+msgstr "البيانات الشخصية"
+
+msgid "From account settings"
+msgstr "من إعدادات الحساب"
+
+msgid "Change in account settings"
+msgstr "تغيير في إعدادات الحساب"
+
+msgid "Physical Information"
+msgstr "المعلومات الجسدية"
+
+msgid "Control who can see your height and weight"
+msgstr "تحكم في من يمكنه رؤية طولك ووزنك"
+
+msgid "e.g., 175"
+msgstr "مثال: 175"
+
+msgid "e.g., 70"
+msgstr "مثال: 70"
+
+msgid "Your BMI"
+msgstr "مؤشر كتلة جسمك"
+
+msgid "Underweight"
+msgstr "نقص الوزن"
+
+msgid "Normal"
+msgstr "طبيعي"
+
+msgid "Overweight"
+msgstr "زيادة الوزن"
+
+msgid "Obese"
+msgstr "سمنة"
+
+msgid "Control who can see your insurance information"
+msgstr "تحكم في من يمكنه رؤية معلومات التأمين"
+
+msgid "e.g., Blue Cross"
+msgstr "مثال: بلو كروس"
+
+msgid "e.g., 123456789"
+msgstr "مثال: 123456789"
+
+msgid "Insurance Card Image"
+msgstr "صورة بطاقة التأمين"
+
+msgid "Current file"
+msgstr "الملف الحالي"
+
+# Missing translations for emergency_scan.html
+msgid "years"
+msgstr "سنة"
+
+msgid "years old"
+msgstr "سنة"
+
+msgid "Gender"
+msgstr "الجنس"
+
+msgid "Male"
+msgstr "ذكر"
+
+msgid "Female"
+msgstr "أنثى"
+
+msgid "Nationality"
+msgstr "الجنسية"
+
+msgid "Doctor Login"
+msgstr "تسجيل دخول الطبيب"
+
+msgid "Access full records"
+msgstr "الوصول إلى السجلات الكاملة"
+
+msgid "Emergency Alert"
+msgstr "تنبيه طوارئ"
+
+msgid "Nearby Hospitals"
+msgstr "المستشفيات القريبة"
+
+msgid "Call"
+msgstr "اتصال"
+
+msgid "View my emergency medical profile"
+msgstr "عرض ملفي الطبي للطوارئ"
+
+msgid "Link copied to clipboard!"
+msgstr "تم نسخ الرابط إلى الحافظة!"
+
+msgid "Showing 10 of"
+msgstr "عرض 10 من"
+
+msgid "Last updated"
+msgstr "آخر تحديث"
+
+msgid "This information is only visible to verified doctors"
+msgstr "هذه المعلومات مرئية فقط للأطباء المتحقق منهم"
+
+msgid "You need a doctor account to view this protected information. Please sign in as a doctor to access this data."
+msgstr "تحتاج إلى حساب طبيب لعرض هذه المعلومات المحمية. يرجى تسجيل الدخول كطبيب للوصول إلى هذه البيانات."
+
+msgid "Sign In as Doctor"
+msgstr "تسجيل الدخول كطبيب" 

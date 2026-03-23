@@ -120,6 +120,7 @@ def profile_edit_view(request):
             "show_chronic_diseases_public",
             "show_notes_public",
             "show_insurance_public",
+            "show_personal_public",
         ]
         for field in visibility_fields:
             if field in post_data and post_data[field] in ["on", "true", "1", "yes"]:
@@ -171,6 +172,7 @@ def profile_edit_view(request):
                 "show_chronic_diseases_public",
                 "show_notes_public",
                 "show_insurance_public",
+                "show_personal_public",
             ]:
                 logger.info(f"  {field}: {getattr(profile, field)}")
 
@@ -642,6 +644,8 @@ def emergency_scan_template_view(request, public_id):
             cached_context["show_full_medical"] = True
             cached_context["show_engineer_info"] = True
             cached_context["show_insurance"] = True
+        # Ensure is_embedded is set for non-embedded display
+        cached_context["is_embedded"] = False
         return render(request, "profiles/emergency_scan.html", cached_context)
 
     # Optimized query: single query for profile+user, plus prefetched related data
@@ -724,8 +728,12 @@ def emergency_scan_template_view(request, public_id):
     # Use prefetched emergency contacts (max 2)
     contacts = list(profile.emergency_contacts.all()[:2])
 
-    # Use prefetched medical events (for doctors/admins)
-    medical_events = profile.all_events if show_full_medical else None
+    # Use prefetched medical events (for doctors/admins OR when public visibility is enabled)
+    # Show if user is doctor/admin/owner OR if profile allows public visibility
+    show_medical_history = show_full_medical or getattr(
+        profile, "show_history_public", True
+    )
+    medical_events = profile.all_events if show_medical_history else None
 
     # Masked National ID for engineers/admins (show first 4 and last 4 digits)
     national_id_masked = None
@@ -781,6 +789,7 @@ def emergency_scan_template_view(request, public_id):
         "calculated_age": calculated_age,
         "calculated_bmi": calculated_bmi,
         "bmi_category": bmi_category,
+        "is_embedded": False,  # Flag for non-embedded display
     }
     # Cache the context for 15 minutes (900 seconds)
     # This dramatically speeds up repeated scans of the same profile

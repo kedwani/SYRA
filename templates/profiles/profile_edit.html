@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
                 <textarea name="chronic_diseases" id="chronic_diseases" rows="3" 
-                          placeholder="e.g., Diabetes, Hypertension"
+                          placeholder="{% trans 'e.g., Diabetes, Hypertension' %}"
                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500">{{ profile.chronic_diseases|default:'' }}</textarea>
                 <!-- Hidden checkbox for form submission -->
                 <input type="checkbox" name="show_chronic_diseases_public" id="show_chronic_diseases_public" 
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </div>
                 <textarea name="allergies" id="allergies" rows="3" 
-                          placeholder="e.g., Penicillin, Peanuts"
+                          placeholder="{% trans 'e.g., Penicillin, Peanuts' %}"
                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500">{{ profile.allergies|default:'' }}</textarea>
                 <!-- Hidden checkbox for form submission -->
                 <input type="checkbox" name="show_allergies_public" id="show_allergies_public" 
@@ -370,6 +370,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
             </button>
             <div class="accordion-content hidden bg-white p-4 border-t border-blue-100">
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm text-gray-500">{% trans "Control who can see your personal details" %}</p>
+                    <!-- Visibility Toggle -->
+                    <button type="button" class="visibility-toggle flex items-center gap-1 px-2 py-1 rounded-lg border bg-green-50 border-green-200" data-field-id="show_personal_public">
+                        <span class="toggle-icon">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                            </svg>
+                        </span>
+                        <span class="toggle-label text-xs font-medium">{% trans "Public" %}</span>
+                    </button>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">{% trans "First Name" %}</label>
@@ -404,6 +416,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-500">
                     </div>
                 </div>
+                <!-- Hidden checkbox for form submission -->
+                <input type="checkbox" name="show_personal_public" id="show_personal_public" 
+                       class="hidden" {% if profile.show_personal_public or not profile %}checked{% endif %}>
             </div>
         </div>
 
@@ -438,14 +453,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for="height" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Height (cm)" %}</label>
                         <input type="number" name="height" id="height" 
                                value="{{ profile.height|default:'' }}"
-                               placeholder="e.g., 175"
+                               placeholder="{% trans 'e.g., 175' %}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
                     </div>
                     <div>
                         <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Weight (kg)" %}</label>
                         <input type="number" name="weight" id="weight" 
                                value="{{ profile.weight|default:'' }}"
-                               placeholder="e.g., 70"
+                               placeholder="{% trans 'e.g., 70' %}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500">
                     </div>
                 </div>
@@ -498,14 +513,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <label for="insurance_provider" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Insurance Provider" %}</label>
                         <input type="text" name="insurance_provider" id="insurance_provider" 
                                value="{{ profile.insurance_provider|default:'' }}"
-                               placeholder="e.g., Blue Cross"
+                               placeholder="{% trans 'e.g., Blue Cross' %}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
                         <label for="insurance_number" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Insurance Number" %}</label>
                         <input type="text" name="insurance_number" id="insurance_number" 
                                value="{{ profile.insurance_number|default:'' }}"
-                               placeholder="e.g., 123456789"
+                               placeholder="{% trans 'e.g., 123456789' %}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     </div>
                 </div>

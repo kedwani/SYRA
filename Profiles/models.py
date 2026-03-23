@@ -125,6 +125,11 @@ class MedicalProfile(models.Model):
         verbose_name="Show Insurance to Public",
         help_text="Anyone can view insurance info (doctors only by default)",
     )
+    show_personal_public = models.BooleanField(
+        default=True,
+        verbose_name="Show Personal Details to Public",
+        help_text="Everyone can see personal details in emergencies",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

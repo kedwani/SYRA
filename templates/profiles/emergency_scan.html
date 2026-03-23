@@ -346,6 +346,8 @@
                     </svg>
                     <h3 class="font-bold text-blue-700 dark:text-blue-300 text-sm">{% trans "Personal Details" %}</h3>
                 </div>
+                
+                {% if profile.show_personal_public or user_role == 'doctor' or user_role == 'admin' %}
                 <div class="grid grid-cols-2 gap-3">
                     <!-- Full Name -->
                     <div class="col-span-2 bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg">
@@ -393,6 +395,16 @@
                         {% endif %}
                     </div>
                 </div>
+                {% else %}
+                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
+                    <button type="button" onclick="document.getElementById('doctor-login-modal').classList.remove('hidden'); document.body.style.overflow='hidden'" class="flex items-center justify-center gap-2 mx-auto">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span class="text-gray-600 dark:text-gray-400 text-sm font-medium">{% trans "Protected Data - Login to view" %}</span>
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </section>
 
@@ -648,60 +660,13 @@
                         <p class="text-gray-500 dark:text-gray-400 text-sm">{% trans "No medical history recorded" %}</p>
                     </div>
                     {% endif %}
-                {% elif profile.show_history_public %}
-                    {# Show to public #}
-                    {% if medical_events %}
-                    <div class="space-y-3">
-                        {% for event in medical_events|slice:":10" %}
-                        <div class="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-lg border border-indigo-100 dark:border-indigo-800">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="text-xs font-bold bg-indigo-600 text-white px-2 py-0.5 rounded">
-                                            {{ event.get_event_type_display }}
-                                        </span>
-                                        {% if event.hospital_name %}
-                                        <span class="text-xs text-indigo-600 dark:text-indigo-400">{{ event.hospital_name }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <p class="font-semibold text-indigo-900 dark:text-indigo-200 text-sm">{{ event.title }}</p>
-                                    {% if event.description %}
-                                    <p class="text-indigo-700 dark:text-indigo-300 text-xs mt-1">{{ event.description|truncatechars:150 }}</p>
-                                    {% endif %}
-                                    {% if event.doctor_name %}
-                                    <p class="text-indigo-600 dark:text-indigo-400 text-xs mt-1">Dr. {{ event.doctor_name }}</p>
-                                    {% endif %}
-                                </div>
-                                {% if event.date %}
-                                <span class="text-xs text-indigo-500 whitespace-nowrap ms-2">{{ event.date|localized_date }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% if medical_events|length > 10 %}
-                    <div class="mt-3 text-center">
-                        <p class="text-indigo-600 dark:text-indigo-400 text-xs">{% trans "Showing 10 of" %} {{ medical_events|length }} {% trans "events" %}</p>
-                    </div>
-                    {% endif %}
-                    {% else %}
-                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                        <p class="text-gray-500 dark:text-gray-400 text-sm">{% trans "No medical history recorded" %}</p>
-                    </div>
-                    {% endif %}
                 {% else %}
-                <div class="bg-white dark:bg-indigo-950 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl p-4 shadow-sm">
-                    <div class="flex items-center gap-2 mb-4">
-                        <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <h3 class="font-bold text-indigo-800 dark:text-indigo-300 text-sm">{% trans "Medical History Timeline" %}</h3>
-                    </div>
-                    <button onclick="document.getElementById('doctor-login-modal').classList.remove('hidden'); document.body.style.overflow='hidden'" class="w-full bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800/50 rounded-lg p-4 flex items-center justify-center gap-2 transition-colors cursor-pointer border border-indigo-200 dark:border-indigo-700">
-                        <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center">
+                    <button type="button" onclick="document.getElementById('doctor-login-modal').classList.remove('hidden'); document.body.style.overflow='hidden'" class="flex items-center justify-center gap-2 mx-auto">
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
-                        <span class="text-indigo-600 dark:text-indigo-400 text-sm font-medium">{% trans "Protected Data" %}</span>
+                        <span class="text-indigo-600 dark:text-indigo-400 text-sm font-medium">{% trans "Protected Data - Login to view" %}</span>
                     </button>
                 </div>
                 {% endif %}
@@ -807,6 +772,7 @@
         <div class="mt-3 space-y-3">
 
         <!-- ==================== SECTION 8: PERSONAL DETAILS (Accordion) ==================== -->
+        {% if profile.show_personal_public or user_role == 'doctor' or user_role == 'admin' %}
         <div class="accordion-item border-2 border-blue-200 dark:border-blue-700 rounded-xl overflow-hidden">
             <button class="accordion-header w-full bg-white dark:bg-slate-800 p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                 <div class="flex items-center gap-2">
@@ -979,6 +945,7 @@
             </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- ==================== PHYSICAL INFORMATION (Accordion) ==================== -->
         <div class="accordion-item border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
