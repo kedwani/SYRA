@@ -456,8 +456,41 @@ msgid "Type"
 msgstr "النوع"
 
 #: .\templates\profiles\events.html:48
-msgid "Title"
-msgstr "العنوان"
+msgid "Record a medical event in your history"
+msgstr "سجل حدثًا طبيًا في تاريخك"
+
+msgid "Event Type"
+msgstr "نوع الحدث"
+
+msgid "Event Date"
+msgstr "تاريخ الحدث"
+
+msgid "Hospital/Clinic Name"
+msgstr "اسم المستشفى/العيادة"
+
+msgid "Doctor Name"
+msgstr "اسم الطبيب"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Select event type..."
+msgstr "اختر نوع الحدث..."
+
+msgid "Surgery"
+msgstr "جراحة"
+
+msgid "Hospitalization"
+msgstr "الإقامة في المستشفى"
+
+msgid "Diagnosis"
+msgstr "التشخيص"
+
+msgid "Emergency"
+msgstr "طوارئ"
+
+msgid "Regular Check-up"
+msgstr "فحص روتيني"
 
 #: .\templates\profiles\events.html:54
 msgid "Hospital"
@@ -971,3 +1004,12 @@ msgstr "تحديث فوري"
 #: templates/store/home.html
 msgid "Instantly update medical records, emergency meds, or contacts anytime."
 msgstr "عدّل بياناتك الطبية، أدوية الطوارئ، أو جهات الاتصال في أي وقت."
+  
+msgid "e.g., Appendectomy, Annual Physical"  
+msgstr "مثال: استئصال الزائدة الدودية، الفحص السنوي"  
+msgid "e.g., Cairo Medical Center"  
+msgstr "مثال: المركز الطبي بالقاهرة"  
+msgid "e.g., Dr. Ahmed Hassan"  
+msgstr "مثال: د. أحمد حسن"  
+msgid "Additional details about this event..."  
+msgstr "تفاصيل إضافية حول هذا الحدث..." 
