@@ -26,10 +26,13 @@ def emergency_url(profile, request=None):
     else:
         base_url = "https://syra.app"  # Default production URL
 
-    # Extract medications (first 3)
+    # Extract medications (first 3 active ones)
     medications = []
     if hasattr(profile, "medications"):
-        for med in profile.medications.filter(is_active=True)[:3]:
+        # Get all medications and filter by is_active property
+        all_meds = profile.medications.all()
+        active_meds = [med for med in all_meds if med.is_active]
+        for med in active_meds[:3]:
             med_str = med.name
             if med.dosage:
                 med_str += f" {med.dosage}"

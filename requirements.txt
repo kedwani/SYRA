@@ -8,3 +8,6 @@ django-filter>=24.0,<25.0
 django-cors-headers>=4.3,<5.0
 drf-spectacular>=0.27,<1.0
 qrcode[pil]>=7.4,<8.0
+django-tailwind>=4.0,<5.0
+hijri-converter>=2.3,<3.0  # Optional: For Hijri calendar support
+requests>=2.31,<3.0  # For Brevo email API

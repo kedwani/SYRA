@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from rest_framework import status
 from store.models import (
     SyraBandType,
     SyraBandUse,
@@ -870,3 +871,302 @@ class OrderIntegrationTest(TestCase):
         self.assertEqual(OrderItem.objects.count(), 1)
         order.delete()
         self.assertEqual(OrderItem.objects.count(), 0)
+
+
+class BandTypeAPITest(TestCase):
+    """Tests for the Band Type API endpoints."""
+
+    def test_list_band_types(self):
+        """Test listing band types."""
+        SyraBandType.objects.create(name="classic", description="Classic band")
+        response = self.client.get("/api/store/types/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 1)
+
+    def test_create_band_type_authenticated(self):
+        """Test creating band type with admin user."""
+        # Create admin user with unique national_id
+        user = SyraUser.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            national_id="99999999999999",
+            password="adminpass123",
+        )
+        # Get JWT token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "99999999999999", "password": "adminpass123"},
+        )
+        token = response.data["access"]
+        data = {"name": "premium", "description": "Premium band"}
+        response = self.client.post(
+            "/api/store/types/", data, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class BandAPITest(TestCase):
+    """Tests for the Band API endpoints."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.band_type = SyraBandType.objects.create(name="standard")
+        self.band_use = SyraBandUse.objects.create(name="personal")
+
+    def test_list_bands(self):
+        """Test listing bands."""
+        SyraBand.objects.create(
+            sku="TEST-001",
+            name="Test Band",
+            band_type=self.band_type,
+            band_use=self.band_use,
+            price=Decimal("99.99"),
+            stock_quantity=10,
+        )
+        response = self.client.get("/api/store/bands/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 1)
+
+    def test_list_available_bands_only(self):
+        """Test that only available bands are listed."""
+        # Available band
+        SyraBand.objects.create(
+            sku="TEST-001",
+            name="Available Band",
+            band_type=self.band_type,
+            band_use=self.band_use,
+            price=Decimal("99.99"),
+            stock_quantity=10,
+            is_available=True,
+        )
+        # Unavailable band
+        SyraBand.objects.create(
+            sku="TEST-002",
+            name="Unavailable Band",
+            band_type=self.band_type,
+            band_use=self.band_use,
+            price=Decimal("99.99"),
+            stock_quantity=0,
+            is_available=False,
+        )
+        # Use available_only query param to filter
+        response = self.client.get("/api/store/bands/?available_only=true")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Should only see available band
+        self.assertEqual(len(response.data["results"]), 1)
+
+    def test_band_detail(self):
+        """Test getting band detail."""
+        band = SyraBand.objects.create(
+            sku="TEST-001",
+            name="Test Band",
+            band_type=self.band_type,
+            band_use=self.band_use,
+            price=Decimal("99.99"),
+            stock_quantity=10,
+        )
+        response = self.client.get(f"/api/store/bands/{band.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], "Test Band")
+
+
+class OrderAPITest(TestCase):
+    """Tests for the Order API endpoints."""
+
+    def setUp(self):
+        """Set up test user."""
+        self.user = SyraUser.objects.create_user(
+            username="ordertest",
+            email="order@example.com",
+            national_id="12345678901234",
+            password="testpass123",
+        )
+        # Get token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "12345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+    def test_list_orders_authenticated(self):
+        """Test listing orders with authentication."""
+        response = self.client.get(
+            "/api/store/orders/", HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_list_orders_unauthenticated(self):
+        """Test listing orders without authentication."""
+        response = self.client.get("/api/store/orders/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_order(self):
+        """Test creating an order."""
+        # First create a band
+        band_type = SyraBandType.objects.create(name="standard")
+        band_use = SyraBandUse.objects.create(name="personal")
+        band = SyraBand.objects.create(
+            sku="TEST-001",
+            name="Test Band",
+            band_type=band_type,
+            band_use=band_use,
+            price=Decimal("99.99"),
+            stock_quantity=10,
+        )
+
+        # Use explicit JSON content
+        import json
+
+        json_data = json.dumps(
+            {
+                "items": [{"product_id": band.id, "quantity": 1}],
+                "payment_method": "cash",
+                "shipping_name": "Test User",
+                "shipping_phone": "01234567890",
+                "shipping_address": "123 Test St",
+                "shipping_city": "Cairo",
+            }
+        )
+        response = self.client.post(
+            "/api/store/orders/",
+            data=json_data,
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Order error: {response.data}")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+class CartAPITest(TestCase):
+    """Tests for the Cart API endpoints."""
+
+    def setUp(self):
+        """Set up test user."""
+        self.user = SyraUser.objects.create_user(
+            username="carttest",
+            email="cart@example.com",
+            national_id="22345678901234",
+            password="testpass123",
+        )
+        # Get token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "22345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+    def test_get_cart_authenticated(self):
+        """Test getting cart with authentication."""
+        response = self.client.get(
+            "/api/store/cart/", HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_cart_unauthenticated(self):
+        """Test getting cart without authentication."""
+        response = self.client.get("/api/store/cart/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_add_to_cart(self):
+        """Test adding item to cart."""
+        # First create a band
+        band_type = SyraBandType.objects.create(name="standard2")
+        band_use = SyraBandUse.objects.create(name="personal2")
+        band = SyraBand.objects.create(
+            sku="TEST-002",
+            name="Test Band 2",
+            band_type=band_type,
+            band_use=band_use,
+            price=Decimal("99.99"),
+            stock_quantity=10,
+        )
+
+        data = {"product_id": band.id, "quantity": 2}
+        response = self.client.post(
+            "/api/store/cart/add_item/", data, HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        # Returns 200 - the view returns the cart after adding
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["total_items"], 2)
+
+
+class BandRegistrationAPITest(TestCase):
+    """Tests for the Band Registration API endpoints."""
+
+    def setUp(self):
+        """Set up test user."""
+        self.user = SyraUser.objects.create_user(
+            username="regtest",
+            email="reg@example.com",
+            national_id="32345678901234",
+            password="testpass123",
+        )
+        # Get token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "32345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+    def test_list_registrations_authenticated(self):
+        """Test listing band registrations."""
+        response = self.client.get(
+            "/api/store/registrations/", HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class BandReviewAPITest(TestCase):
+    """Tests for the Band Review API endpoints."""
+
+    def setUp(self):
+        """Set up test user."""
+        self.user = SyraUser.objects.create_user(
+            username="reviewtest",
+            email="review@example.com",
+            national_id="42345678901234",
+            password="testpass123",
+        )
+        # Get token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "42345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+        # Create band
+        self.band_type = SyraBandType.objects.create(name="standard3")
+        self.band_use = SyraBandUse.objects.create(name="personal3")
+        self.band = SyraBand.objects.create(
+            sku="TEST-003",
+            name="Test Band 3",
+            band_type=self.band_type,
+            band_use=self.band_use,
+            price=Decimal("99.99"),
+            stock_quantity=10,
+        )
+
+    def test_create_review(self):
+        """Test creating a review."""
+        data = {
+            "product": self.band.id,
+            "rating": 5,
+            "title": "Great product!",
+            "comment": "Great product!",
+        }
+        response = self.client.post(
+            "/api/store/reviews/", data, HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Review error: {response.data}")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["rating"], 5)
+
+    def test_list_reviews(self):
+        """Test listing reviews."""
+        BandReview.objects.create(
+            product=self.band, user=self.user, rating=4, comment="Good"
+        )
+        response = self.client.get(f"/api/store/bands/{self.band.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

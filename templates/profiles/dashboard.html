@@ -103,7 +103,9 @@
             
             <!-- Quick Search Form -->
             <form method="get" action="{% url 'doctor-portal' %}" class="flex gap-2">
+                <label for="doctor_search_nid" class="sr-only">{% trans 'Search by National ID' %}</label>
                 <input type="text" 
+                       id="doctor_search_nid"
                        name="national_id" 
                        placeholder="{% trans 'Enter National ID' %}"
                        maxlength="14"
@@ -120,41 +122,13 @@
         <div class="card-medical card-accent-primary p-4">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="text-lg font-bold text-gray-900">{% trans "Medical Profile" %}</h2>
-                <div class="relative">
-                    <button type="button" id="profileEditDropdown" 
-                            class="text-medical-primary hover:text-medical-primaryDark font-medium text-sm flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                        </svg>
-                        {% trans "Edit" %}
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    <!-- Dropdown Menu -->
-                    <div id="profileEditMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                        <a href="{% url 'profile-edit' %}" 
-                           class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
-                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                            </svg>
-                            <div>
-                                <p class="font-medium">{% trans "Medical Profile" %}</p>
-                                <p class="text-xs text-gray-500">{% trans "Blood type, allergies, medications" %}</p>
-                            </div>
-                        </a>
-                        <a href="{% url 'profile-edit-personal' %}" 
-                           class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            <div>
-                                <p class="font-medium">{% trans "Edit Profile" %}</p>
-                                <p class="text-xs text-gray-500">{% trans "Personal info, height, weight" %}</p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+                <a href="{% url 'profile-edit' %}" 
+                   class="text-medical-primary hover:text-medical-primaryDark font-medium text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                    {% trans "Edit" %}
+                </a>
             </div>
             
             <div class="space-y-2 text-sm">
@@ -251,6 +225,26 @@
                     </a>
                 </div>
             </div>
+        </div>
+        
+        <!-- Shop Panel - Simple Link to Store -->
+        <div class="card-medical card-accent-accent p-4">
+            <a href="{% url 'store:band_list' %}" class="flex items-center justify-between group">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">{% trans "Shop Now" %}</h2>
+                        <p class="text-sm text-gray-500">{% trans "Browse bands and accessories" %}</p>
+                    </div>
+                </div>
+                <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
         </div>
         
     </div>

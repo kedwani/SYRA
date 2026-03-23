@@ -4,6 +4,8 @@ import uuid
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
+from django.utils import timezone
+from datetime import timedelta
 
 
 class MedicalProfile(models.Model):
@@ -104,7 +106,7 @@ class MedicalProfile(models.Model):
         help_text="Anyone can view height/weight (doctors only by default)",
     )
     show_history_public = models.BooleanField(
-        default=False,
+        default=True,
         verbose_name="Show Medical History to Public",
         help_text="Anyone can view medical history (doctors only by default)",
     )
@@ -226,7 +228,13 @@ class Medication(models.Model):
         max_length=100, verbose_name="Dosage", help_text="e.g., 500mg twice daily"
     )
     frequency = models.CharField(max_length=100, blank=True, verbose_name="Frequency")
-    is_active = models.BooleanField(default=True, verbose_name="Currently Taking")
+    # Period in days - null means ongoing/long-term medication
+    period_days = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Treatment Duration (days)",
+        help_text="Number of days this medication should be taken. Leave empty for ongoing medications.",
+    )
     notes = models.TextField(blank=True, verbose_name="Additional Notes")
 
     # Doctor-added tracking fields
@@ -257,6 +265,38 @@ class Medication(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.dosage}"
+
+    @property
+    def is_active(self):
+        """
+        Calculate if medication is still active based on creation date and treatment period.
+        - If period_days is None, medication is considered ongoing (active)
+        - If period_days is set, check if we're still within the treatment period
+        """
+        if self.period_days is None:
+            # No period specified - assume ongoing/long-term medication
+            return True
+
+        # Calculate end date
+        end_date = self.created_at + timedelta(days=self.period_days)
+
+        # Check if current date is before end date
+        return timezone.now() < end_date
+
+    @property
+    def days_remaining(self):
+        """
+        Calculate days remaining in treatment period.
+        Returns None if period is not set (ongoing medication).
+        Returns 0 if treatment period has ended.
+        Returns negative number if overdue.
+        """
+        if self.period_days is None:
+            return None
+
+        end_date = self.created_at + timedelta(days=self.period_days)
+        remaining = (end_date - timezone.now()).days
+        return max(0, remaining)
 
 
 class EmergencyContact(models.Model):

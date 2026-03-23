@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
+{% load arabic_dates %}
 {% block title %}{% trans "Medical History" %} - SYRA{% endblock %}
 
 {% block content %}
@@ -36,17 +37,18 @@
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-100">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Date" %}</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Type" %}</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Title" %}</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Hospital" %}</th>
+                        <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Date" %}</th>
+                        <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Type" %}</th>
+                        <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Title" %}</th>
+                        <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Hospital" %}</th>
+                        <th class="px-6 py-4 text-start text-xs font-semibold text-gray-500 uppercase tracking-wider">{% trans "Actions" %}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     {% for event in events %}
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                            {{ event.date|date:"M d, Y" }}
+                            {{ event.date|localized_date }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-3 py-1 rounded-full text-xs font-medium 
@@ -69,6 +71,43 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-gray-600">
                             {{ event.hospital_name|default:"-" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <a href="{% url 'event-edit' event.id %}" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="{% trans 'Edit' %}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </a>
+                                <button type="button" onclick="document.getElementById('delete-modal-{{ event.id }}').classList.remove('hidden'); document.getElementById('delete-modal-{{ event.id }}').classList.add('flex');" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="{% trans 'Delete' %}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Delete Confirmation Modal -->
+                            <div id="delete-modal-{{ event.id }}" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-sm">
+                                <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4">
+                                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-semibold text-gray-900 text-center mb-2">{% trans "Delete Event" %}</h3>
+                                    <p class="text-gray-500 text-center mb-6">{% blocktrans with title=event.title %}Are you sure you want to delete "{{ title }}"? This action cannot be undone.{% endblocktrans %}</p>
+                                    <div class="flex gap-3">
+                                        <button onclick="document.getElementById('delete-modal-{{ event.id }}').classList.add('hidden'); document.getElementById('delete-modal-{{ event.id }}').classList.remove('flex');" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                                            {% trans "Cancel" %}
+                                        </button>
+                                        <form method="post" action="{% url 'event-delete' event.id %}" class="flex-1">
+                                            {% csrf_token %}
+                                            <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors">
+                                                {% trans "Delete" %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}

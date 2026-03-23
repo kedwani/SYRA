@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_http_methods
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -199,23 +200,44 @@ class MedicalEventViewSet(viewsets.ModelViewSet):
     responses=EmergencyProfileSerializer,
 )
 @api_view(["GET"])
+@require_http_methods(["GET"])  # Explicitly allow only GET
 @permission_classes([AllowAny])
-@ratelimit(key="ip", rate="30/m", method="GET")
+@ratelimit(key="ip", rate="20/m", method="GET")  # Reduced from 30/m
+@ratelimit(key="ip", rate="100/h", method="GET")  # Add hourly limit
 def emergency_scan_view(request, public_id):
     """
     Public emergency view - triggered by scanning NFC/QR code.
     Returns life-saving data WITHOUT requiring authentication.
     Excludes sensitive insurance/financial data.
-    Returns JSON response for API consumers.
 
-    Rate limited to 30 requests per minute per IP to prevent abuse.
+    Rate limited to 20 requests per minute per IP to prevent abuse.
     """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Check for suspicious access patterns
+    ip = request.META.get("REMOTE_ADDR")
+    from django.core.cache import cache
+
+    cache_key = f"emergency_scan_attempts_{ip}"
+    attempts = cache.get(cache_key, 0)
+
+    if attempts > 50:  # More than 50 different profiles in 1 hour
+        logger.warning(f"Suspicious emergency scan pattern from IP {ip}")
+
     try:
         profile = MedicalProfile.objects.select_related("user").get(public_id=public_id)
     except MedicalProfile.DoesNotExist:
         return Response(
             {"error": "Medical profile not found."}, status=status.HTTP_404_NOT_FOUND
         )
+
+    # Increment access counter
+    cache.set(cache_key, attempts + 1, 3600)  # Expire after 1 hour
+
+    # Log access for security monitoring
+    logger.info(f"Emergency scan from IP {ip} for profile {public_id}")
 
     serializer = EmergencyProfileSerializer(profile)
     return Response(serializer.data)

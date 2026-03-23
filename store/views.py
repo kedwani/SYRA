@@ -12,6 +12,11 @@ from django.db.models import F
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from decimal import Decimal, InvalidOperation
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+import logging
 
 
 def get_shipping_cost():
@@ -149,6 +154,26 @@ class SyraBandViewSet(viewsets.ModelViewSet):
             return [IsStoreAdmin()]
         return [AllowAny()]
 
+    @method_decorator(cache_page(60 * 15))  # Cache for 15 minutes
+    def list(self, request, *args, **kwargs):
+        """List products with caching."""
+        return super().list(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        """Clear cache when creating product."""
+        super().perform_create(serializer)
+        cache.clear()
+
+    def perform_update(self, serializer):
+        """Clear cache when updating product."""
+        super().perform_update(serializer)
+        cache.clear()
+
+    def perform_destroy(self, instance):
+        """Clear cache when deleting product."""
+        super().perform_destroy(instance)
+        cache.clear()
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
@@ -157,13 +182,29 @@ class SyraBandViewSet(viewsets.ModelViewSet):
         if featured:
             queryset = queryset.filter(is_featured=featured.lower() == "true")
 
-        # Filter by price range
+        # Filter by price range - with validation
         min_price = self.request.query_params.get("min_price")
         max_price = self.request.query_params.get("max_price")
+
         if min_price:
-            queryset = queryset.filter(price__gte=min_price)
+            try:
+                min_price_decimal = Decimal(min_price)
+                if min_price_decimal < 0:
+                    raise ValueError("Price cannot be negative")
+                queryset = queryset.filter(price__gte=min_price_decimal)
+            except (ValueError, InvalidOperation):
+                # Invalid price format - ignore parameter
+                pass
+
         if max_price:
-            queryset = queryset.filter(price__lte=max_price)
+            try:
+                max_price_decimal = Decimal(max_price)
+                if max_price_decimal < 0:
+                    raise ValueError("Price cannot be negative")
+                queryset = queryset.filter(price__lte=max_price_decimal)
+            except (ValueError, InvalidOperation):
+                # Invalid price format - ignore parameter
+                pass
 
         # Filter by availability
         available_only = self.request.query_params.get("available_only")
@@ -205,7 +246,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     queryset = (
         Order.objects.select_related("user")
-        .prefetch_related("items", "items__product")
+        .prefetch_related(
+            "items",
+            "items__product",
+            "items__product__band_type",
+            "items__product__band_use",
+        )
         .all()
     )
     permission_classes = [IsAuthenticated]
@@ -223,12 +269,22 @@ class OrderViewSet(viewsets.ModelViewSet):
         if user.is_staff or user.store_role in ["store_admin", "store_viewer"]:
             return (
                 Order.objects.select_related("user")
-                .prefetch_related("items", "items__product")
+                .prefetch_related(
+                    "items",
+                    "items__product",
+                    "items__product__band_type",
+                    "items__product__band_use",
+                )
                 .all()
             )
         return (
             Order.objects.select_related("user")
-            .prefetch_related("items", "items__product")
+            .prefetch_related(
+                "items",
+                "items__product",
+                "items__product__band_type",
+                "items__product__band_use",
+            )
             .filter(user=user)
         )
 
@@ -341,7 +397,7 @@ class CartViewSet(viewsets.ModelViewSet):
         cart = self.get_object()
 
         product_id = request.data.get("product_id")
-        quantity = request.data.get("quantity", 1)
+        quantity = int(request.data.get("quantity", 1))
         size = request.data.get("size", "medium")
         color = request.data.get("color", "black")
 
@@ -534,15 +590,34 @@ class CartViewSet(viewsets.ModelViewSet):
 class BandRegistrationViewSet(viewsets.ModelViewSet):
     """ViewSet for Band Registrations."""
 
-    queryset = BandRegistration.objects.select_related("user", "band").all()
+    queryset = (
+        BandRegistration.objects.select_related(
+            "user", "order_item__product", "medical_profile"
+        )
+        .prefetch_related("order_item__order")
+        .all()
+    )
     serializer_class = BandRegistrationSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         if user.is_staff:
-            return BandRegistration.objects.select_related("user", "band").all()
-        return BandRegistration.objects.select_related("user", "band").filter(user=user)
+            return (
+                BandRegistration.objects.select_related(
+                    "user", "order_item__product", "medical_profile"
+                )
+                .prefetch_related("order_item__order")
+                .all()
+            )
+        # Regular users only see their own registrations
+        return (
+            BandRegistration.objects.select_related(
+                "user", "order_item__product", "medical_profile"
+            )
+            .prefetch_related("order_item__order")
+            .filter(user=user)
+        )
 
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
@@ -581,9 +656,27 @@ class BandRegistrationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def update_nickname(self, request, pk=None):
-        """Update band nickname."""
+        """Update band nickname with validation."""
         registration = self.get_object()
-        registration.nickname = request.data.get("nickname", "")
+        nickname = request.data.get("nickname", "").strip()
+
+        # Validation
+        if len(nickname) > 100:
+            return Response(
+                {"error": "Nickname must be 100 characters or less."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Allow letters, numbers, spaces, and common punctuation
+        import re
+
+        if nickname and not re.match(r"^[a-zA-Z0-9\s\-'_.]+$", nickname):
+            return Response(
+                {"error": "Nickname contains invalid characters."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        registration.nickname = nickname
         registration.save()
 
         serializer = self.get_serializer(registration)

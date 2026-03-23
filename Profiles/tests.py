@@ -5,6 +5,7 @@ from datetime import date
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from rest_framework import status
 from profiles.models import MedicalProfile, Medication, EmergencyContact, MedicalEvent
 
 SyraUser = get_user_model()
@@ -173,17 +174,41 @@ class MedicationModelTest(TestCase):
         self.assertEqual(Medication.objects.count(), 0)
 
     def test_filter_active_medications(self):
-        """Test filtering active medications."""
-        Medication.objects.create(
-            profile=self.profile, name="Active Med", dosage="100mg", is_active=True
-        )
-        Medication.objects.create(
-            profile=self.profile, name="Inactive Med", dosage="50mg", is_active=False
+        """Test filtering medications based on period_days and created_at."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Create a medication with period that is still active (created today, 30 day period)
+        med_active = Medication.objects.create(
+            profile=self.profile, name="Active Med", dosage="100mg", period_days=30
         )
 
-        active_meds = Medication.objects.filter(profile=self.profile, is_active=True)
-        self.assertEqual(active_meds.count(), 1)
-        self.assertEqual(active_meds.first().name, "Active Med")
+        # Create a medication with period that has ended (created 60 days ago, 30 day period)
+        med_inactive = Medication.objects.create(
+            profile=self.profile, name="Completed Med", dosage="50mg", period_days=30
+        )
+        # Backdate the created_at to simulate completed medication
+        med_inactive.created_at = timezone.now() - timedelta(days=60)
+        med_inactive.save()
+
+        # Create a medication without period (ongoing)
+        med_ongoing = Medication.objects.create(
+            profile=self.profile, name="Ongoing Med", dosage="25mg", period_days=None
+        )
+
+        # Test the is_active property
+        self.assertTrue(med_active.is_active)  # 30 day period, not expired
+        self.assertFalse(
+            med_inactive.is_active
+        )  # 30 day period, expired (60 days > 30 days)
+        self.assertTrue(med_ongoing.is_active)  # No period, ongoing
+
+        # Test filtering by property in Python
+        all_meds = Medication.objects.filter(profile=self.profile)
+        active_meds = [med for med in all_meds if med.is_active]
+        self.assertEqual(len(active_meds), 2)
+        self.assertTrue(any(med.name == "Active Med" for med in active_meds))
+        self.assertTrue(any(med.name == "Ongoing Med" for med in active_meds))
 
 
 class EmergencyContactModelTest(TestCase):
@@ -469,3 +494,287 @@ class EmergencyContactLimitTest(TestCase):
 
         updated = EmergencyContact.objects.get(id=contact1.id)
         self.assertEqual(updated.name, "Updated Contact")
+
+
+class EmergencyScanAPITest(TestCase):
+    """Tests for the emergency scan API endpoint."""
+
+    def setUp(self):
+        """Set up test user and profile."""
+        self.user = SyraUser.objects.create_user(
+            username="emergencytest",
+            email="emergency@example.com",
+            national_id="12345678901234",
+            password="testpass123",
+        )
+        self.profile = self.user.medical_profile
+        self.profile.blood_type = "A+"
+        self.profile.allergies = "Penicillin"
+        self.profile.save()
+
+    def test_emergency_scan_success(self):
+        """Test successful emergency scan."""
+        url = f"/api/profiles/scan/{self.profile.public_id}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["blood_type"], "A+")
+
+    def test_emergency_scan_invalid_uuid(self):
+        """Test emergency scan with invalid UUID."""
+        url = "/api/profiles/scan/00000000-0000-0000-0000-000000000000/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_emergency_scan_invalid_format(self):
+        """Test emergency scan with invalid UUID format."""
+        url = "/api/profiles/scan/invalid-uuid/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class EmergencyAccessCheckAPITest(TestCase):
+    """Tests for the emergency access check API endpoint."""
+
+    def setUp(self):
+        """Set up test user and profile."""
+        self.user = SyraUser.objects.create_user(
+            username="accesstest",
+            email="access@example.com",
+            national_id="22345678901234",
+            password="testpass123",
+        )
+        self.profile = self.user.medical_profile
+
+    def test_access_check_anonymous_user(self):
+        """Test access check as anonymous user."""
+        url = f"/api/profiles/access/{self.profile.public_id}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["user_role"], "user")
+        self.assertFalse(response.data["show_full_medical"])
+
+    def test_access_check_authenticated_user(self):
+        """Test access check as authenticated user."""
+        # Login
+        self.client.login(username="accesstest", password="testpass123")
+        url = f"/api/profiles/access/{self.profile.public_id}/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # User should see their own data
+        self.assertEqual(response.data["user_role"], "user")
+
+
+class SearchMedicalDataAPITest(TestCase):
+    """Tests for the search medical data API endpoint."""
+
+    def test_search_medications(self):
+        """Test searching for medications."""
+        url = "/api/profiles/search/?q=asp&type=medications"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("medications", response.data)
+
+    def test_search_empty_query(self):
+        """Test search with empty query."""
+        url = "/api/profiles/search/?q="
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["medications"], [])
+
+    def test_search_diagnoses(self):
+        """Test searching for diagnoses."""
+        url = "/api/profiles/search/?q=diab&type=diagnoses"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("diagnoses", response.data)
+
+
+class MedicationAPITest(TestCase):
+    """Tests for the Medication API endpoints."""
+
+    def setUp(self):
+        """Set up test user and get token."""
+        self.user = SyraUser.objects.create_user(
+            username="medtest",
+            email="med@example.com",
+            national_id="32345678901234",
+            password="testpass123",
+        )
+        self.profile = self.user.medical_profile
+        # Get JWT token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "32345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+    def test_create_medication_authenticated(self):
+        """Test creating medication with authentication."""
+        data = {
+            "name": "Aspirin",
+            "dosage": "100mg",
+            "frequency": "Once daily",
+            "is_active": True,
+        }
+        response = self.client.post(
+            "/api/profiles/medications/",
+            data,
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["name"], "Aspirin")
+
+    def test_create_medication_unauthenticated(self):
+        """Test creating medication without authentication."""
+        data = {"name": "Aspirin", "dosage": "100mg"}
+        response = self.client.post("/api/profiles/medications/", data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_medications(self):
+        """Test listing medications."""
+        Medication.objects.create(profile=self.profile, name="Test Med", dosage="50mg")
+        response = self.client.get(
+            "/api/profiles/medications/", HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 1)
+
+
+class EmergencyContactAPITest(TestCase):
+    """Tests for the Emergency Contact API endpoints."""
+
+    def setUp(self):
+        """Set up test user and get token."""
+        self.user = SyraUser.objects.create_user(
+            username="contacttest",
+            email="contact@example.com",
+            national_id="42345678901234",
+            password="testpass123",
+        )
+        self.profile = self.user.medical_profile
+        # Get JWT token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "42345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+    def test_create_contact_authenticated(self):
+        """Test creating emergency contact with authentication."""
+        data = {
+            "name": "John Doe",
+            "relationship": "spouse",
+            "phone_number": "01234567890",
+        }
+        response = self.client.post(
+            "/api/profiles/contacts/", data, HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["name"], "John Doe")
+
+    def test_create_contact_unauthenticated(self):
+        """Test creating contact without authentication."""
+        data = {"name": "John Doe", "phone_number": "01234567890"}
+        response = self.client.post("/api/profiles/contacts/", data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_max_two_contacts_enforced(self):
+        """Test that max 2 contacts limit is enforced at API level."""
+        # Create first contact
+        self.client.post(
+            "/api/profiles/contacts/",
+            {
+                "name": "Contact 1",
+                "relationship": "parent",
+                "phone_number": "01234567890",
+            },
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        # Create second contact
+        self.client.post(
+            "/api/profiles/contacts/",
+            {
+                "name": "Contact 2",
+                "relationship": "spouse",
+                "phone_number": "09876543210",
+            },
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        # Try to create third contact - should fail
+        response = self.client.post(
+            "/api/profiles/contacts/",
+            {
+                "name": "Contact 3",
+                "relationship": "friend",
+                "phone_number": "01111111111",
+            },
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class MedicalEventAPITest(TestCase):
+    """Tests for the Medical Event API endpoints."""
+
+    def setUp(self):
+        """Set up test user and get token."""
+        self.user = SyraUser.objects.create_user(
+            username="eventtest",
+            email="event@example.com",
+            national_id="52345678901234",
+            password="testpass123",
+        )
+        self.profile = self.user.medical_profile
+        # Get JWT token
+        response = self.client.post(
+            "/api/accounts/login/",
+            {"national_id": "52345678901234", "password": "testpass123"},
+        )
+        self.token = response.data["access"]
+
+    def test_create_event_authenticated(self):
+        """Test creating medical event with authentication."""
+        data = {
+            "event_type": "surgery",
+            "title": "Appendectomy",
+            "description": "Appendectomy surgery",
+            "date": "2020-01-15",
+        }
+        response = self.client.post(
+            "/api/profiles/events/", data, HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["event_type"], "surgery")
+
+    def test_create_event_unauthenticated(self):
+        """Test creating event without authentication."""
+        data = {"event_type": "surgery", "description": "Test"}
+        response = self.client.post("/api/profiles/events/", data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class ProfileVisibilityTest(TestCase):
+    """Tests for profile visibility settings."""
+
+    def setUp(self):
+        """Set up test user."""
+        self.user = SyraUser.objects.create_user(
+            username="visibilitytest",
+            email="visibility@example.com",
+            national_id="62345678901234",
+            password="testpass123",
+        )
+        self.profile = self.user.medical_profile
+
+    def test_visibility_fields_exist(self):
+        """Test that visibility toggle fields exist."""
+        self.assertTrue(hasattr(self.profile, "show_chronic_diseases_public"))
+        self.assertTrue(hasattr(self.profile, "show_notes_public"))
+        self.assertTrue(hasattr(self.profile, "show_insurance_public"))
+
+    def test_default_visibility_settings(self):
+        """Test default visibility settings."""
+        # Chronic diseases should be public by default
+        self.assertTrue(self.profile.show_chronic_diseases_public)
+        # Insurance should be private by default
+        self.assertFalse(self.profile.show_insurance_public)

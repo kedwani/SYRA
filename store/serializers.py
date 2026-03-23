@@ -332,12 +332,16 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         logger = logging.getLogger(__name__)
 
         user = self.context["request"].user
+        # Pop user from validated_data to avoid duplicate keyword argument
+        validated_data.pop("user", None)
         items_data = validated_data.pop("items")
 
         # Calculate totals
-        subtotal = 0
-        tax_rate = 0.14  # 14% VAT
-        shipping_cost = 50  # Default shipping cost
+        from decimal import Decimal
+
+        subtotal = Decimal("0")
+        tax_rate = Decimal("0.14")  # 14% VAT
+        shipping_cost = Decimal("50")  # Default shipping cost
 
         order_items = []
         for item_data in items_data:

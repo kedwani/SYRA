@@ -23,13 +23,13 @@
                 <form method="post" class="space-y-6">
                     {% csrf_token %}
                     
-                    <!-- National ID Field -->
+                    <!-- National ID / Phone Field -->
                     <div>
                         <label for="national_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                            {% trans "Egyptian National ID" %}
+                            {% trans "Egyptian National ID or Phone Number" %}
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a4 4 0 118 0v1m-4 0a4 4 0 108 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
                                 </svg>
@@ -37,14 +37,12 @@
                             <input type="text" 
                                    id="national_id" 
                                    name="national_id" 
-                                   placeholder="{% trans "Enter 14-digit National ID" %}"
+                                   placeholder="{% trans "Enter National ID or Phone Number" %}"
                                    required 
-                                   maxlength="14" 
-                                   pattern="\d{14}"
                                    aria-describedby="national_id_help"
-                                   class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                                   class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200">
                         </div>
-                        <p id="national_id_help" class="mt-1.5 text-xs text-gray-500">Must be exactly 14 digits</p>
+                        <p id="national_id_help" class="mt-1.5 text-xs text-gray-500">{% trans "Enter your 14-digit National ID or registered phone number" %}</p>
                     </div>
                     
                     <!-- Password Field -->
@@ -53,7 +51,7 @@
                             {% trans "Password" %}
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                 </svg>
@@ -63,7 +61,7 @@
                                    name="password" 
                                    placeholder="{% trans "Enter your password" %}"
                                    required
-                                   class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                                   class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200">
                         </div>
                     </div>
                     
@@ -87,21 +85,6 @@
             </div>
         </div>
         
-        <!-- Doctor Login Button -->
-        <div class="mt-4">
-            <a href="{% url 'login' %}?role=doctor" class="block w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-6 rounded-xl font-semibold text-center shadow-lg shadow-indigo-500/30 transition-all duration-200">
-                <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                {% trans "Login as Doctor" %}
-            </a>
-            <p class="text-center mt-2 text-xs text-gray-500">{% trans "For verified medical professionals only" %}</p>
-        </div>
-        
-        <!-- Footer -->
-        <p class="text-center mt-6 text-sm text-gray-400">
-            {% trans "Protected by SYRA Medical ID Security" %}
-        </p>
     </div>
 </div>
 {% endblock %}

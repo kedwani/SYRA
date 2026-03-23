@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load arabic_dates %}
 
 {% block hide_navigation %}true{% endblock %}
 
@@ -115,7 +116,7 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400">Activated</p>
                             <p class="font-medium text-slate-900 dark:text-white">
                                 {% if reg.activated_at %}
-                                {{ reg.activated_at|date:"M d, Y" }}
+                                {{ reg.activated_at|localized_date }}
                                 {% else %}
                                 <span class="text-yellow-600 dark:text-yellow-400">Pending</span>
                                 {% endif %}
@@ -125,7 +126,7 @@
                         <div>
                             <p class="text-xs text-slate-500 dark:text-slate-400">Expires</p>
                             <p class="font-medium text-slate-900 dark:text-white">
-                                {{ reg.expires_at|date:"M d, Y" }}
+                                {{ reg.expires_at|localized_date }}
                             </p>
                         </div>
                         {% endif %}
@@ -164,7 +165,7 @@
                     <div class="modal-content apple-card border-0 m-4">
                         <div class="modal-header border-b border-slate-100 dark:border-slate-700 px-6 py-4">
                             <h5 class="modal-title font-semibold text-slate-900 dark:text-white">{% trans "Edit Nickname" %}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
                         </div>
                         <form method="post" action="{% url 'store:registration_update_nickname' reg.id %}">
                             {% csrf_token %}
@@ -187,7 +188,7 @@
                     <div class="modal-content apple-card border-0 m-4">
                         <div class="modal-header border-b border-slate-100 dark:border-slate-700 px-6 py-4">
                             <h5 class="modal-title font-semibold text-slate-900 dark:text-white">{% trans "Report as Lost" %}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
                         </div>
                         <div class="modal-body px-6 py-4">
                             <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">

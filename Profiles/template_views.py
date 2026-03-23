@@ -71,6 +71,18 @@ def dashboard_view(request):
                 result.pending_meds + result.pending_contacts + result.pending_events
             )
 
+    # Get featured products from store (limit to 4)
+    from store.models import SyraBand
+
+    featured_products = SyraBand.objects.filter(
+        is_active=True, is_featured=True, stock_quantity__gt=0
+    )[:4]
+
+    # Get latest products (limit to 4)
+    latest_products = SyraBand.objects.filter(
+        is_active=True, stock_quantity__gt=0
+    ).order_by("-created_at")[:4]
+
     context = {
         "profile": profile,
         "profile_serializer": (
@@ -78,6 +90,8 @@ def dashboard_view(request):
         ),
         "pending_count": pending_count,
         "hide_navigation": True,
+        "featured_products": featured_products,
+        "latest_products": latest_products,
     }
     return render(request, "profiles/dashboard.html", context)
 
@@ -94,9 +108,40 @@ def profile_edit_view(request):
         # Create mutable copy of POST data
         post_data = request.POST.copy()
 
+        # Fix: Explicitly set visibility fields to False if not present in POST
+        # This is necessary because unchecked checkboxes don't submit any value
+        visibility_fields = [
+            "show_blood_type_public",
+            "show_allergies_public",
+            "show_medications_public",
+            "show_contacts_public",
+            "show_physical_public",
+            "show_history_public",
+            "show_chronic_diseases_public",
+            "show_notes_public",
+            "show_insurance_public",
+        ]
+        for field in visibility_fields:
+            if field in post_data and post_data[field] in ["on", "true", "1", "yes"]:
+                post_data[field] = True
+            else:
+                post_data[field] = False
+
+        # Debug: Log visibility fields
+        logger.info(f"POST data visibility fields:")
+        for key in post_data:
+            if "show_" in key:
+                logger.info(f"  {key}: {post_data.get(key)}")
+
         serializer = MedicalProfileSerializer(profile, data=post_data, partial=True)
 
         if serializer.is_valid():
+            # Debug: Log validated data
+            logger.info(f"Validated serializer data for visibility:")
+            for key in serializer.validated_data:
+                if "show_" in key:
+                    logger.info(f"  {key}: {serializer.validated_data.get(key)}")
+
             # Handle file upload separately
             if "insurance_image" in request.FILES:
                 from django.core.files.base import ContentFile
@@ -112,6 +157,23 @@ def profile_edit_view(request):
                 profile.save()
             else:
                 serializer.save()
+
+            # Debug: Log saved profile visibility values
+            profile.refresh_from_db()
+            logger.info(f"Saved profile visibility values:")
+            for field in [
+                "show_blood_type_public",
+                "show_allergies_public",
+                "show_medications_public",
+                "show_contacts_public",
+                "show_physical_public",
+                "show_history_public",
+                "show_chronic_diseases_public",
+                "show_notes_public",
+                "show_insurance_public",
+            ]:
+                logger.info(f"  {field}: {getattr(profile, field)}")
+
             messages.success(request, "Profile updated successfully.")
             return redirect("dashboard")
     else:
@@ -237,6 +299,57 @@ def medication_add_view(request):
 
 
 @login_required
+def medication_edit_view(request, medication_id):
+    """Edit an existing medication."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        messages.error(request, "Please create a medical profile first.")
+        return redirect("dashboard")
+
+    # Get the medication and ensure it belongs to the user's profile
+    medication = get_object_or_404(Medication, id=medication_id, profile=profile)
+
+    if request.method == "POST":
+        serializer = MedicationSerializer(medication, data=request.POST, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, "Medication updated successfully.")
+            return redirect("medications")
+    else:
+        serializer = MedicationSerializer(medication)
+
+    return render(
+        request,
+        "profiles/medication_form.html",
+        {"form": serializer, "action": "Edit", "medication": medication},
+    )
+
+
+@login_required
+def medication_delete_view(request, medication_id):
+    """Delete a medication."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        messages.error(request, "Please create a medical profile first.")
+        return redirect("dashboard")
+
+    # Get the medication and ensure it belongs to the user's profile
+    medication = get_object_or_404(Medication, id=medication_id, profile=profile)
+
+    if request.method == "POST":
+        medication.delete()
+        messages.success(request, "Medication deleted successfully.")
+        return redirect("medications")
+
+    # If GET request, show confirmation page
+    return render(
+        request, "profiles/medication_confirm_delete.html", {"medication": medication}
+    )
+
+
+@login_required
 def contacts_view(request):
     """View and manage emergency contacts."""
     try:
@@ -267,20 +380,71 @@ def contact_add_view(request):
     # Enforce max 2 contacts at view level
     if profile.emergency_contacts.count() >= 2:
         messages.error(request, "Maximum of 2 emergency contacts allowed.")
-        return redirect("contacts")
+        return redirect("emergency-contacts")
 
     if request.method == "POST":
         serializer = EmergencyContactSerializer(data=request.POST)
         if serializer.is_valid():
             serializer.save(profile=profile)
             messages.success(request, "Emergency contact added successfully.")
-            return redirect("contacts")
+            return redirect("emergency-contacts")
     else:
         serializer = EmergencyContactSerializer()
 
     return render(
         request, "profiles/contact_form.html", {"form": serializer, "action": "Add"}
     )
+
+
+@login_required
+def contact_edit_view(request, contact_id):
+    """Edit an existing emergency contact."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        messages.error(request, "Please create a medical profile first.")
+        return redirect("dashboard")
+
+    # Get the contact and ensure it belongs to the user's profile
+    contact = get_object_or_404(EmergencyContact, id=contact_id, profile=profile)
+
+    if request.method == "POST":
+        serializer = EmergencyContactSerializer(
+            contact, data=request.POST, partial=True
+        )
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, "Contact updated successfully.")
+            return redirect("emergency-contacts")
+    else:
+        serializer = EmergencyContactSerializer(contact)
+
+    return render(
+        request,
+        "profiles/contact_form.html",
+        {"form": serializer, "action": "Edit", "contact": contact},
+    )
+
+
+@login_required
+def contact_delete_view(request, contact_id):
+    """Delete an emergency contact."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        messages.error(request, "Please create a medical profile first.")
+        return redirect("dashboard")
+
+    # Get the contact and ensure it belongs to the user's profile
+    contact = get_object_or_404(EmergencyContact, id=contact_id, profile=profile)
+
+    if request.method == "POST":
+        contact.delete()
+        messages.success(request, "Contact deleted successfully.")
+        return redirect("emergency-contacts")
+
+    # If GET request, show confirmation (inline modal handled in template)
+    return redirect("emergency-contacts")
 
 
 @login_required
@@ -317,6 +481,55 @@ def event_add_view(request):
     return render(
         request, "profiles/event_form.html", {"form": serializer, "action": "Add"}
     )
+
+
+@login_required
+def event_edit_view(request, event_id):
+    """Edit an existing medical event."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        messages.error(request, "Please create a medical profile first.")
+        return redirect("dashboard")
+
+    # Get the event and ensure it belongs to the user's profile
+    event = get_object_or_404(MedicalEvent, id=event_id, profile=profile)
+
+    if request.method == "POST":
+        serializer = MedicalEventSerializer(event, data=request.POST, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, "Medical event updated successfully.")
+            return redirect("events")
+    else:
+        serializer = MedicalEventSerializer(event)
+
+    return render(
+        request,
+        "profiles/event_form.html",
+        {"form": serializer, "action": "Edit", "event": event},
+    )
+
+
+@login_required
+def event_delete_view(request, event_id):
+    """Delete a medical event."""
+    try:
+        profile = request.user.medical_profile
+    except MedicalProfile.DoesNotExist:
+        messages.error(request, "Please create a medical profile first.")
+        return redirect("dashboard")
+
+    # Get the event and ensure it belongs to the user's profile
+    event = get_object_or_404(MedicalEvent, id=event_id, profile=profile)
+
+    if request.method == "POST":
+        event.delete()
+        messages.success(request, "Medical event deleted successfully.")
+        return redirect("events")
+
+    # If GET request, show confirmation (inline modal handled in template)
+    return redirect("events")
 
 
 def emergency_scan_template_view(request, public_id):
@@ -438,7 +651,8 @@ def emergency_scan_template_view(request, public_id):
             .prefetch_related(
                 Prefetch(
                     "medications",
-                    queryset=Medication.objects.filter(is_active=True),
+                    # Get all medications - filter by is_active property in template
+                    queryset=Medication.objects.all(),
                     to_attr="active_meds_list",
                 ),
                 "emergency_contacts",
@@ -585,10 +799,12 @@ def htmx_emergency_medications(request, public_id):
     """
     try:
         profile = MedicalProfile.objects.prefetch_related(
-            Prefetch("medications", queryset=Medication.objects.filter(is_active=True))
+            # Get all medications - filter by is_active property in template
+            Prefetch("medications", queryset=Medication.objects.all())
         ).get(public_id=public_id)
 
-        medications = profile.medications.filter(is_active=True)
+        # Get all medications and let template filter by is_active property
+        medications = profile.medications.all()
 
         # Check if HTMX request
         if request.headers.get("HX-Request"):

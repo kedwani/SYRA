@@ -1,4 +1,4 @@
-{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
+{% load static %}{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
@@ -62,65 +62,14 @@
     
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="font" href="https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2" type="font/woff2" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Arabic Font -->
+    <link rel="preload" as="font" href="https://fonts.gstatic.com/s/cairo/v31/SLXgc3n7Oqq9QvNpNq-d9g.ttf" type="font/woff2" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS with Custom Config -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // Medical Professional Palette
-                        medical: {
-                            primary: '#1d4ed8',      // Deep professional blue - trust
-                            primaryDark: '#1e40af',   // Darker primary
-                            primaryLight: '#3b82f6',  // Lighter primary
-                            accent: '#14b8a6',         // Medical teal - vitality
-                            accentLight: '#2dd4bf',   // Lighter teal
-                            emergency: '#dc2626',      // Controlled red - critical alerts
-                            emergencyDark: '#b91c1c', // Darker red
-                            emergencyLight: '#ef4444', // Lighter red
-                            neutral: '#6b7280',       // Neutral gray
-                        },
-                        // Status colors
-                        success: '#16a34a',
-                        warning: '#f59e0b',
-                        danger: '#dc2626',
-                        info: '#3b82f6',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    fontSize: {
-                        'base': ['1rem', '1.6'],     // 16px base with 1.6 line-height
-                    },
-                    letterSpacing: {
-                        'tightest': '-0.02em',
-                    },
-                    animation: {
-                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'slide-up': 'slideUp 0.3s ease-out',
-                        'fade-in': 'fadeIn 0.2s ease-out',
-                    },
-                    keyframes: {
-                        slideUp: {
-                            '0%': { transform: 'translateY(10px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Tailwind CSS - Production optimized -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
     
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
@@ -165,6 +114,47 @@
             font-family: 'Cairo', 'Inter', system-ui, sans-serif;
         }
         
+        /* RTL margin/padding overrides - convert ml-/mr- to appropriate logical properties */
+        [dir="rtl"] .ml-1 { margin-left: 0 !important; margin-right: 0.25rem !important; }
+        [dir="rtl"] .ml-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
+        [dir="rtl"] .ml-3 { margin-left: 0 !important; margin-right: 0.75rem !important; }
+        [dir="rtl"] .ml-4 { margin-left: 0 !important; margin-right: 1rem !important; }
+        [dir="rtl"] .ml-11 { margin-left: 0 !important; margin-right: 2.75rem !important; }
+        [dir="rtl"] .mr-1 { margin-right: 0 !important; margin-left: 0.25rem !important; }
+        [dir="rtl"] .mr-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
+        [dir="rtl"] .mr-3 { margin-right: 0 !important; margin-left: 0.75rem !important; }
+        [dir="rtl"] .mr-4 { margin-right: 0 !important; margin-left: 1rem !important; }
+        
+        /* RTL padding overrides */
+        [dir="rtl"] .pl-4 { padding-left: 0 !important; padding-right: 1rem !important; }
+        [dir="rtl"] .pl-12 { padding-left: 0 !important; padding-right: 3rem !important; }
+        
+        /* RTL left/right icon flipping */
+        [dir="rtl"] .rotate-180 {
+            transform: rotate(180deg);
+        }
+        [dir="rtl"] [dir="ltr"] {
+            direction: ltr;
+        }
+        
+        /* RTL flip class for directional icons (arrows, chevrons) */
+        [dir="rtl"] .rtl-flip {
+            transform: scaleX(-1);
+        }
+        
+        /* Don't flip icons that shouldn't flip (like hearts, medical symbols) */
+        .rtl-no-flip {
+            transform: none !important;
+        }
+        
+        [dir="rtl"] .rtl-no-flip {
+            transform: none !important;
+        }
+        
+        /* RTL text alignment */
+        [dir="rtl"] .text-start { text-align: right !important; }
+        [dir="rtl"] .text-end { text-align: left !important; }
+        
         body {
             font-family: 'Inter', system-ui, sans-serif;
             line-height: 1.6;
@@ -192,8 +182,8 @@
         .dark .text-gray-800 { color: #f5f5f5; }
         .dark .text-gray-700 { color: #e5e5e5; }
         .dark .text-gray-600 { color: #d4d4d4; }
-        .dark .text-gray-500 { color: #a3a3a3; }
-        .dark .text-gray-400 { color: #a3a3a3; }
+        .dark .text-gray-500 { color: #d4d4d4; }
+        .dark .text-gray-400 { color: #d4d4d4; }
         .dark .text-gray-300 { color: #d4d4d4; }
         
         /* Border colors */
@@ -213,10 +203,149 @@
         .dark footer.bg-gray-800 { background-color: #0a0a0a; }
         .dark .mobile-nav { background-color: #262626; border-color: #404040; }
         
+        /* Card system - consistent styling */
+        .card-emergency {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-warning {
+            background: white;
+            border: 2px solid #f59e0b;
+            border-left-width: 4px;
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        
+        .dark .card-warning {
+            background: #451a03;
+            border-color: #f59e0b;
+        }
+        
+        .card-info {
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        
+        .dark .card-info {
+            background: #262626;
+            border-color: #404040;
+        }
+        
+        .card-protected {
+            background: rgba(0, 0, 0, 0.05);
+            border: 2px dashed #9ca3af;
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        
+        .dark .card-protected {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #525252;
+        }
+        
+        /* Button component system */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-emergency {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        
+        .btn-emergency:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .dark .btn-secondary {
+            background: #262626;
+            color: #f3f4f6;
+            border-color: #404040;
+        }
+        
+        /* Icon sizing system */
+        .icon-xs { width: 12px; height: 12px; }
+        .icon-sm { width: 16px; height: 16px; }
+        .icon-md { width: 20px; height: 20px; }
+        .icon-lg { width: 24px; height: 24px; }
+        .icon-xl { width: 32px; height: 32px; }
+        .icon-2xl { width: 48px; height: 48px; }
+        
+        /* Card padding system */
+        .card-sm { padding: 0.75rem; }
+        .card-md { padding: 1rem; }
+        .card-lg { padding: 1.5rem; }
+        
+        /* Grid gap system */
+        .gap-cards { gap: 0.75rem; }
+        .gap-sections { gap: 1rem; }
+        .gap-groups { gap: 1.5rem; }
+        
+        /* Information priority levels */
+        .priority-critical {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .priority-high {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+        
+        .priority-medium {
+            font-size: 1rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        
+        .priority-low {
+            font-size: 0.875rem;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        
+        /* Info color coding */
+        .info-emergency { color: #dc2626; }
+        .info-warning { color: #f59e0b; }
+        .info-normal { color: #3b82f6; }
+        .info-neutral { color: #6b7280; }
+        
         /* Alert styles */
         .dark .alert-success { background-color: #052e16; color: #dcfce7; border-color: #166534; }
         .dark .alert-error { background-color: #450a0a; color: #fecaca; border-color: #991b1b; }
-        .dark .alert-warning { background-color: #451a03; color: #fef3c7; border-color: #b45309; }
+        .dark .alert-warning { background-color: #451a03; color: #fde68a; border-color: #b45309; }
         .dark .alert-info { background-color: #172554; color: #dbeafe; border-color: #1e40af; }
         
         /* Form input enhancements for dark mode */
@@ -233,7 +362,7 @@
         }
         .dark input::placeholder,
         .dark textarea::placeholder {
-            color: #737373;
+            color: #a3a3a3;
         }
         .dark input:focus,
         .dark select:focus,
@@ -276,13 +405,29 @@
             background: #f87171;
         }
         
-        /* Focus states for accessibility */
+        /* Focus states for accessibility - Enhanced for WCAG 2.2 */
         button:focus-visible,
         a:focus-visible,
         input:focus-visible,
         select:focus-visible,
         textarea:focus-visible {
-            outline: 2px solid #3b82f6;
+            outline: 3px solid #1d4ed8;
+            outline-offset: 2px;
+        }
+        
+        /* Dark mode focus indicators */
+        .dark button:focus-visible,
+        .dark a:focus-visible,
+        .dark input:focus-visible,
+        .dark select:focus-visible,
+        .dark textarea:focus-visible {
+            outline: 3px solid #60a5fa;
+            outline-offset: 2px;
+        }
+        
+        /* Extra high contrast for emergency buttons */
+        .btn-emergency:focus-visible {
+            outline: 4px solid #fbbf24;
             outline-offset: 2px;
         }
         
@@ -316,7 +461,7 @@
             border-width: 0;
         }
         
-        /* Table styles for dark mode */
+
         .dark table {
             color: #e5e5e5;
         }
@@ -356,9 +501,9 @@
         }
         
         /* Placeholder text */
-        .dark .text-gray-400,
-        .dark .text-gray-500 {
-            color: #a3a3a3 !important;
+        .dark input::placeholder,
+        .dark textarea::placeholder {
+            color: #a3a3af !important;
         }
         
         /* Gradient text in dark mode */
@@ -368,7 +513,7 @@
         
         /* Bootstrap utility dark mode fixes */
         .dark .text-muted {
-            color: #a3a3a3 !important;
+            color: #d4d4d4 !important;
         }
         .dark .bg-light {
             background-color: #262626 !important;
@@ -1131,13 +1276,7 @@
     </script>
 </head>
 <body class="bg-gray-50 min-h-screen" x-data="{ sidebarOpen: false }">
-    
-    <!-- Skip to main content link for accessibility -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-medical-primary focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none">
-        {% trans "Skip to main content" %}
-    </a>
-    
-    <!-- Global Loading Indicator -->
+
     <div class="global-loading fixed top-4 right-4 z-50 hidden">
         <div class="loading-spinner bg-medical-primary"></div>
     </div>
@@ -1152,10 +1291,15 @@
                 <!-- Logo and Name (Start) -->
                 <div class="flex items-center gap-3">
                     <a href="/" class="flex items-center gap-2">
-                        <img src="/media/logo.png" alt="SYRA" class="h-10 w-auto">
+                        <span class="text-2xl font-bold tracking-wide" style="background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                            SYRA
+                        </span>
                     </a>
                     {% block page_name %}{% endblock %}
                 </div>
+                
+                <!-- Emergency Profile Info (Center) -->
+                {% block emergency_header_info %}{% endblock %}
                 
                 <!-- Right Side: Language, Dark Mode, User Menu -->
                 <div class="flex items-center gap-2">
@@ -1358,15 +1502,27 @@
         {% block content %}{% endblock %}
     </main>
     
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-300 mt-auto">
+    <!-- Footer - Always LTR to prevent RTL flipping -->
+    <footer class="bg-gray-800 text-gray-300 mt-auto" dir="ltr">
         <div class="max-w-7xl mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <p class="text-sm">&copy; 2024 SYRA Medical ID. {% trans "All rights reserved." %}</p>
-                <div class="flex space-x-4 mt-4 md:mt-0">
-                    <a href="#" class="text-sm hover:text-white transition-colors">Privacy</a>
-                    <a href="#" class="text-sm hover:text-white transition-colors">Terms</a>
-                    <a href="#" class="text-sm hover:text-white transition-colors">Support</a>
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <a href="/privacy/" target="_blank" class="text-sm hover:text-white transition-colors">{% trans "Privacy Policy" %}</a>
+                    <span class="text-gray-500">|</span>
+                    <a href="/terms/" target="_blank" class="text-sm hover:text-white transition-colors">{% trans "Terms of Use" %}</a>
+                    <span class="text-gray-500">|</span>
+                    <a href="/support/" target="_blank" class="text-sm hover:text-white transition-colors">{% trans "Support" %}</a>
+                    <span class="text-gray-500">|</span>
+                    <!-- Language Switcher -->
+                    <form action="/i18n/setlang/" method="post" class="inline">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="">
+                        <select name="language" onchange="this.form.submit()" class="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white text-sm px-2 py-1 rounded border border-gray-300 dark:border-none focus:ring-2 focus:ring-blue-500">
+                            <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+                            <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>العربية</option>
+                        </select>
+                    </form>
                 </div>
             </div>
         </div>

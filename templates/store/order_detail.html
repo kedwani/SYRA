@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load arabic_dates %}
 
 {% block hide_navigation %}true{% endblock %}
 
@@ -49,13 +50,13 @@
                     </svg>
                     {% trans "Home" %}
                 </a>
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
                 <a href="{% url 'store:order_list' %}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400">
                     {% trans "Orders" %}
                 </a>
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-slate-400 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
                 <span class="text-slate-500 dark:text-slate-400">{{ order.order_number }}</span>
@@ -67,7 +68,7 @@
                         {% trans "Order" %} #{{ order.order_number }}
                     </h1>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {% trans "Placed on" %} {{ order.created_at|date:"F d, Y" }}
+                        {% trans "Placed on" %} {{ order.created_at|localized_date }}
                     </p>
                 </div>
                 <span class="apple-badge 
@@ -94,7 +95,7 @@
                     <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div>
                             <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Order Date" %}</p>
-                            <p class="mt-1 font-medium text-slate-900 dark:text-white">{{ order.created_at|date:"F d, Y" }}</p>
+                            <p class="mt-1 font-medium text-slate-900 dark:text-white">{{ order.created_at|localized_date }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Payment Method" %}</p>
@@ -135,7 +136,7 @@
                                         {{ item.product_size }} · {{ item.product_color }}
                                     </p>
                                 </div>
-                                <div class="text-right">
+                                <div class="text-end">
                                     <p class="text-sm text-slate-500 dark:text-slate-400">x{{ item.quantity }}</p>
                                     <p class="mt-1 font-semibold text-slate-900 dark:text-white">EGP {{ item.total }}</p>
                                 </div>
@@ -173,7 +174,7 @@
                         </div>
                         {% if order.shipping_notes %}
                         <div>
-                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Notes" %}</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Notes" context "order notes" %}</p>
                             <p class="font-medium text-slate-900 dark:text-white">{{ order.shipping_notes }}</p>
                         </div>
                         {% endif %}

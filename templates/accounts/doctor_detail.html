@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% block title %}{% trans "Doctor Details" %} - SYRA{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center gap-4">
+                <a href="{% url 'admin-doctor-approvals' %}" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{% trans "Doctor Details" %}</h1>
+                    <p class="text-gray-600 mt-1">{% trans "View and manage doctor account information" %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Status Banner -->
+            <div class="px-6 py-4 {% if doctor.is_approved_doctor %}bg-green-50{% else %}bg-yellow-50{% endif %} border-b {% if doctor.is_approved_doctor %}border-green-100{% else %}border-yellow-100{% endif %}">
+                <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2 {% if doctor.is_approved_doctor %}text-green-700{% else %}text-yellow-700{% endif %}">
+                        {% if doctor.is_approved_doctor %}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {% trans "Approved Doctor" %}
+                        {% else %}
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {% trans "Pending Approval" %}
+                        {% endif %}
+                    </span>
+                    <span class="text-sm text-gray-500">
+                        {% trans "Member since" %} {{ doctor.date_joined|date:"M d, Y" }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Basic Info Section -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        {% trans "Basic Information" %}
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "Username" %}</label>
+                            <p class="text-gray-900 font-medium">{{ doctor.username }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "Email" %}</label>
+                            <p class="text-gray-900">{{ doctor.email }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "First Name" %}</label>
+                            <p class="text-gray-900">{{ doctor.first_name|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "Last Name" %}</label>
+                            <p class="text-gray-900">{{ doctor.last_name|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "National ID" %}</label>
+                            <p class="text-gray-900">{{ doctor.national_id|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "Phone Number" %}</label>
+                            <p class="text-gray-900">{{ doctor.phone_number|default:"-" }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professional Info Section -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        {% trans "Professional Information" %}
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "License Number" %}</label>
+                            <p class="text-gray-900 font-medium">{{ doctor.license_number|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "Specialty" %}</label>
+                            <p class="text-gray-900">{{ doctor.specialty|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "Organization" %}</label>
+                            <p class="text-gray-900">{{ doctor.organization|default:"-" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">{% trans "License Image" %}</label>
+                            {% if doctor.license_image %}
+                                <a href="{{ doctor.license_image.url }}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    {% trans "View License Image" %}
+                                </a>
+                            {% else %}
+                                <p class="text-gray-400">-</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verification Status Section -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        {% trans "Verification Status" %}
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                            {% if doctor.is_email_verified %}
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                            {% else %}
+                                <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{% trans "Email Verified" %}</p>
+                                <p class="text-xs text-gray-500">{% if doctor.is_email_verified %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                            {% if doctor.is_phone_verified %}
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                            {% else %}
+                                <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{% trans "Phone Verified" %}</p>
+                                <p class="text-xs text-gray-500">{% if doctor.is_phone_verified %}{% trans "Yes" %}{% else %}{% trans "No" %}{% endif %}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                            {% if doctor.is_approved_doctor %}
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                            {% else %}
+                                <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{% trans "Doctor Approved" %}</p>
+                                <p class="text-xs text-gray-500">{% if doctor.is_approved_doctor %}{% trans "Yes" %}{% else %}{% trans "Pending" %}{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Section -->
+                <div class="border-t border-gray-100 pt-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        {% trans "Actions" %}
+                    </h2>
+                    <div class="flex flex-wrap gap-3">
+                        {% if doctor.is_approved_doctor %}
+                            <form method="post" action="{% url 'revoke-doctor' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium inline-flex items-center gap-2"
+                                        onclick="return confirm('{% trans "Are you sure you want to revoke this doctor's authority? They will no longer be able to access patient data." %}');">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                                    </svg>
+                                    {% trans "Revoke Authority" %}
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'approve-doctor' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium inline-flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    {% trans "Approve Doctor" %}
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'reject-doctor' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium inline-flex items-center gap-2"
+                                        onclick="return confirm('{% trans "Are you sure you want to reject this doctor application?" %}');">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    {% trans "Reject Application" %}
+                                </button>
+                            </form>
+                        {% endif %}
+                        <a href="{% url 'admin-doctor-approvals' %}" 
+                           class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            {% trans "Back to List" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

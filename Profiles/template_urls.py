@@ -18,10 +18,38 @@ urlpatterns = [
     ),
     path("medications/", template_views.medications_view, name="medications"),
     path("medications/add/", template_views.medication_add_view, name="medication-add"),
+    path(
+        "medications/<int:medication_id>/edit/",
+        template_views.medication_edit_view,
+        name="medication-edit",
+    ),
+    path(
+        "medications/<int:medication_id>/delete/",
+        template_views.medication_delete_view,
+        name="medication-delete",
+    ),
     path("contacts/", template_views.contacts_view, name="emergency-contacts"),
     path("contacts/add/", template_views.contact_add_view, name="contact-add"),
+    path(
+        "contacts/<int:contact_id>/edit/",
+        template_views.contact_edit_view,
+        name="contact-edit",
+    ),
+    path(
+        "contacts/<int:contact_id>/delete/",
+        template_views.contact_delete_view,
+        name="contact-delete",
+    ),
     path("events/", template_views.events_view, name="events"),
     path("events/add/", template_views.event_add_view, name="event-add"),
+    path(
+        "events/<int:event_id>/edit/", template_views.event_edit_view, name="event-edit"
+    ),
+    path(
+        "events/<int:event_id>/delete/",
+        template_views.event_delete_view,
+        name="event-delete",
+    ),
     # Emergency scan - HTML version for QR/NFC scanning
     path(
         "emergency/<uuid:public_id>/",

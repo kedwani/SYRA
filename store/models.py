@@ -4,9 +4,11 @@ Includes Syra Band products with different types and uses, orders, and order ite
 """
 
 import uuid
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 
 class SyraBandType(models.Model):
@@ -333,6 +335,7 @@ class OrderItem(models.Model):
         return f"{self.product_name} x {self.quantity}"
 
     def save(self, *args, **kwargs):
+        # Auto-populate product details if not set
         if not self.product_name:
             self.product_name = self.product.name
         if not self.product_sku:
@@ -344,7 +347,21 @@ class OrderItem(models.Model):
         if not self.unit_price:
             self.unit_price = self.product.current_price
 
+        # Validate before calculation
+        if self.unit_price is None:
+            raise ValueError("unit_price must be set")
+        if self.quantity is None or self.quantity <= 0:
+            raise ValueError("quantity must be a positive integer")
+        if self.discount is None:
+            self.discount = Decimal("0.00")
+
+        # Calculate total
         self.total = (self.unit_price * self.quantity) - self.discount
+
+        # Ensure total is not negative
+        if self.total < 0:
+            raise ValueError("Total cannot be negative (discount exceeds price)")
+
         super().save(*args, **kwargs)
 
 
@@ -520,6 +537,11 @@ class BandReview(models.Model):
         verbose_name = "Band Review"
         verbose_name_plural = "Band Reviews"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["product", "is_approved", "-created_at"]),
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["is_approved", "-created_at"]),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["product", "user"], name="unique_user_review"

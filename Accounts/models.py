@@ -80,6 +80,12 @@ class SyraUser(AbstractUser):
     license_number = models.CharField(
         max_length=50, blank=True, verbose_name="Professional License Number"
     )
+    license_image = models.ImageField(
+        upload_to="doctor_licenses/",
+        blank=True,
+        null=True,
+        verbose_name="Medical License Image",
+    )
     specialty = models.CharField(
         max_length=100, blank=True, verbose_name="Medical Specialty (for doctors)"
     )
@@ -87,6 +93,23 @@ class SyraUser(AbstractUser):
         default=False,
         verbose_name="Doctor Account Approved",
         help_text="Whether doctor account has been approved by admin",
+    )
+    is_email_verified = models.BooleanField(
+        default=False,
+        verbose_name="Email Verified",
+        help_text="Whether user has verified their email address",
+    )
+    is_phone_verified = models.BooleanField(
+        default=False,
+        verbose_name="Phone Verified",
+        help_text="Whether user has verified their phone number",
+    )
+    email_verification_token = models.CharField(
+        max_length=64, blank=True, verbose_name="Email Verification Token"
+    )
+    phone_otp = models.CharField(max_length=6, blank=True, verbose_name="Phone OTP")
+    phone_otp_expiry = models.DateTimeField(
+        null=True, blank=True, verbose_name="Phone OTP Expiry"
     )
     organization = models.CharField(
         max_length=200, blank=True, verbose_name="Organization/Company"

@@ -163,11 +163,11 @@
                 </svg>
                 Home
             </a>
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-400 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
             <a href="{% url 'store:band_list' %}" class="text-slate-500 hover:text-slate-700">{% trans "Medical Bracelets" %}</a>
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-slate-400 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
             <span class="text-slate-900 font-medium">{{ band.name }}</span>
@@ -247,8 +247,8 @@
             <div class="mb-6">
                 <span class="text-4xl font-bold text-slate-900">EGP {{ band.current_price }}</span>
                 {% if band.has_discount %}
-                <span class="text-xl text-slate-400 line-through ml-3">EGP {{ band.price }}</span>
-                <span class="ml-3 px-3 py-1 bg-red-100 text-red-600 text-sm font-bold rounded-full">-{{ band.discount_percentage }}%</span>
+                <span class="text-xl text-slate-400 line-through ms-3">EGP {{ band.price }}</span>
+                <span class="ms-3 px-3 py-1 bg-red-100 text-red-600 text-sm font-bold rounded-full">-{{ band.discount_percentage }}%</span>
                 {% endif %}
             </div>
 
@@ -445,15 +445,17 @@
                     </div>
                 </div>
                 <div class="flex items-center mb-4">
-                    <label class="text-sm font-semibold text-slate-700 mr-4">Qty</label>
+                    <label class="text-sm font-semibold text-slate-700 me-4">Qty</label>
                     <div class="flex items-center">
-                        <button type="button" class="qty-btn" onclick="this.nextElementSibling.value = Math.max(1, parseInt(this.nextElementSibling.value) - 1)">
+                        <button type="button" class="qty-btn" onclick="this.nextElementSibling.value = Math.max(1, parseInt(this.nextElementSibling.value) - 1)"
+                                aria-label="{% trans 'Decrease quantity' %}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                             </svg>
                         </button>
                         <input type="number" class="w-16 text-center border-y-2 border-slate-200 py-3 focus:outline-none focus:border-cyan-500" name="quantity" value="1" min="1" max="10">
-                        <button type="button" class="qty-btn" onclick="this.previousElementSibling.value = Math.min(10, parseInt(this.previousElementSibling.value) + 1)">
+                        <button type="button" class="qty-btn" onclick="this.previousElementSibling.value = Math.min(10, parseInt(this.previousElementSibling.value) + 1)"
+                                aria-label="{% trans 'Increase quantity' %}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>

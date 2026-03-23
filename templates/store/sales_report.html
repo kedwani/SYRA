@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load arabic_dates %}
 
 {% block hide_navigation %}true{% endblock %}
 
@@ -28,7 +29,7 @@
                 <tbody>
                     {% for month in monthly_sales %}
                     <tr>
-                        <td>{{ month.month|date:"F Y" }}</td>
+                        <td>{{ month.month|localized_date:'full' }}</td>
                         <td>{{ month.orders }}</td>
                         <td>EGP {{ month.revenue|floatformat:2 }}</td>
                         <td>EGP {{ month.avg_order|floatformat:2 }}</td>

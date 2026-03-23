@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "drf_spectacular",
+    "tailwind",
     "accounts",
     "profiles",
     "store",
@@ -159,8 +160,61 @@ STATICFILES_DIRS = (
     else []
 )
 
+# Tailwind CSS Configuration
+NPM_BIN_PATH = "npm"  # Path to npm executable
+
+TAILWIND_APP_NAME = "theme"
+
+TAILWIND_CONFIG = {
+    "colors": {
+        "medical": {
+            "primary": "#1d4ed8",
+            "primaryDark": "#1e40af",
+            "primaryLight": "#3b82f6",
+            "accent": "#14b8a6",
+            "accentLight": "#2dd4bf",
+            "emergency": "#dc2626",
+            "emergencyDark": "#b91c1c",
+            "emergencyLight": "#ef4444",
+            "neutral": "#6b7280",
+        },
+        "success": "#16a34a",
+        "warning": "#f59e0b",
+        "danger": "#dc2626",
+        "info": "#3b82f6",
+    },
+    "fontFamily": {
+        "sans": ["Inter", "system-ui", "sans-serif"],
+        "mono": ["JetBrains Mono", "monospace"],
+    },
+    "extend": {
+        "animation": {
+            "pulse-fast": "pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            "pulse-slow": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            "slide-up": "slideUp 0.3s ease-out",
+            "fade-in": "fadeIn 0.2s ease-out",
+        },
+        "keyframes": {
+            "slideUp": {
+                "0%": {"transform": "translateY(10px)", "opacity": "0"},
+                "100%": {"transform": "translateY(0)", "opacity": "1"},
+            },
+            "fadeIn": {
+                "0%": {"opacity": "0"},
+                "100%": {"opacity": "1"},
+            },
+        },
+    },
+}
+
+# Experimental: Try to use pytailwindcss without Node.js
+TAILWIND_USE_PY = True
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# API Keys
+NINJAS_API_KEY = "3jIsUMFu3r2qh2ObQ62w4ISGO3R58v3SOEUdiDVI"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -174,6 +228,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SYRA Medical Identification API",
+    "DESCRIPTION": "API for SYRA medical identification platform",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api/",
 }
 
 from datetime import timedelta
@@ -198,23 +262,47 @@ if not FERNET_KEY:
             "FERNET_KEY is required in production! "
             "Generate with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
         )
-    # Use persistent dev key for development to avoid data loss on restart
-    FERNET_KEY = os.environ.get(
-        "FERNET_DEV_KEY", "dev-fernet-key-for-testing-only-do-not-use-in-prod=="
-    )
+    # For development, check if we have a persistent dev key file
+    dev_key_file = BASE_DIR / ".dev_fernet_key"
+    if dev_key_file.exists():
+        FERNET_KEY = dev_key_file.read_text().strip()
+    else:
+        # Generate and save a proper dev key
+        from cryptography.fernet import Fernet
+
+        FERNET_KEY = Fernet.generate_key().decode()
+        dev_key_file.write_text(FERNET_KEY)
+        # Add to .gitignore if not already there
+        gitignore_path = BASE_DIR / ".gitignore"
+        if gitignore_path.exists():
+            content = gitignore_path.read_text()
+            if ".dev_fernet_key" not in content:
+                gitignore_path.write_text(content + "\n.dev_fernet_key\n")
+
+# Validate the key format
+if FERNET_KEY:
+    try:
+        from cryptography.fernet import Fernet
+
+        Fernet(FERNET_KEY.encode())
+    except Exception as e:
+        raise ImproperlyConfigured(f"Invalid FERNET_KEY format: {e}")
 
 # Email Configuration
-EMAIL_BACKEND = (
-    "django.core.mail.backends.console.EmailBackend"
-    if DEBUG
-    else "django.core.mail.backends.smtp.EmailBackend"
-)
+# Using console for development - Brevo available for production
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@syra.app")
+
+# Brevo API Configuration (for future use)
+BREVO_API_KEY = os.environ.get(
+    "BREVO_API_KEY",
+    "eyJhcGlfa2V5IjoieGtleXNpYi0zOGVmYWZhMzcwYWRiMGVmY2JiNWFjOGY1ZGJmYTJkNDlhY2YyYzZlN2JiYzNjOTk0MDY3YzZhMWIxZGNiYTgyLXNROU9WaElrZVNLU0tkRnkifQ==",
+)
 
 # CORS Configuration
 CORS_ALLOW_CREDENTIALS = True

@@ -14,6 +14,7 @@ class MedicationSerializer(serializers.ModelSerializer):
             "name",
             "dosage",
             "frequency",
+            "period_days",
             "is_active",
             "notes",
             "added_by_doctor",

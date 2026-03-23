@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
-{% block title %}{{ action }} Event - SYRA{% endblock %}
+{% block title %}{% if action == 'Add' %}{% trans "Add Event" %}{% else %}{% trans "Edit Event" %}{% endif %} - SYRA{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-8">
@@ -9,13 +9,13 @@
     <div class="mb-8">
         <div class="flex items-center gap-3 mb-2">
             <a href="{% url 'events' %}" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-gray-600 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
-            <h1 class="text-2xl font-bold text-gray-900">{% blocktrans with action=action %}{{ action }} Medical Event{% endblocktrans %}</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{% if action == 'Add' %}{% trans "Add Medical Event" %}{% else %}{% trans "Edit Medical Event" %}{% endif %}</h1>
         </div>
-        <p class="text-gray-500 ml-11">{% trans "Record a medical event in your history" %}</p>
+        <p class="text-gray-500 ms-11">{% trans "Record a medical event in your history" %}</p>
     </div>
 
     <!-- Form Card -->
@@ -30,7 +30,7 @@
                         {% trans "Event Type" %} <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
@@ -38,16 +38,16 @@
                         <select name="event_type" 
                                 id="event_type" 
                                 required
-                                class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200 appearance-none">
+                                class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200 appearance-none">
                             <option value="">{% trans "Select event type..." %}</option>
-                            <option value="surgery">🏥 {% trans "Surgery" %}</option>
-                            <option value="hospitalization">🩺 {% trans "Hospitalization" %}</option>
-                            <option value="diagnosis">🔬 {% trans "Diagnosis" %}</option>
-                            <option value="emergency">🚨 {% trans "Emergency" %}</option>
-                            <option value="checkup">✅ {% trans "Regular Check-up" %}</option>
-                            <option value="other">📋 {% trans "Other" %}</option>
+                            <option value="surgery" {% if form.event_type.value == 'surgery' %}selected{% endif %}>🏥 {% trans "Surgery" %}</option>
+                            <option value="hospitalization" {% if form.event_type.value == 'hospitalization' %}selected{% endif %}>🩺 {% trans "Hospitalization" %}</option>
+                            <option value="diagnosis" {% if form.event_type.value == 'diagnosis' %}selected{% endif %}>🔬 {% trans "Diagnosis" %}</option>
+                            <option value="emergency" {% if form.event_type.value == 'emergency' %}selected{% endif %}>🚨 {% trans "Emergency" %}</option>
+                            <option value="checkup" {% if form.event_type.value == 'checkup' %}selected{% endif %}>✅ {% trans "Regular Check-up" %}</option>
+                            <option value="other" {% if form.event_type.value == 'other' %}selected{% endif %}>📋 {% trans "Other" %}</option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 end-0 pe-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
@@ -61,7 +61,7 @@
                         {% trans "Title" %} <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
                             </svg>
@@ -71,7 +71,8 @@
                                id="title" 
                                required
                                placeholder="{% trans "e.g., Appendectomy, Annual Physical" %}"
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               value="{{ form.title.value|default:'' }}"
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
@@ -81,7 +82,7 @@
                         {% trans "Event Date" %} <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
@@ -90,7 +91,8 @@
                                name="date" 
                                id="date" 
                                required
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               value="{{ form.date.value|default:'' }}"
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
@@ -100,7 +102,7 @@
                         {% trans "Hospital/Clinic Name" %}
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                             </svg>
@@ -109,7 +111,8 @@
                                name="hospital_name" 
                                id="hospital_name" 
                                placeholder="{% trans "e.g., Cairo Medical Center" %}"
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               value="{{ form.hospital_name.value|default:'' }}"
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
@@ -119,7 +122,7 @@
                         {% trans "Doctor Name" %}
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
@@ -128,7 +131,8 @@
                                name="doctor_name" 
                                id="doctor_name" 
                                placeholder="{% trans "e.g., Dr. Ahmed Hassan" %}"
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               value="{{ form.doctor_name.value|default:'' }}"
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
@@ -141,14 +145,14 @@
                               id="description" 
                               rows="3"
                               placeholder="{% trans "Additional details about this event..." %}"
-                              class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200 resize-none"></textarea>
+                              class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white transition-all duration-200 resize-none">{{ form.description.value|default:'' }}</textarea>
                 </div>
                 
                 <!-- Action Buttons -->
                 <div class="flex gap-4 pt-4">
                     <button type="submit" 
                             class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white py-3.5 px-6 rounded-xl font-semibold hover:from-indigo-700 hover:to-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 shadow-lg shadow-indigo-500/30">
-                        {% blocktrans with action=action %}{{ action }} Event{% endblocktrans %}
+                        {% if action == 'Add' %}{% trans "Add Event" %}{% else %}{% trans "Edit Event" %}{% endif %}
                     </button>
                     <a href="{% url 'events' %}" 
                        class="flex-1 bg-gray-100 text-gray-700 py-3.5 px-6 rounded-xl font-semibold hover:bg-gray-200 text-center transition-all duration-200 border border-gray-200">

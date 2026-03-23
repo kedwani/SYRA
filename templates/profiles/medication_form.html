@@ -9,13 +9,13 @@
     <div class="mb-8">
         <div class="flex items-center gap-3 mb-2">
             <a href="{% url 'medications' %}" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-gray-600 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </a>
             <h1 class="text-2xl font-bold text-gray-900">{% blocktrans with action=action %}{{ action }} Medication{% endblocktrans %}</h1>
         </div>
-        <p class="text-gray-500 ml-11">{% trans "Add or update your current medications" %}</p>
+        <p class="text-gray-500 ms-11">{% trans "Add or update your current medications" %}</p>
     </div>
 
     <!-- Form Card -->
@@ -30,7 +30,7 @@
                         {% trans "Medication Name" %} <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
                             </svg>
@@ -39,8 +39,9 @@
                                name="name" 
                                id="name" 
                                required
+                               value="{% if medication %}{{ medication.name }}{% endif %}"
                                placeholder="{% trans "e.g., Metformin, Aspirin" %}"
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
@@ -50,7 +51,7 @@
                         {% trans "Dosage" %} <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                             </svg>
@@ -59,8 +60,9 @@
                                name="dosage" 
                                id="dosage" 
                                placeholder="{% trans "e.g., 500mg, 2 tablets" %}"
+                               value="{% if medication %}{{ medication.dosage }}{% endif %}"
                                required
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
@@ -70,7 +72,7 @@
                         {% trans "Frequency" %}
                     </label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
@@ -79,21 +81,31 @@
                                name="frequency" 
                                id="frequency" 
                                placeholder="{% trans "e.g., Twice daily, Every 8 hours" %}"
-                               class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                               value="{% if medication %}{{ medication.frequency }}{% endif %}"
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
                     </div>
                 </div>
                 
-                <!-- Currently Taking Checkbox -->
-                <div class="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
-                    <input type="checkbox" 
-                           name="is_active" 
-                           id="is_active"
-                           checked
-                           class="w-5 h-5 text-green-600 rounded focus:ring-green-500 border-gray-300">
-                    <label for="is_active" class="flex-1">
-                        <span class="block text-sm font-semibold text-gray-900">{% trans "Currently Taking" %}</span>
-                        <span class="text-xs text-gray-500">{% trans "Show this medication in your emergency profile" %}</span>
+                <!-- Period -->
+                <div>
+                    <label for="period_days" class="block text-sm font-semibold text-gray-700 mb-2">
+                        {% trans "Treatment Duration (days)" %}
                     </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <input type="number" 
+                               name="period_days" 
+                               id="period_days" 
+                               min="1"
+                               value="{% if medication and medication.period_days %}{{ medication.period_days }}{% endif %}"
+                               placeholder="{% trans "e.g., 30 days (leave empty for ongoing)" %}"
+                               class="w-full ps-12 pe-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">{% trans "Leave empty for ongoing/long-term medications" %}</p>
                 </div>
                 
                 <!-- Notes -->
@@ -105,7 +117,7 @@
                               id="notes" 
                               rows="3"
                               placeholder="{% trans "Any additional instructions or notes..." %}"
-                              class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200 resize-none"></textarea>
+                              class="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent focus:bg-white transition-all duration-200 resize-none">{% if medication %}{{ medication.notes }}{% endif %}</textarea>
                 </div>
                 
                 <!-- Action Buttons -->

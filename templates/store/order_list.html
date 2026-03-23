@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load arabic_dates %}
 
 {% block hide_navigation %}true{% endblock %}
 
@@ -83,7 +84,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
-                                    {{ order.created_at|date:"M d, Y" }}
+                                    {{ order.created_at|localized_date }}
                                 </span>
                                 <span class="flex items-center gap-1.5">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,13 +103,13 @@
                         
                         <!-- Total & Action -->
                         <div class="flex items-center gap-4">
-                            <div class="text-right">
+                            <div class="text-end">
                                 <p class="text-sm text-slate-500 dark:text-slate-400">{% trans "Total" %}</p>
                                 <p class="text-xl font-semibold text-slate-900 dark:text-white">EGP {{ order.total }}</p>
                             </div>
                             <a href="{% url 'store:order_detail' order.id %}" class="apple-btn apple-btn-secondary">
                                 <span>{% trans "View" %}</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </a>

@@ -123,7 +123,8 @@
                                     {% csrf_token %}
                                     <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}"
                                             class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity <= 1 %}opacity-50 cursor-not-allowed{% endif %}"
-                                            {% if item.quantity <= 1 %}disabled{% endif %}>
+                                            {% if item.quantity <= 1 %}disabled{% endif %}
+                                            aria-label="{% trans 'Decrease quantity' %}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                                         </svg>
@@ -133,7 +134,8 @@
                                     </span>
                                     <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}"
                                             class="apple-quantity-btn bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 {% if item.quantity >= 10 %}opacity-50 cursor-not-allowed{% endif %}"
-                                            {% if item.quantity >= 10 %}disabled{% endif %}>
+                                            {% if item.quantity >= 10 %}disabled{% endif %}
+                                            aria-label="{% trans 'Increase quantity' %}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
@@ -143,7 +145,8 @@
                                 <!-- Remove Button -->
                                 <form method="post" action="{% url 'store:remove_from_cart' item.id %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                                            aria-label="{% trans 'Remove item' %}">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
