@@ -21,14 +21,47 @@
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
   }
   
   body {
     @apply bg-gray-50 text-gray-900;
   }
+
+  /* Reduced motion support - WCAG 2.3.3 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer utilities {
+  /* Image lazy loading placeholder */
+  .img-lazy {
+    @apply bg-gray-200 animate-pulse;
+  }
+
+  /* Focus visible for accessibility */
+  .focus-visible-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  /* Skip link styles */
+  .skip-link {
+    @apply absolute -top-10 left-4 z-50 px-4 py-3 bg-blue-600 text-white font-semibold rounded-b-lg transition-all duration-200;
+  }
+  
+  .skip-link:focus {
+    @apply top-0;
+  }
+
+  /* Animation utilities */
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
@@ -45,5 +78,27 @@
   @keyframes fadeIn {
     0% { opacity: 0; }
     100% { opacity: 1; }
+  }
+
+  /* Screen reader only - accessibility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* RTL flip for directional icons */
+  .rtl-flip {
+    @apply scale-x-[-1];
+  }
+  
+  [dir="rtl"] .rtl-flip {
+    @apply scale-x-100;
   }
 }

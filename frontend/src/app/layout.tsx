@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-import "@/styles/globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
+import RootProviders from './providers';
 
 export const metadata: Metadata = {
-  title: "SYRA Medical ID",
-  description: "Medical emergency identification and alert system",
+  title: 'SYRA Medical ID',
+  description: 'Medical emergency identification and alert system',
 };
 
 export default function RootLayout({
@@ -12,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body><main>{children}</main></body>
-    </html>
+    <RootProviders>
+      {children}
+    </RootProviders>
   );
 }
