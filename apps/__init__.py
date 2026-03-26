@@ -1,0 +1,1 @@
+# Default Django apps package for SYRA

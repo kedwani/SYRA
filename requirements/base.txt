@@ -1,0 +1,28 @@
+# Django
+Django>=5.2,<6.0
+djangorestframework>=3.15,<4.0
+django-cors-headers>=4.3,<5.0
+django-ratelimit>=4.1,<5.0
+django-filter>=24.0
+
+# Database
+psycopg2-binary>=2.9,<3.0
+
+# Cache
+django-redis>=5.4,<6.0
+redis>=5.0,<6.0
+
+# Authentication
+djangorestframework-simplejwt>=5.3,<6.0
+
+# Security
+PyJWT>=2.8,<3.0
+cryptography>=42.0,<43.0
+
+# Utilities
+python-dotenv>=1.0,<2.0
+Pillow>=10.0,<11.0
+qrcode[pil]>=7.4,<8.0
+
+# Stripe (optional)
+# stripe>=8.0,<9.0
